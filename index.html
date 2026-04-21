@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="el">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- ── SEO ── -->
+    <title>WorkInPάτρα — Θέσεις Εργασίας στην Πάτρα</title>
+    <meta
+      name="description"
+      content="Βρες τις πιο πρόσφατες θέσεις εργασίας στην Πάτρα. Συγκεντρώνουμε αγγελίες από JobFind, Kariera και XE σε ένα μέρος, ενημερωμένες καθημερινά."
+    />
+    <meta
+      name="keywords"
+      content="θέσεις εργασίας Πάτρα, δουλειές Πάτρα, αγγελίες εργασίας Πάτρα, jobs Patra, εργασία Αχαΐα"
+    />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://workinpatra.gr/" />
+
+    <!-- ── Open Graph ── -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://workinpatra.gr/" />
+    <meta
+      property="og:title"
+      content="WorkInPάτρα — Θέσεις Εργασίας στην Πάτρα"
+    />
+    <meta
+      property="og:description"
+      content="Όλες οι αγγελίες εργασίας της Πάτρας σε ένα μέρος. Ενημερωμένο καθημερινά από JobFind, Kariera και XE."
+    />
+    <meta property="og:locale" content="el_GR" />
+
+    <!-- ── Twitter Card ── -->
+    <meta name="twitter:card" content="summary" />
+    <meta
+      name="twitter:title"
+      content="WorkInPάτρα — Θέσεις Εργασίας στην Πάτρα"
+    />
+    <meta
+      name="twitter:description"
+      content="Όλες οι αγγελίες εργασίας της Πάτρας σε ένα μέρος."
+    />
+
+    <!-- ── JSON-LD Structured Data ── -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "WorkInPάτρα",
+        "url": "https://workinpatra.gr",
+        "description": "Συγκεντρωτική πλατφόρμα αγγελιών εργασίας για την Πάτρα",
+        "inLanguage": "el",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://workinpatra.gr/?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="header">
+      <div class="container header-inner">
+        <div class="logo">
+          <span class="logo-dot"></span>
+          <span>WorkIn<strong>Πάτρα</strong></span>
+        </div>
+        <div class="header-meta">
+          <span id="last-updated">Τελευταία ενημέρωση: —</span>
+          <button class="btn-refresh" id="btn-refresh" title="Ανανέωση">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <polyline points="23 4 23 10 17 10" />
+              <polyline points="1 20 1 14 7 14" />
+              <path
+                d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- ── Hero ── -->
+    <section class="hero">
+      <div class="container hero-inner">
+        <div class="hero-text">
+          <span class="hero-eyebrow">Πάτρα · Αχαΐα</span>
+          <h1 class="hero-title">
+            Όλες οι δουλειές<br />σε <em>ένα μέρος</em>.
+          </h1>
+          <p class="hero-sub">
+            Μαζεύουμε τις πιο πρόσφατες αγγελίες από JobFind, Kariera και XE —
+            ενημερωμένες αυτόματα, χωρίς διαφημίσεις, χωρίς εγγραφή.
+          </p>
+          <div class="hero-stats">
+            <div class="hero-stat">
+              <strong id="stat-total">—</strong>
+              <span>θέσεις διαθέσιμες</span>
+            </div>
+            <div class="hero-stat-divider"></div>
+            <div class="hero-stat">
+              <strong>4</strong>
+              <span>πηγές</span>
+            </div>
+            <div class="hero-stat-divider"></div>
+            <div class="hero-stat">
+              <strong>Δωρεάν</strong>
+              <span>χωρίς εγγραφή</span>
+            </div>
+          </div>
+        </div>
+        <div class="hero-visual" aria-hidden="true">
+          <div class="hero-blob"></div>
+          <div class="hero-badge-stack">
+            <div class="hbadge hbadge-xe">XE</div>
+            <div class="hbadge hbadge-jobfind">JobFind</div>
+            <div class="hbadge hbadge-kariera">Kariera</div>
+            <div class="hbadge hbadge-indeed">Indeed</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <main class="container main">
+      <!-- Filters -->
+      <section class="filters-bar" aria-label="Φίλτρα αναζήτησης">
+        <div class="filter-group">
+          <span class="filter-label">Πηγή</span>
+          <div class="source-chips">
+            <label class="chip chip-all">
+              <input type="checkbox" value="all" checked id="src-all" />
+              <span>Όλα</span>
+            </label>
+            <label class="chip chip-jobfind">
+              <input type="checkbox" value="jobfind" id="src-jobfind" />
+              <span>JobFind</span>
+            </label>
+            <label class="chip chip-kariera">
+              <input type="checkbox" value="kariera" id="src-kariera" />
+              <span>Kariera</span>
+            </label>
+            <label class="chip chip-xe">
+              <input type="checkbox" value="xe" id="src-xe" />
+              <span>XE</span>
+            </label>
+            <label class="chip chip-indeed">
+              <input type="checkbox" value="indeed" id="src-indeed" />
+              <span>Indeed</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <span class="filter-label">Διάστημα</span>
+          <div class="period-tabs">
+            <button class="period-tab active" data-days="7">7 μέρες</button>
+            <button class="period-tab" data-days="30">30 μέρες</button>
+          </div>
+        </div>
+
+        <div class="filter-group filter-search">
+          <input
+            type="text"
+            id="search-input"
+            class="search-input"
+            placeholder="Αναζήτηση τίτλου ή εταιρείας…"
+            aria-label="Αναζήτηση"
+          />
+        </div>
+      </section>
+
+      <!-- Category filter -->
+      <div class="category-bar-wrap">
+        <div class="category-bar-label">
+          Κατηγορίες
+          <span class="beta-badge">Δοκιμαστική Λειτουργία Beta</span>
+        </div>
+
+        <!-- Desktop: pill buttons -->
+        <div class="category-bar" id="category-bar">
+          <button class="cat-btn active" data-cat="all">Όλες</button>
+        </div>
+
+        <!-- Mobile: custom dropdown -->
+        <div class="cat-dropdown" id="cat-dropdown">
+          <button
+            class="cat-dropdown-btn"
+            id="cat-dropdown-btn"
+            aria-expanded="false"
+          >
+            <span id="cat-dropdown-label">Όλες οι κατηγορίες</span>
+            <svg
+              class="cat-chevron"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+          <div class="cat-dropdown-panel" id="cat-dropdown-panel"></div>
+        </div>
+      </div>
+
+      <!-- Stats bar -->
+      <div class="stats-bar">
+        <span id="count-label">— θέσεις εργασίας</span>
+        <div class="sort-wrap">
+          <label for="sort-select" class="sr-only">Ταξινόμηση</label>
+          <select id="sort-select" class="sort-select">
+            <option value="date">Νεότερες πρώτα</option>
+            <option value="title">Τίτλος (Α→Ω)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Job grid -->
+      <div
+        class="job-grid"
+        id="job-grid"
+        role="list"
+        aria-label="Θέσεις εργασίας"
+      ></div>
+
+      <!-- Empty state -->
+      <div class="empty-state hidden" id="empty-state">
+        <svg
+          width="48"
+          height="48"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#c0c0c0"
+          stroke-width="1.5"
+        >
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        <p>Δεν βρέθηκαν θέσεις για τα επιλεγμένα φίλτρα.</p>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="container footer-inner">
+        <p>
+          © 2026 WorkInPάτρα · Δεδομένα από
+          <a href="https://www.jobfind.gr" target="_blank" rel="noopener"
+            >JobFind</a
+          >,
+          <a href="https://www.kariera.gr" target="_blank" rel="noopener"
+            >Kariera</a
+          >, <a href="https://www.xe.gr" target="_blank" rel="noopener">XE</a>
+        </p>
+        <p class="footer-note">
+          Δεν φιλοξενούμε αγγελίες — σε παραπέμπουμε στην πηγή.
+        </p>
+      </div>
+    </footer>
+
+    <!-- Job card template -->
+    <template id="card-template">
+      <article class="job-card" role="listitem">
+        <div class="card-top">
+          <div class="card-source-badge"></div>
+          <span class="card-date"></span>
+        </div>
+        <h2 class="card-title"></h2>
+        <p class="card-company"></p>
+        <div class="card-tags"></div>
+        <a class="card-link" href="#" target="_blank" rel="noopener">
+          Δες αγγελία
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <line x1="7" y1="17" x2="17" y2="7" />
+            <polyline points="7 7 17 7 17 17" />
+          </svg>
+        </a>
+      </article>
+    </template>
+
+    <script src="app.js"></script>
+  </body>
+</html>

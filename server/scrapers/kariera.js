@@ -1,0 +1,44 @@
+import { withBrowser, parseGreekDate } from "./_shared.js";
+
+const URL = "https://www.kariera.gr/jobs/jobs-in-achaia--patra";
+
+export async function scrape() {
+  return withBrowser(async (page) => {
+    await page.goto(URL, { waitUntil: "networkidle", timeout: 30000 });
+    await page.waitForSelector("[class*='BaseJobCard_root']", { timeout: 15000 });
+
+    return page.evaluate(() => {
+      return Array.from(document.querySelectorAll("[class*='BaseJobCard_root']")).map(card => {
+        const titleEl  = card.querySelector("[class*='BaseJobCard_jobTitle']");
+        const infoEl   = card.querySelector("[class*='JobInfoTagsSection_compWrap']");
+
+        // Info section children: location | date | salary | type
+        const infoItems = infoEl
+          ? Array.from(infoEl.children).map(c => c.innerText?.trim()).filter(Boolean)
+          : [];
+
+        const dateRaw = infoItems.find(s =>
+          /πριν|χθες|σήμερα|ημέρ|εβδ|μήν/i.test(s)
+        ) || "";
+
+        const tags = infoItems.filter(s =>
+          !/πριν|χθες|σήμερα|ημέρ|εβδ|μήν|πάτρ|αχαΐ|N\/A/i.test(s)
+          && s.length < 40
+        );
+
+        return {
+          title:   titleEl?.innerText?.trim() || "",
+          company: card.querySelector("[class*='JobCompanyName_company']")?.innerText?.trim() || "",
+          dateRaw,
+          tags,
+          url:     titleEl?.href || card.querySelector("a[href]")?.href || "",
+          source:  "kariera",
+        };
+      });
+    }).then(jobs =>
+      jobs
+        .filter(j => j.title)
+        .map(j => ({ ...j, date: parseGreekDate(j.dateRaw) }))
+    );
+  });
+}
