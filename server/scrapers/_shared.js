@@ -18,27 +18,33 @@ export async function withBrowser(fn) {
 export function parseGreekDate(str) {
   if (!str) return null;
   const s = str.trim().toLowerCase();
+
+  // Always work at midnight UTC so stored dates are clean calendar days
+  function midnight(d) {
+    return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())).toISOString();
+  }
+
   const now = new Date();
 
-  if (s.includes("σήμερα") || s.includes("today")) return now.toISOString();
+  if (s.includes("σήμερα") || s.includes("today")) return midnight(now);
 
   if (s.includes("χθες") || s.includes("yesterday")) {
-    const d = new Date(now); d.setDate(d.getDate() - 1); return d.toISOString();
+    const d = new Date(now); d.setUTCDate(d.getUTCDate() - 1); return midnight(d);
   }
 
   const daysMatch = s.match(/(\d+)\s*(μέρ|ημέρ|day)/);
   if (daysMatch) {
-    const d = new Date(now); d.setDate(d.getDate() - parseInt(daysMatch[1])); return d.toISOString();
+    const d = new Date(now); d.setUTCDate(d.getUTCDate() - parseInt(daysMatch[1])); return midnight(d);
   }
 
   const weeksMatch = s.match(/(\d+)\s*(εβδ|week)/);
   if (weeksMatch) {
-    const d = new Date(now); d.setDate(d.getDate() - parseInt(weeksMatch[1]) * 7); return d.toISOString();
+    const d = new Date(now); d.setUTCDate(d.getUTCDate() - parseInt(weeksMatch[1]) * 7); return midnight(d);
   }
 
   const monthsMatch = s.match(/(\d+)\s*(μήν|month)/);
   if (monthsMatch) {
-    const d = new Date(now); d.setMonth(d.getMonth() - parseInt(monthsMatch[1])); return d.toISOString();
+    const d = new Date(now); d.setUTCMonth(d.getUTCMonth() - parseInt(monthsMatch[1])); return midnight(d);
   }
 
   // dd/mm/yyyy or dd-mm-yyyy
@@ -47,5 +53,5 @@ export function parseGreekDate(str) {
     return new Date(`${dateMatch[3]}-${dateMatch[2].padStart(2,"0")}-${dateMatch[1].padStart(2,"0")}`).toISOString();
   }
 
-  return now.toISOString(); // fallback: treat as today
+  return midnight(now); // fallback: treat as today
 }

@@ -42,7 +42,13 @@ const CATEGORY_LABELS = {
 // ── Date helpers ──────────────────────────────────────────────────────────────
 function formatDate(isoStr) {
   if (!isoStr) return "";
-  const diff = Math.floor((Date.now() - new Date(isoStr)) / 86400000);
+  const now  = new Date();
+  const d    = new Date(isoStr);
+  // Compare calendar days (local midnight) — avoids "Σήμερα" for jobs
+  // scraped yesterday at an hour that's < 24h ago in absolute ms.
+  const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const dateMidnight  = new Date(d.getFullYear(),   d.getMonth(),   d.getDate());
+  const diff = Math.round((todayMidnight - dateMidnight) / 86400000);
   if (diff === 0) return "Σήμερα";
   if (diff === 1) return "Χθες";
   if (diff < 7)  return `${diff} μέρες πριν`;
