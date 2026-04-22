@@ -167,8 +167,8 @@
         <div class="filter-group">
           <span class="filter-label">Διάστημα</span>
           <div class="period-tabs">
-            <button class="period-tab active" data-days="7">7 μέρες</button>
-            <button class="period-tab" data-days="30">30 μέρες</button>
+            <button class="period-tab" data-days="7">7 μέρες</button>
+            <button class="period-tab active" data-days="30">30 μέρες</button>
           </div>
         </div>
 
@@ -277,7 +277,10 @@
     <template id="card-template">
       <article class="job-card" role="listitem">
         <div class="card-top">
-          <div class="card-source-badge"></div>
+          <div class="card-badges">
+            <div class="card-source-badge"></div>
+            <span class="card-new-badge hidden">Νέο</span>
+          </div>
           <span class="card-date"></span>
         </div>
         <h2 class="card-title"></h2>

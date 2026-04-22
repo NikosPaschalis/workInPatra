@@ -1,7 +1,7 @@
 // ── State ─────────────────────────────────────────────────────────────────────
 const state = {
   sources:  new Set(["jobfind", "kariera", "xe", "indeed"]),
-  days:     7,
+  days:     30,
   search:   "",
   sort:     "date",
   category: "all",
@@ -169,7 +169,13 @@ function render() {
     badge.textContent = SOURCE_LABELS[job.source] || job.source;
     badge.classList.add(`badge-${job.source}`);
 
-    card.querySelector(".card-date").textContent    = formatDate(job.date);
+    const dateLabel = formatDate(job.date);
+    card.querySelector(".card-date").textContent = dateLabel;
+
+    // "Νέο" badge — visible only for today's listings
+    if (dateLabel === "Σήμερα") {
+      card.querySelector(".card-new-badge").classList.remove("hidden");
+    }
     card.querySelector(".card-title").textContent   = job.title;
     card.querySelector(".card-company").textContent = job.company || "—";
 

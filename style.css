@@ -237,6 +237,12 @@ body {
   justify-content: space-between;
 }
 
+.card-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .card-source-badge {
   font-size: 11px;
   font-weight: 700;
@@ -244,6 +250,24 @@ body {
   text-transform: uppercase;
   padding: 3px 10px;
   border-radius: 999px;
+}
+
+.card-new-badge {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #dcfce7;
+  color: #15803d;
+  animation: pulse-new 2s ease-in-out infinite;
+}
+.card-new-badge.hidden { display: none; }
+
+@keyframes pulse-new {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: .6; }
 }
 
 .badge-jobfind { background: var(--jobfind-soft); color: var(--jobfind); }
