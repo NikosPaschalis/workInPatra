@@ -39,6 +39,20 @@ const CATEGORY_LABELS = {
   other:        "📌 Άλλα",
 };
 
+// Plain (no emoji) labels for SEO meta tags
+const CATEGORY_SEO = {
+  tech:         "Πληροφορική",
+  sales:        "Πωλήσεις",
+  hospitality:  "Εστίαση & Τουρισμός",
+  health:       "Υγεία & Φαρμακείο",
+  logistics:    "Μεταφορές & Αποθήκη",
+  admin:        "Διοίκηση & Λογιστική",
+  retail:       "Λιανική & Εξυπηρέτηση",
+  construction: "Τεχνικά & Κατασκευές",
+  education:    "Εκπαίδευση",
+  other:        "Άλλα",
+};
+
 // ── Date helpers ──────────────────────────────────────────────────────────────
 function formatDate(isoStr) {
   if (!isoStr) return "";
@@ -117,7 +131,85 @@ function setCat(cat) {
     ? "Όλες οι κατηγορίες"
     : CATEGORY_LABELS[cat] || cat;
   catDropdownLabel.textContent = label;
+  updateURL();
+  updateSEO();
   render();
+}
+
+// ── URL state (sharable + bookmarkable) ──────────────────────────────────────
+function updateURL() {
+  const params = new URLSearchParams();
+  if (state.category !== "all") params.set("cat", state.category);
+  if (state.search)             params.set("q", state.search);
+  if (state.days !== 30)        params.set("days", state.days);
+  if (state.sort !== "date")    params.set("sort", state.sort);
+  if (state.sources.size !== allSources.length) {
+    params.set("src", [...state.sources].join(","));
+  }
+  const qs = params.toString();
+  const newUrl = window.location.pathname + (qs ? "?" + qs : "");
+  history.replaceState(null, "", newUrl);
+}
+
+function readURL() {
+  const params = new URLSearchParams(window.location.search);
+  const cat = params.get("cat");
+  if (cat && (cat === "all" || CATEGORY_LABELS[cat])) state.category = cat;
+  const q = params.get("q");
+  if (q) {
+    state.search = q;
+    searchInput.value = q;
+  }
+  const days = parseInt(params.get("days"));
+  if (days === 7 || days === 30) {
+    state.days = days;
+    document.querySelectorAll(".period-tab").forEach(b => {
+      b.classList.toggle("active", parseInt(b.dataset.days) === days);
+    });
+  }
+  const sort = params.get("sort");
+  if (sort === "title" || sort === "date") {
+    state.sort = sort;
+    sortSelect.value = sort;
+  }
+  const src = params.get("src");
+  if (src) {
+    const parts = src.split(",").filter(s => allSources.includes(s));
+    if (parts.length) {
+      state.sources = new Set(parts);
+    }
+  }
+  // Update dropdown label for preselected category
+  if (state.category !== "all") {
+    catDropdownLabel.textContent = CATEGORY_LABELS[state.category] || state.category;
+  }
+}
+
+// ── Dynamic SEO — update title + meta based on active category ──────────────
+function updateSEO() {
+  const baseTitle = "WorkInPάτρα — Θέσεις Εργασίας στην Πάτρα";
+  const baseDesc  = "Βρες τις πιο πρόσφατες θέσεις εργασίας στην Πάτρα. Συγκεντρώνουμε αγγελίες από JobFind, Kariera, XE και Indeed σε ένα μέρος, ενημερωμένες καθημερινά.";
+
+  let title = baseTitle;
+  let desc  = baseDesc;
+
+  if (state.category !== "all" && CATEGORY_SEO[state.category]) {
+    const catName = CATEGORY_SEO[state.category];
+    title = `Θέσεις Εργασίας ${catName} στην Πάτρα — WorkInPάτρα`;
+    desc  = `Αγγελίες εργασίας για ${catName} στην Πάτρα. Συγκεντρωμένες από JobFind, Kariera, XE και Indeed — ενημερωμένες καθημερινά.`;
+  }
+
+  document.title = title;
+  const descEl = document.querySelector('meta[name="description"]');
+  if (descEl) descEl.setAttribute("content", desc);
+  const ogTitle = document.querySelector('meta[property="og:title"]');
+  if (ogTitle) ogTitle.setAttribute("content", title);
+  const ogDesc = document.querySelector('meta[property="og:description"]');
+  if (ogDesc) ogDesc.setAttribute("content", desc);
+  const twTitle = document.querySelector('meta[name="twitter:title"]');
+  if (twTitle) twTitle.setAttribute("content", title);
+  const twDesc = document.querySelector('meta[name="twitter:description"]');
+  if (twDesc) twDesc.setAttribute("content", desc);
 }
 
 function closeDropdown() {
@@ -150,9 +242,19 @@ function render() {
 
   grid.innerHTML = "";
   const count = filtered.length;
+
+  // Trust stat — count jobs from the last 7 days within the filtered set
+  const weekStart = new Date();
+  weekStart.setDate(weekStart.getDate() - 7);
+  weekStart.setHours(0, 0, 0, 0);
+  const newCount = filtered.filter(j => j.date && new Date(j.date) >= weekStart).length;
+
   countLabel.innerHTML = state.loading
     ? "Φόρτωση…"
-    : `<strong>${count}</strong> θέσ${count === 1 ? "η" : "εις"} εργασίας`;
+    : `<strong>${count}</strong> θέσ${count === 1 ? "η" : "εις"} εργασίας` +
+      (newCount > 0 && count !== newCount
+        ? ` <span class="new-count">· ${newCount} νέες αυτή την εβδομάδα</span>`
+        : "");
 
   if (count === 0 && !state.loading) {
     emptyState.classList.remove("hidden");
@@ -244,14 +346,14 @@ function syncChipUI() {
 document.getElementById("src-all").addEventListener("change", e => {
   if (e.target.checked) allSources.forEach(s => state.sources.add(s));
   else allSources.forEach(s => state.sources.delete(s));
-  syncChipUI(); buildCategoryBar(); render();
+  syncChipUI(); buildCategoryBar(); updateURL(); render();
 });
 
 allSources.forEach(src => {
   document.getElementById(`src-${src}`).addEventListener("change", e => {
     if (e.target.checked) state.sources.add(src);
     else state.sources.delete(src);
-    syncChipUI(); buildCategoryBar(); render();
+    syncChipUI(); buildCategoryBar(); updateURL(); render();
   });
 });
 
@@ -261,7 +363,20 @@ document.querySelectorAll(".period-tab").forEach(btn => {
     document.querySelectorAll(".period-tab").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
     state.days = parseInt(btn.dataset.days);
-    buildCategoryBar(); render();
+    buildCategoryBar(); updateURL(); render();
+  });
+});
+
+// ── Popular search chips ──────────────────────────────────────────────────────
+document.querySelectorAll(".popular-chip").forEach(chip => {
+  chip.addEventListener("click", () => {
+    const q = chip.dataset.q || "";
+    state.search = q;
+    searchInput.value = q;
+    updateURL();
+    render();
+    // Nice UX: scroll results into view
+    document.getElementById("job-grid").scrollIntoView({ behavior: "smooth", block: "start" });
   });
 });
 
@@ -279,12 +394,14 @@ catDropdownBtn.addEventListener("click", e => {
 document.addEventListener("click", () => closeDropdown());
 
 // ── Search & Sort ─────────────────────────────────────────────────────────────
-searchInput.addEventListener("input", e => { state.search = e.target.value.trim(); render(); });
-sortSelect.addEventListener("change",  e => { state.sort  = e.target.value;        render(); });
+searchInput.addEventListener("input", e => { state.search = e.target.value.trim(); updateURL(); render(); });
+sortSelect.addEventListener("change",  e => { state.sort  = e.target.value;        updateURL(); render(); });
 
 // ── Refresh button ────────────────────────────────────────────────────────────
 btnRefresh.addEventListener("click", () => loadJobs(true));
 
 // ── Init ──────────────────────────────────────────────────────────────────────
+readURL();
 syncChipUI();
+updateSEO();
 loadJobs();

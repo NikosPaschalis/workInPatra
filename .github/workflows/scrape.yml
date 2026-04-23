@@ -42,4 +42,4 @@ jobs:
           git add data/jobs.json
           git diff --staged --quiet \
             && echo "⏭  No changes — skipping commit" \
-            || (git commit -m "chore: update jobs.json [skip ci]" && git push)
+            || (git commit -m "chore: update jobs.json" && git push)

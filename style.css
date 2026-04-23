@@ -701,3 +701,67 @@ body {
   font-size: 13px;
 }
 .footer-links a:hover { color: var(--accent); text-decoration: underline; }
+
+/* ── Popular searches ── */
+.popular-searches {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0 0 18px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.popular-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  margin-right: 4px;
+}
+
+.popular-chip {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.popular-chip:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-1px);
+}
+
+/* ── "X νέες αυτή την εβδομάδα" trust stat ── */
+.new-count {
+  color: #15803d;
+  font-weight: 600;
+  font-size: 13px;
+  margin-left: 2px;
+}
+
+@media (max-width: 640px) {
+  .popular-searches {
+    padding: 8px 10px;
+  }
+  .popular-label {
+    width: 100%;
+    margin-bottom: 2px;
+  }
+  .popular-chip {
+    font-size: 12px;
+    padding: 4px 10px;
+  }
+}
