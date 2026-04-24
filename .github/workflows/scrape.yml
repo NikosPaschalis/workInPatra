@@ -32,8 +32,25 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install chromium --with-deps
 
+      - name: Snapshot previous jobs.json (for diff)
+        run: |
+          mkdir -p /tmp/prev
+          if [ -f data/jobs.json ]; then
+            cp data/jobs.json /tmp/prev/jobs.json
+            echo "Saved previous snapshot ($(wc -c < /tmp/prev/jobs.json) bytes)"
+          else
+            echo "No previous data/jobs.json — treating all scraped jobs as new"
+            echo '{"jobs":[]}' > /tmp/prev/jobs.json
+          fi
+
       - name: Run scrapers
         run: node scripts/scrape.js
+
+      - name: Notify Telegram about new jobs
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: node scripts/notify-telegram.js diff /tmp/prev/jobs.json
 
       - name: Commit & push data/jobs.json
         run: |

@@ -1,0 +1,27 @@
+name: Preview Telegram Notification
+
+# Manual-only — run from GitHub UI to see how a real job-update message looks
+# in the channel, using the 5 most recent jobs from the current data/jobs.json.
+# Does NOT run the scraper and does NOT require new jobs.
+on:
+  workflow_dispatch:
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Send preview notification to Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: node scripts/notify-telegram.js preview
