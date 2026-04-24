@@ -50,7 +50,7 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: node scripts/notify-telegram.js diff /tmp/prev/jobs.json
+        run: node scripts/notify-telegram.js /tmp/prev/jobs.json
 
       - name: Commit & push data/jobs.json
         run: |

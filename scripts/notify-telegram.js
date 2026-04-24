@@ -1,13 +1,13 @@
-// Send a Telegram notification about new jobs.
+// Send a Telegram notification about newly-added jobs.
 //
-// Modes:
-//   node scripts/notify-telegram.js preview        → format + send using N latest jobs
-//                                                     from data/jobs.json (for visual testing)
-//   node scripts/notify-telegram.js diff <oldPath> → compare oldPath vs data/jobs.json,
-//                                                     send only if new jobs exist
+// Usage (called from .github/workflows/scrape.yml after the scraper runs):
+//   node scripts/notify-telegram.js <previousJobsJsonPath>
+//
+// Diffs the previous snapshot against the fresh data/jobs.json by URL and
+// posts a short message to the channel if any jobs were added.
 //
 // Requires env vars: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
-// Silently exits 0 if either is missing (so workflow doesn't fail on forks).
+// Silently exits 0 if either is missing (so the workflow doesn't fail on forks).
 
 import { readFileSync, existsSync } from "fs";
 import path from "path";
@@ -39,14 +39,12 @@ function esc(s) {
     .replace(/>/g, "&gt;");
 }
 
-function formatMessage(jobs, isPreview) {
+function formatMessage(jobs) {
   const count = jobs.length;
 
-  const header = isPreview
-    ? `🧪 <b>PREVIEW — έτσι θα φαίνονται οι ΝΕΕΣ αγγελίες</b>`
-    : (count === 1
-        ? `🆕 <b>Μόλις μπήκε 1 ΝΕΑ θέση εργασίας στην Πάτρα</b>`
-        : `🆕 <b>Μόλις μπήκαν ${count} ΝΕΕΣ θέσεις εργασίας στην Πάτρα</b>`);
+  const header = count === 1
+    ? `🆕 <b>Μόλις μπήκε 1 ΝΕΑ θέση εργασίας στην Πάτρα</b>`
+    : `🆕 <b>Μόλις μπήκαν ${count} ΝΕΕΣ θέσεις εργασίας στην Πάτρα</b>`;
 
   const shown = jobs.slice(0, MAX_JOBS_IN_MESSAGE);
   const lines = shown.map(j => {
@@ -66,9 +64,8 @@ function formatMessage(jobs, isPreview) {
   const footer = `📍 <a href="${SITE_URL}">Δες όλες τις αγγελίες →</a>`;
 
   return [header, "", ...lines.map(l => l + "\n"), moreLine, "", footer]
-    .filter(x => x !== null && x !== undefined)
     .join("\n")
-    .slice(0, 4000); // Telegram hard limit 4096 — stay safe
+    .slice(0, 4000); // Telegram hard limit is 4096 — stay safe
 }
 
 async function send(text) {
@@ -77,7 +74,7 @@ async function send(text) {
 
   if (!token || !chatId) {
     console.log("⏭  Telegram secrets not set — skipping notification");
-    return { skipped: true };
+    return;
   }
 
   const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
@@ -97,7 +94,6 @@ async function send(text) {
     process.exit(1);
   }
   console.log(`✅ Sent message ${body.result?.message_id} to ${chatId}`);
-  return { ok: true };
 }
 
 function loadJobs(p) {
@@ -111,51 +107,28 @@ function loadJobs(p) {
 }
 
 async function main() {
-  const mode = process.argv[2];
+  const oldPath = process.argv[2];
+  if (!oldPath) {
+    console.error("Usage: notify-telegram.js <previousJobsJsonPath>");
+    process.exit(1);
+  }
 
-  if (mode === "preview") {
-    const all = loadJobs(JOBS_PATH);
-    if (all.length === 0) {
-      console.log("No jobs in data/jobs.json — nothing to preview");
-      return;
-    }
-    // Pick up to 5 most recent jobs for the preview
-    const sorted = [...all].sort((a, b) => new Date(b.date) - new Date(a.date));
-    const sample = sorted.slice(0, 5);
-    const text = formatMessage(sample, true);
-    console.log("Preview message:\n", text);
-    await send(text);
+  const oldJobs = loadJobs(oldPath);
+  const newJobs = loadJobs(JOBS_PATH);
+
+  const oldUrls = new Set(oldJobs.map(j => j.url).filter(Boolean));
+  const added   = newJobs.filter(j => j.url && !oldUrls.has(j.url));
+
+  console.log(`Old: ${oldJobs.length} · New: ${newJobs.length} · Added: ${added.length}`);
+
+  if (added.length === 0) {
+    console.log("⏭  No new jobs — skipping notification");
     return;
   }
 
-  if (mode === "diff") {
-    const oldPath = process.argv[3];
-    if (!oldPath) {
-      console.error("Usage: notify-telegram.js diff <oldJobsPath>");
-      process.exit(1);
-    }
-    const oldJobs = loadJobs(oldPath);
-    const newJobs = loadJobs(JOBS_PATH);
-
-    const oldUrls = new Set(oldJobs.map(j => j.url).filter(Boolean));
-    const added = newJobs.filter(j => j.url && !oldUrls.has(j.url));
-
-    console.log(`Old: ${oldJobs.length} jobs · New: ${newJobs.length} jobs · Added: ${added.length}`);
-
-    if (added.length === 0) {
-      console.log("⏭  No new jobs — skipping notification");
-      return;
-    }
-
-    // Sort by date (newest first) for the message
-    added.sort((a, b) => new Date(b.date) - new Date(a.date));
-    const text = formatMessage(added, false);
-    await send(text);
-    return;
-  }
-
-  console.error("Unknown mode. Use: preview | diff <oldPath>");
-  process.exit(1);
+  // Newest first in the message
+  added.sort((a, b) => new Date(b.date) - new Date(a.date));
+  await send(formatMessage(added));
 }
 
 main().catch(err => {
