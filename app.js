@@ -1,12 +1,12 @@
 // ── State ─────────────────────────────────────────────────────────────────────
 const state = {
-  sources:  new Set(["jobfind", "kariera", "xe", "indeed"]),
-  days:     30,
-  search:   "",
-  sort:     "date",
-  category: "all",
-  jobs:     [],
-  loading:  false,
+  sources:    new Set(["jobfind", "kariera", "xe", "indeed"]),
+  days:       30,
+  search:     "",
+  sort:       "date",
+  categories: new Set(), // empty = all categories
+  jobs:       [],
+  loading:    false,
 };
 
 // ── DOM refs ──────────────────────────────────────────────────────────────────
@@ -23,6 +23,7 @@ const categoryBar       = document.getElementById("category-bar");
 const catDropdownBtn    = document.getElementById("cat-dropdown-btn");
 const catDropdownPanel  = document.getElementById("cat-dropdown-panel");
 const catDropdownLabel  = document.getElementById("cat-dropdown-label");
+const searchClearBtn    = document.getElementById("search-clear");
 
 const SOURCE_LABELS = { jobfind: "JobFind", kariera: "Kariera", xe: "XE", indeed: "Indeed" };
 
@@ -71,6 +72,11 @@ function formatDate(isoStr) {
 }
 
 // ── Category bar — built dynamically from actual data ─────────────────────────
+function isCatActive(cat) {
+  if (cat === "all") return state.categories.size === 0;
+  return state.categories.has(cat);
+}
+
 function buildCategoryBar() {
   const counts = {};
   // Count only jobs that pass the current date + source filters
@@ -94,55 +100,104 @@ function buildCategoryBar() {
   categoryBar.querySelectorAll(".cat-btn[data-cat]").forEach(b => {
     if (b.dataset.cat !== "all") b.remove();
   });
+  // Update "all" button state
+  const allBtnDesktop = categoryBar.querySelector("[data-cat='all']");
+  if (allBtnDesktop) allBtnDesktop.classList.toggle("active", isCatActive("all"));
+
   sorted.forEach(([cat, count]) => {
     const btn = document.createElement("button");
-    btn.className = "cat-btn" + (state.category === cat ? " active" : "");
+    btn.className = "cat-btn" + (isCatActive(cat) ? " active" : "");
     btn.dataset.cat = cat;
     btn.textContent = `${CATEGORY_LABELS[cat] || cat} (${count})`;
-    btn.addEventListener("click", () => setCat(cat));
+    btn.addEventListener("click", () => toggleCat(cat));
     categoryBar.appendChild(btn);
   });
 
   // ── Mobile dropdown panel ──
   catDropdownPanel.innerHTML = "";
   const allBtn = document.createElement("button");
-  allBtn.className = "cat-btn" + (state.category === "all" ? " active" : "");
+  allBtn.className = "cat-btn" + (isCatActive("all") ? " active" : "");
+  allBtn.dataset.cat = "all";
   allBtn.textContent = "Όλες";
-  allBtn.addEventListener("click", () => { setCat("all"); closeDropdown(); });
+  allBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    toggleCat("all");
+  });
   catDropdownPanel.appendChild(allBtn);
 
   sorted.forEach(([cat, count]) => {
     const btn = document.createElement("button");
-    btn.className = "cat-btn" + (state.category === cat ? " active" : "");
+    btn.className = "cat-btn" + (isCatActive(cat) ? " active" : "");
+    btn.dataset.cat = cat;
     btn.textContent = `${CATEGORY_LABELS[cat] || cat} (${count})`;
-    btn.addEventListener("click", () => { setCat(cat); closeDropdown(); });
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      toggleCat(cat);
+      // Keep dropdown open for multi-select — user explicitly closes with "Όλες" or outside click
+    });
     catDropdownPanel.appendChild(btn);
   });
 }
 
-function setCat(cat) {
-  state.category = cat;
-  // update desktop pills
-  categoryBar.querySelectorAll(".cat-btn").forEach(b =>
-    b.classList.toggle("active", b.dataset.cat === cat)
-  );
-  // update mobile dropdown label
-  const label = cat === "all"
-    ? "Όλες οι κατηγορίες"
-    : CATEGORY_LABELS[cat] || cat;
-  catDropdownLabel.textContent = label;
+function toggleCat(cat) {
+  if (cat === "all") {
+    // Clear all — show everything
+    state.categories.clear();
+  } else {
+    if (state.categories.has(cat)) state.categories.delete(cat);
+    else                           state.categories.add(cat);
+  }
+  syncCategoryUI();
   updateURL();
   updateSEO();
   render();
 }
 
+function syncCategoryUI() {
+  // desktop + mobile pills
+  document.querySelectorAll(".cat-btn").forEach(b => {
+    const cat = b.dataset.cat;
+    if (cat === "all") {
+      b.classList.toggle("active", isCatActive("all"));
+    } else if (cat) {
+      b.classList.toggle("active", isCatActive(cat));
+    } else {
+      // mobile panel buttons built without data-cat use textContent match
+      const txt = b.textContent.replace(/\s*\(\d+\)$/, "");
+      const match = Object.entries(CATEGORY_LABELS).find(([, label]) => label === txt);
+      if (match) b.classList.toggle("active", isCatActive(match[0]));
+    }
+  });
+  // mobile dropdown label
+  const cats = [...state.categories];
+  let label;
+  if (cats.length === 0)      label = "Όλες οι κατηγορίες";
+  else if (cats.length === 1) label = CATEGORY_LABELS[cats[0]] || cats[0];
+  else                        label = `${cats.length} κατηγορίες`;
+  catDropdownLabel.textContent = label;
+}
+
+// ── Popular chips sync ───────────────────────────────────────────────────────
+function syncPopularChips() {
+  document.querySelectorAll(".popular-chip").forEach(chip => {
+    const q = chip.dataset.q || "";
+    chip.classList.toggle("active", state.search === q && q !== "");
+  });
+}
+
+// ── Search clear (X) button ──────────────────────────────────────────────────
+function syncSearchClear() {
+  if (!searchClearBtn) return;
+  searchClearBtn.classList.toggle("hidden", !state.search);
+}
+
 // ── URL state (sharable + bookmarkable) ──────────────────────────────────────
 function updateURL() {
   const params = new URLSearchParams();
-  if (state.category !== "all") params.set("cat", state.category);
-  if (state.search)             params.set("q", state.search);
-  if (state.days !== 30)        params.set("days", state.days);
-  if (state.sort !== "date")    params.set("sort", state.sort);
+  if (state.categories.size > 0) params.set("cat", [...state.categories].join(","));
+  if (state.search)              params.set("q", state.search);
+  if (state.days !== 30)         params.set("days", state.days);
+  if (state.sort !== "date")     params.set("sort", state.sort);
   if (state.sources.size !== allSources.length) {
     params.set("src", [...state.sources].join(","));
   }
@@ -154,7 +209,10 @@ function updateURL() {
 function readURL() {
   const params = new URLSearchParams(window.location.search);
   const cat = params.get("cat");
-  if (cat && (cat === "all" || CATEGORY_LABELS[cat])) state.category = cat;
+  if (cat) {
+    const parts = cat.split(",").filter(c => CATEGORY_LABELS[c]);
+    if (parts.length) state.categories = new Set(parts);
+  }
   const q = params.get("q");
   if (q) {
     state.search = q;
@@ -179,10 +237,7 @@ function readURL() {
       state.sources = new Set(parts);
     }
   }
-  // Update dropdown label for preselected category
-  if (state.category !== "all") {
-    catDropdownLabel.textContent = CATEGORY_LABELS[state.category] || state.category;
-  }
+  syncCategoryUI();
 }
 
 // ── Dynamic SEO — update title + meta based on active category ──────────────
@@ -193,10 +248,14 @@ function updateSEO() {
   let title = baseTitle;
   let desc  = baseDesc;
 
-  if (state.category !== "all" && CATEGORY_SEO[state.category]) {
-    const catName = CATEGORY_SEO[state.category];
-    title = `Θέσεις Εργασίας ${catName} στην Πάτρα — WorkInPάτρα`;
-    desc  = `Αγγελίες εργασίας για ${catName} στην Πάτρα. Συγκεντρωμένες από JobFind, Kariera, XE και Indeed — ενημερωμένες καθημερινά.`;
+  // Use specialized SEO copy only when exactly one category is selected
+  if (state.categories.size === 1) {
+    const onlyCat = [...state.categories][0];
+    if (CATEGORY_SEO[onlyCat]) {
+      const catName = CATEGORY_SEO[onlyCat];
+      title = `Θέσεις Εργασίας ${catName} στην Πάτρα — WorkInPάτρα`;
+      desc  = `Αγγελίες εργασίας για ${catName} στην Πάτρα. Συγκεντρωμένες από JobFind, Kariera, XE και Indeed — ενημερωμένες καθημερινά.`;
+    }
   }
 
   document.title = title;
@@ -226,7 +285,7 @@ function render() {
   let filtered = state.jobs.filter(j => {
     if (!state.sources.has(j.source)) return false;
     if (j.date && new Date(j.date) < cutoff) return false;
-    if (state.category !== "all" && j.category !== state.category) return false;
+    if (state.categories.size > 0 && !state.categories.has(j.category || "other")) return false;
     if (state.search) {
       const q = state.search.toLowerCase();
       if (!j.title?.toLowerCase().includes(q) && !j.company?.toLowerCase().includes(q)) return false;
@@ -371,17 +430,37 @@ document.querySelectorAll(".period-tab").forEach(btn => {
 document.querySelectorAll(".popular-chip").forEach(chip => {
   chip.addEventListener("click", () => {
     const q = chip.dataset.q || "";
-    state.search = q;
-    searchInput.value = q;
+    // Toggle: clicking an already-active chip clears the search
+    if (state.search === q) {
+      state.search = "";
+      searchInput.value = "";
+    } else {
+      state.search = q;
+      searchInput.value = q;
+    }
+    syncPopularChips();
+    syncSearchClear();
     updateURL();
     render();
-    // Nice UX: scroll results into view
     document.getElementById("job-grid").scrollIntoView({ behavior: "smooth", block: "start" });
   });
 });
 
+// ── Search clear (X) button ──────────────────────────────────────────────────
+if (searchClearBtn) {
+  searchClearBtn.addEventListener("click", () => {
+    state.search = "";
+    searchInput.value = "";
+    syncPopularChips();
+    syncSearchClear();
+    updateURL();
+    render();
+    searchInput.focus();
+  });
+}
+
 // ── Category "all" button (desktop) ──────────────────────────────────────────
-categoryBar.querySelector("[data-cat='all']").addEventListener("click", () => setCat("all"));
+categoryBar.querySelector("[data-cat='all']").addEventListener("click", () => toggleCat("all"));
 
 // ── Mobile dropdown toggle ────────────────────────────────────────────────────
 catDropdownBtn.addEventListener("click", e => {
@@ -394,7 +473,13 @@ catDropdownBtn.addEventListener("click", e => {
 document.addEventListener("click", () => closeDropdown());
 
 // ── Search & Sort ─────────────────────────────────────────────────────────────
-searchInput.addEventListener("input", e => { state.search = e.target.value.trim(); updateURL(); render(); });
+searchInput.addEventListener("input", e => {
+  state.search = e.target.value.trim();
+  syncPopularChips();
+  syncSearchClear();
+  updateURL();
+  render();
+});
 sortSelect.addEventListener("change",  e => { state.sort  = e.target.value;        updateURL(); render(); });
 
 // ── Refresh button ────────────────────────────────────────────────────────────
@@ -403,5 +488,7 @@ btnRefresh.addEventListener("click", () => loadJobs(true));
 // ── Init ──────────────────────────────────────────────────────────────────────
 readURL();
 syncChipUI();
+syncPopularChips();
+syncSearchClear();
 updateSEO();
 loadJobs();

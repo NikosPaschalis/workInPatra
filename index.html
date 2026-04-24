@@ -173,13 +173,22 @@
         </div>
 
         <div class="filter-group filter-search">
-          <input
-            type="text"
-            id="search-input"
-            class="search-input"
-            placeholder="Αναζήτηση τίτλου ή εταιρείας…"
-            aria-label="Αναζήτηση"
-          />
+          <div class="search-input-wrap">
+            <input
+              type="text"
+              id="search-input"
+              class="search-input"
+              placeholder="Αναζήτηση τίτλου ή εταιρείας…"
+              aria-label="Αναζήτηση"
+            />
+            <button
+              type="button"
+              id="search-clear"
+              class="search-clear hidden"
+              aria-label="Καθαρισμός αναζήτησης"
+              title="Καθαρισμός"
+            >×</button>
+          </div>
         </div>
       </section>
 
@@ -198,6 +207,7 @@
       <div class="category-bar-wrap">
         <div class="category-bar-label">
           Κατηγορίες
+          <span class="cat-hint">— επίλεξε μία ή περισσότερες</span>
           <span class="beta-badge">Δοκιμαστική Λειτουργία Beta</span>
         </div>
 
