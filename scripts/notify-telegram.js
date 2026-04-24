@@ -16,7 +16,7 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const JOBS_PATH = path.join(__dirname, "..", "data", "jobs.json");
 const SITE_URL  = "https://workinpatras.netlify.app";
-const MAX_JOBS_IN_MESSAGE = 10;
+const MAX_JOBS_IN_MESSAGE = 3;
 
 const CATEGORY_EMOJI = {
   tech: "💻", sales: "🛒", hospitality: "🍽", health: "🏥",
@@ -41,9 +41,12 @@ function esc(s) {
 
 function formatMessage(jobs, isPreview) {
   const count = jobs.length;
+
   const header = isPreview
-    ? `🧪 <b>PREVIEW — έτσι θα φαίνονται ${count} νέες αγγελίες</b>`
-    : `🆕 <b>${count} ${count === 1 ? "νέα αγγελία" : "νέες αγγελίες"} εργασίας στην Πάτρα</b>`;
+    ? `🧪 <b>PREVIEW — έτσι θα φαίνονται οι ΝΕΕΣ αγγελίες</b>`
+    : (count === 1
+        ? `🆕 <b>Μόλις μπήκε 1 ΝΕΑ θέση εργασίας στην Πάτρα</b>`
+        : `🆕 <b>Μόλις μπήκαν ${count} ΝΕΕΣ θέσεις εργασίας στην Πάτρα</b>`);
 
   const shown = jobs.slice(0, MAX_JOBS_IN_MESSAGE);
   const lines = shown.map(j => {
@@ -56,12 +59,14 @@ function formatMessage(jobs, isPreview) {
   });
 
   const remaining = count - shown.length;
-  const moreLine = remaining > 0 ? `\n<i>…και ${remaining} ακόμα</i>` : "";
+  const moreLine = remaining > 0
+    ? `➕ <b>${remaining}</b> ${remaining === 1 ? "νέα ακόμη" : "νέες ακόμη"} στο site`
+    : "";
 
-  const footer = `\n📍 <a href="${SITE_URL}">Δες όλες τις αγγελίες →</a>`;
+  const footer = `📍 <a href="${SITE_URL}">Δες όλες τις αγγελίες →</a>`;
 
-  return [header, "", ...lines.map(l => l + "\n"), moreLine, footer]
-    .filter(Boolean)
+  return [header, "", ...lines.map(l => l + "\n"), moreLine, "", footer]
+    .filter(x => x !== null && x !== undefined)
     .join("\n")
     .slice(0, 4000); // Telegram hard limit 4096 — stay safe
 }
