@@ -1,6 +1,6 @@
 // ── State ─────────────────────────────────────────────────────────────────────
 const state = {
-  sources:    new Set(["jobfind", "kariera", "xe", "indeed"]),
+  sources:    new Set(["jobfind", "kariera", "xe"]),
   days:       30,
   search:     "",
   sort:       "date",
@@ -25,7 +25,7 @@ const catDropdownPanel  = document.getElementById("cat-dropdown-panel");
 const catDropdownLabel  = document.getElementById("cat-dropdown-label");
 const searchClearBtn    = document.getElementById("search-clear");
 
-const SOURCE_LABELS = { jobfind: "JobFind", kariera: "Kariera", xe: "XE", indeed: "Indeed" };
+const SOURCE_LABELS = { jobfind: "JobFind", kariera: "Kariera", xe: "XE" };
 
 const CATEGORY_LABELS = {
   tech:         "💻 Πληροφορική",
@@ -243,7 +243,7 @@ function readURL() {
 // ── Dynamic SEO — update title + meta based on active category ──────────────
 function updateSEO() {
   const baseTitle = "WorkInPάτρα — Θέσεις Εργασίας στην Πάτρα";
-  const baseDesc  = "Βρες τις πιο πρόσφατες θέσεις εργασίας στην Πάτρα. Συγκεντρώνουμε αγγελίες από JobFind, Kariera, XE και Indeed σε ένα μέρος, ενημερωμένες καθημερινά.";
+  const baseDesc  = "Βρες τις πιο πρόσφατες θέσεις εργασίας στην Πάτρα. Συγκεντρώνουμε αγγελίες από JobFind, Kariera και XE σε ένα μέρος, ενημερωμένες καθημερινά.";
 
   let title = baseTitle;
   let desc  = baseDesc;
@@ -254,7 +254,7 @@ function updateSEO() {
     if (CATEGORY_SEO[onlyCat]) {
       const catName = CATEGORY_SEO[onlyCat];
       title = `Θέσεις Εργασίας ${catName} στην Πάτρα — WorkInPάτρα`;
-      desc  = `Αγγελίες εργασίας για ${catName} στην Πάτρα. Συγκεντρωμένες από JobFind, Kariera, XE και Indeed — ενημερωμένες καθημερινά.`;
+      desc  = `Αγγελίες εργασίας για ${catName} στην Πάτρα. Συγκεντρωμένες από JobFind, Kariera και XE — ενημερωμένες καθημερινά.`;
     }
   }
 
@@ -391,7 +391,7 @@ async function loadJobs(forceRefresh = false) {
 }
 
 // ── Source chips ──────────────────────────────────────────────────────────────
-const allSources = ["jobfind", "kariera", "xe", "indeed"];
+const allSources = ["jobfind", "kariera", "xe"];
 
 function syncChipUI() {
   const allChecked = allSources.every(s => state.sources.has(s));
@@ -399,7 +399,6 @@ function syncChipUI() {
   document.getElementById("src-jobfind").checked = state.sources.has("jobfind");
   document.getElementById("src-kariera").checked = state.sources.has("kariera");
   document.getElementById("src-xe").checked      = state.sources.has("xe");
-  document.getElementById("src-indeed").checked  = state.sources.has("indeed");
 }
 
 document.getElementById("src-all").addEventListener("change", e => {

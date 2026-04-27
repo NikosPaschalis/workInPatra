@@ -5,7 +5,6 @@ import { isFresh, getCache, setCache, lastFetchedAt } from "./cache.js";
 import { scrape as scrapeJobfind } from "./scrapers/jobfind.js";
 import { scrape as scrapeKariera } from "./scrapers/kariera.js";
 import { scrape as scrapeXe } from "./scrapers/xe.js";
-import { scrape as scrapeIndeed } from "./scrapers/indeed.js";
 import { categorize } from "./categorize.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -21,11 +20,10 @@ async function fetchAll() {
     scrapeJobfind(),
     scrapeKariera(),
     scrapeXe(),
-    scrapeIndeed(),
   ]);
 
   const jobs = results.flatMap((r, i) => {
-    const name = ["jobfind", "kariera", "xe", "indeed"][i];
+    const name = ["jobfind", "kariera", "xe"][i];
     if (r.status === "fulfilled") {
       console.log(`✅ ${name}: ${r.value.length} jobs`);
       return r.value;
