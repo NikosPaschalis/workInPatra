@@ -4,8 +4,15 @@ const URL = "https://www.kariera.gr/jobs/jobs-in-achaia--patra";
 
 export async function scrape() {
   return withBrowser(async (page) => {
-    await page.goto(URL, { waitUntil: "networkidle", timeout: 30000 });
-    await page.waitForSelector("[class*='BaseJobCard_root']", { timeout: 15000 });
+    await page.goto(URL, { waitUntil: "domcontentloaded", timeout: 30000 });
+
+    // Detect Cloudflare JS challenge / IP block before waiting for job cards
+    const title = await page.title();
+    if (/just a moment|attention required|access denied|cloudflare/i.test(title)) {
+      throw new Error(`kariera.gr blocked by Cloudflare (page title: "${title}") — datacenter IP likely flagged`);
+    }
+
+    await page.waitForSelector("[class*='BaseJobCard_root']", { timeout: 20000 });
 
     return page.evaluate(() => {
       return Array.from(document.querySelectorAll("[class*='BaseJobCard_root']")).map(card => {
