@@ -43,6 +43,13 @@ jobs:
             echo '{"jobs":[]}' > /tmp/prev/jobs.json
           fi
 
+      - name: Random delay (only on scheduled runs)
+        if: github.event_name == 'schedule'
+        run: |
+          DELAY=$((RANDOM % 90))
+          echo "Sleeping ${DELAY}s to break the cron pattern"
+          sleep $DELAY
+
       - name: Run scrapers
         run: node scripts/scrape.js
 
