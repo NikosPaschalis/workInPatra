@@ -1,10 +1,21 @@
 import { chromium } from "playwright";
 
 export async function withBrowser(fn) {
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({
+    headless: true,
+    args: ["--disable-blink-features=AutomationControlled"],
+  });
   const context = await browser.newContext({
-    userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
     locale: "el-GR",
+    viewport: { width: 1920, height: 1080 },
+    extraHTTPHeaders: { "Accept-Language": "el-GR,el;q=0.9,en-US;q=0.8,en;q=0.7" },
+  });
+  await context.addInitScript(() => {
+    Object.defineProperty(navigator, "webdriver", { get: () => undefined });
+    Object.defineProperty(navigator, "languages", { get: () => ["el-GR", "el", "en-US", "en"] });
+    Object.defineProperty(navigator, "plugins", { get: () => [{ name: "PDF Viewer" }, { name: "Chrome PDF Viewer" }] });
+    window.chrome = { runtime: {} };
   });
   const page = await context.newPage();
   try {
