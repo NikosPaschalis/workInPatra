@@ -14,7 +14,7 @@ env:
 jobs:
   scrape:
     runs-on: ubuntu-latest
-    timeout-minutes: 15 # ← NEW: kills job if scrapers hang (was: no limit = 6h death)
+    timeout-minutes: 30 # ← NEW: kills job if scrapers hang (was: no limit = 6h death)
 
     steps:
       - name: Checkout repository
