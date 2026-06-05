@@ -42,7 +42,15 @@ jobs:
       # Still needed for system libs (fonts, libgbm, etc.) — fast, no download
       - name: Install Playwright system dependencies
         run: npx playwright install-deps chromium
+        # might need remove
+      - name: Link system Chrome as Playwright headless shell
+        run: |
+          DIR="$HOME/.cache/ms-playwright/chromium_headless_shell-1217/chrome-headless-shell-linux64"
+          mkdir -p "$DIR"
+          ln -sf /usr/bin/google-chrome-stable "$DIR/chrome-headless-shell"
+          echo "✅ Linked: $DIR/chrome-headless-shell"
 
+      
       - name: Snapshot previous jobs.json (for diff)
         run: |
           mkdir -p /tmp/prev
