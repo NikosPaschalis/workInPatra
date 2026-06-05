@@ -1,5 +1,4 @@
 name: Scrape Jobs
-
 on:
   schedule:
     # Runs at 06:00 and 18:00 UTC every day (every 12 hours)
@@ -15,6 +14,7 @@ env:
 jobs:
   scrape:
     runs-on: ubuntu-latest
+    timeout-minutes: 15 # ← NEW: kills job if scrapers hang (was: no limit = 6h death)
 
     steps:
       - name: Checkout repository
@@ -29,8 +29,22 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Install Playwright browsers
-        run: npx playwright install chromium --with-deps
+      # ← NEW: cache the 170MB browser — only re-downloads when package-lock.json changes
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ hashFiles('package-lock.json') }}
+
+      # ← SPLIT from --with-deps: system apt packages (fast, can't cache, always run)
+      - name: Install Playwright system dependencies
+        run: npx playwright install-deps chromium
+
+      # ← SPLIT: 170MB browser binary — skipped if cache hit
+      - name: Install Playwright browser
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install chromium
 
       - name: Snapshot previous jobs.json (for diff)
         run: |
