@@ -1,10 +1,8 @@
 name: Scrape Jobs
-
 on:
   schedule:
-    # Runs at 06:00 and 18:00 UTC every day (every 12 hours)
     - cron: '0 6,18 * * *'
-  workflow_dispatch: # allows manual trigger from GitHub UI
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -15,6 +13,7 @@ env:
 jobs:
   scrape:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - name: Checkout repository
@@ -29,9 +28,35 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Install Playwright browsers
-        run: npx playwright install chromium --with-deps
+      # Use pre-installed Chrome on the runner — skips the 170MB CDN download entirely
+      # ubuntu-latest always has google-chrome-stable pre-installed
+      - name: Set Chrome executable path
+        run: |
+          CHROME=$(which google-chrome-stable 2>/dev/null \
+                || which google-chrome       2>/dev/null \
+                || which chromium-browser    2>/dev/null)
+          echo "PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=$CHROME" >> $GITHUB_ENV
+          echo "✅ Using Chrome at: $CHROME"
+          $CHROME --version
 
+      # Still needed for system libs (fonts, libgbm, etc.) — fast, no download
+      - name: Install Playwright system dependencies
+        run: npx playwright install-deps chromium
+      - name: Link system Chrome as Playwright headless shell
+        run: |
+          DIR="$HOME/.cache/ms-playwright/chromium_headless_shell-1217/chrome-headless-shell-linux64"
+          mkdir -p "$DIR"
+          ln -sf /usr/bin/google-chrome-stable "$DIR/chrome-headless-shell"
+          echo "✅ Linked: $DIR/chrome-headless-shell"
+        # might need remove
+      - name: Link system Chrome as Playwright headless shell
+        run: |
+          DIR="$HOME/.cache/ms-playwright/chromium_headless_shell-1217/chrome-headless-shell-linux64"
+          mkdir -p "$DIR"
+          ln -sf /usr/bin/google-chrome-stable "$DIR/chrome-headless-shell"
+          echo "✅ Linked: $DIR/chrome-headless-shell"
+
+      
       - name: Snapshot previous jobs.json (for diff)
         run: |
           mkdir -p /tmp/prev
@@ -43,7 +68,15 @@ jobs:
             echo '{"jobs":[]}' > /tmp/prev/jobs.json
           fi
 
+      - name: Random delay (only on scheduled runs)
+        if: github.event_name == 'schedule'
+        run: |
+          DELAY=$((RANDOM % 90))
+          echo "Sleeping ${DELAY}s to break the cron pattern"
+          sleep $DELAY
+
       - name: Run scrapers
+        timeout-minutes: 20
         run: node scripts/scrape.js
 
       - name: Notify Telegram about new jobs
