@@ -2,7 +2,7 @@
 
 > A job aggregator for the city of Patra, Greece — pulling listings from multiple Greek job boards into one clean, fast interface.
 
-🔗 **Live:** [workinpatras.netlify.app](https://workinpatras.netlify.app/)
+🔗 **Live:** [www.workinpatras.gr/](https://www.workinpatras.gr/)
 📣 **Telegram channel:** [t.me/workinpatras](https://t.me/workinpatras) — auto-posts every new listing
 
 ---
