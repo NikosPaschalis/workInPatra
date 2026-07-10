@@ -1,0 +1,23 @@
+{
+  "month": "2026-06",
+  "capturedAt": "2026-07-03T04:41:41.334Z",
+  "lastFetched": "2026-07-02T19:17:52.718Z",
+  "total": 115,
+  "byCategory": {
+    "marketing": 6,
+    "sales": 21,
+    "logistics": 15,
+    "admin": 20,
+    "construction": 12,
+    "tech": 6,
+    "hospitality": 14,
+    "other": 15,
+    "retail": 1,
+    "health": 5
+  },
+  "bySource": {
+    "jobfind": 34,
+    "kariera": 66,
+    "xe": 15
+  }
+}
