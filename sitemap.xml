@@ -1,67 +1,67 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://workinpatras.netlify.app/</loc>
+    <loc>https://www.workinpatras.gr/</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://workinpatras.netlify.app/?cat=tech</loc>
+    <loc>https://www.workinpatras.gr/?cat=tech</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://workinpatras.netlify.app/?cat=sales</loc>
+    <loc>https://www.workinpatras.gr/?cat=sales</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://workinpatras.netlify.app/?cat=hospitality</loc>
+    <loc>https://www.workinpatras.gr/?cat=hospitality</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://workinpatras.netlify.app/?cat=health</loc>
+    <loc>https://www.workinpatras.gr/?cat=health</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://workinpatras.netlify.app/?cat=logistics</loc>
+    <loc>https://www.workinpatras.gr/?cat=logistics</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://workinpatras.netlify.app/?cat=admin</loc>
+    <loc>https://www.workinpatras.gr/?cat=admin</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://workinpatras.netlify.app/?cat=retail</loc>
+    <loc>https://www.workinpatras.gr/?cat=retail</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://workinpatras.netlify.app/?cat=construction</loc>
+    <loc>https://www.workinpatras.gr/?cat=construction</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://workinpatras.netlify.app/?cat=education</loc>
+    <loc>https://www.workinpatras.gr/?cat=education</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://workinpatras.netlify.app/?cat=other</loc>
+    <loc>https://www.workinpatras.gr/?cat=other</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://workinpatras.netlify.app/privacy.html</loc>
+    <loc>https://www.workinpatras.gr/privacy.html</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://workinpatras.netlify.app/terms.html</loc>
+    <loc>https://www.workinpatras.gr/terms.html</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
