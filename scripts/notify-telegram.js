@@ -1,13 +1,13 @@
-// Send a Telegram notification about newly-added jobs.
+// Send notifications about newly-added jobs to Telegram and Facebook Page.
 //
 // Usage (called from .github/workflows/scrape.yml after the scraper runs):
 //   node scripts/notify-telegram.js <previousJobsJsonPath>
 //
-// Diffs the previous snapshot against the fresh data/jobs.json by URL and
-// posts a short message to the channel if any jobs were added.
+// Requires env vars:
+//   TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID   — for Telegram
+//   FACEBOOK_PAGE_TOKEN, FACEBOOK_PAGE_ID  — for Facebook (optional)
 //
-// Requires env vars: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
-// Silently exits 0 if either is missing (so the workflow doesn't fail on forks).
+// Silently skips a channel if its secrets are missing.
 
 import { readFileSync, existsSync } from 'fs';
 import path from 'path';
@@ -15,36 +15,37 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const JOBS_PATH = path.join(__dirname, '..', 'data', 'jobs.json');
-const SITE_URL = 'https://www.workinpatras.gr';
+const SITE_URL  = 'https://www.workinpatras.gr';
 const MAX_JOBS_IN_MESSAGE = 3;
 
 const CATEGORY_EMOJI = {
-  tech: '💻',
-  sales: '🛒',
-  hospitality: '🍽',
-  health: '🏥',
-  logistics: '🚛',
-  admin: '📋',
-  retail: '🏪',
+  tech:         '💻',
+  sales:        '🛒',
+  hospitality:  '🍽',
+  health:       '🏥',
+  logistics:    '🚛',
+  admin:        '📋',
+  retail:       '🏪',
   construction: '🔧',
-  education: '📚',
-  other: '📌',
+  education:    '📚',
+  other:        '📌',
 };
 
 const CATEGORY_LABEL = {
-  tech: 'Πληροφορική',
-  sales: 'Πωλήσεις',
-  hospitality: 'Εστίαση & Τουρισμός',
-  health: 'Υγεία & Φαρμακείο',
-  logistics: 'Μεταφορές & Αποθήκη',
-  admin: 'Διοίκηση & Λογιστική',
-  retail: 'Λιανική & Εξυπηρέτηση',
+  tech:         'Πληροφορική',
+  sales:        'Πωλήσεις',
+  hospitality:  'Εστίαση & Τουρισμός',
+  health:       'Υγεία & Φαρμακείο',
+  logistics:    'Μεταφορές & Αποθήκη',
+  admin:        'Διοίκηση & Λογιστική',
+  retail:       'Λιανική & Εξυπηρέτηση',
   construction: 'Τεχνικά & Κατασκευές',
-  education: 'Εκπαίδευση',
-  other: 'Άλλα',
+  education:    'Εκπαίδευση',
+  other:        'Άλλα',
 };
 
-// HTML-escape for Telegram parse_mode=HTML
+// ─── Telegram ────────────────────────────────────────────────────────────────
+
 function esc(s) {
   return String(s || '')
     .replace(/&/g, '&amp;')
@@ -52,9 +53,8 @@ function esc(s) {
     .replace(/>/g, '&gt;');
 }
 
-function formatMessage(jobs) {
+function formatTelegramMessage(jobs) {
   const count = jobs.length;
-
   const header =
     count === 1
       ? `🆕 <b>Μόλις μπήκε 1 ΝΕΑ θέση εργασίας στην Πάτρα</b>`
@@ -62,16 +62,16 @@ function formatMessage(jobs) {
 
   const shown = jobs.slice(0, MAX_JOBS_IN_MESSAGE);
   const lines = shown.map((j) => {
-    const emoji = CATEGORY_EMOJI[j.category] || '📌';
+    const emoji    = CATEGORY_EMOJI[j.category] || '📌';
     const catLabel = CATEGORY_LABEL[j.category] || 'Άλλα';
-    const title = esc(j.title);
-    const company = j.company ? esc(j.company) : '—';
-    const url = j.url || SITE_URL;
+    const title    = esc(j.title);
+    const company  = j.company ? esc(j.company) : '—';
+    const url      = j.url || SITE_URL;
     return `${emoji} <a href="${esc(url)}">${title}</a>\n<i>${company} · ${esc(catLabel)}</i>`;
   });
 
   const remaining = count - shown.length;
-  const moreLine =
+  const moreLine  =
     remaining > 0
       ? `➕ <b>${remaining}</b> ${remaining === 1 ? 'νέα ακόμη' : 'νέες ακόμη'} στο site`
       : '';
@@ -80,36 +80,95 @@ function formatMessage(jobs) {
 
   return [header, '', ...lines.map((l) => l + '\n'), moreLine, '', footer]
     .join('\n')
-    .slice(0, 4000); // Telegram hard limit is 4096 — stay safe
+    .slice(0, 4000);
 }
 
-async function send(text) {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
+async function sendTelegram(jobs) {
+  const token  = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;
 
   if (!token || !chatId) {
-    console.log('⏭  Telegram secrets not set — skipping notification');
+    console.log('⏭  Telegram secrets not set — skipping');
     return;
   }
 
-  const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-    method: 'POST',
+  const res  = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    method:  'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      chat_id: chatId,
-      text,
-      parse_mode: 'HTML',
+    body:    JSON.stringify({
+      chat_id:                chatId,
+      text:                   formatTelegramMessage(jobs),
+      parse_mode:             'HTML',
       disable_web_page_preview: true,
     }),
   });
 
   const body = await res.json().catch(() => ({}));
   if (!res.ok || !body.ok) {
-    console.error('❌ Telegram API error:', res.status, body);
+    console.error('❌ Telegram error:', res.status, body);
     process.exit(1);
   }
-  console.log(`✅ Sent message ${body.result?.message_id} to ${chatId}`);
+  console.log(`✅ Telegram: sent message ${body.result?.message_id}`);
 }
+
+// ─── Facebook ─────────────────────────────────────────────────────────────────
+
+function formatFacebookMessage(jobs) {
+  const count = jobs.length;
+  const shown = jobs.slice(0, MAX_JOBS_IN_MESSAGE);
+
+  const lines = shown.map((j) => {
+    const emoji    = CATEGORY_EMOJI[j.category] || '📌';
+    const company  = j.company ? ` — ${j.company}` : '';
+    return `${emoji} ${j.title}${company}`;
+  });
+
+  const remaining = count - shown.length;
+  const moreLine  = remaining > 0 ? `+${remaining} ακόμα...` : '';
+
+  return [
+    `🆕 ${count} νέες αγγελίες εργασίας στην Πάτρα!`,
+    '',
+    ...lines,
+    ...(moreLine ? [moreLine] : []),
+    '',
+    `🔗 Δες όλες: ${SITE_URL}`,
+    `📢 Telegram για instant ειδοποιήσεις: https://t.me/workinpatras`,
+    '',
+    '#εργασια #αγγελιες #πατρα #jobs #πελοποννησος',
+  ].join('\n');
+}
+
+async function sendFacebook(jobs) {
+  const token  = process.env.FACEBOOK_PAGE_TOKEN;
+  const pageId = process.env.FACEBOOK_PAGE_ID;
+
+  if (!token || !pageId) {
+    console.log('⏭  Facebook secrets not set — skipping');
+    return;
+  }
+
+  const res = await fetch(
+    `https://graph.facebook.com/${pageId}/feed`,
+    {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({
+        message:      formatFacebookMessage(jobs),
+        access_token: token,
+      }),
+    }
+  );
+
+  const body = await res.json().catch(() => ({}));
+  if (body.id) {
+    console.log(`✅ Facebook: posted ${body.id}`);
+  } else {
+    console.error('❌ Facebook error:', JSON.stringify(body));
+  }
+}
+
+// ─── Main ─────────────────────────────────────────────────────────────────────
 
 function loadJobs(p) {
   if (!existsSync(p)) return [];
@@ -132,20 +191,23 @@ async function main() {
   const newJobs = loadJobs(JOBS_PATH);
 
   const oldUrls = new Set(oldJobs.map((j) => j.url).filter(Boolean));
-  const added = newJobs.filter((j) => j.url && !oldUrls.has(j.url));
+  const added   = newJobs.filter((j) => j.url && !oldUrls.has(j.url));
 
-  console.log(
-    `Old: ${oldJobs.length} · New: ${newJobs.length} · Added: ${added.length}`,
-  );
+  console.log(`Old: ${oldJobs.length} · New: ${newJobs.length} · Added: ${added.length}`);
 
   if (added.length === 0) {
-    console.log('⏭  No new jobs — skipping notification');
+    console.log('⏭  No new jobs — skipping notifications');
     return;
   }
 
-  // Newest first in the message
+  // Newest first
   added.sort((a, b) => new Date(b.date) - new Date(a.date));
-  await send(formatMessage(added));
+
+  // Send to both channels in parallel — one failing won't block the other
+  await Promise.allSettled([
+    sendTelegram(added),
+    sendFacebook(added),
+  ]);
 }
 
 main().catch((err) => {
