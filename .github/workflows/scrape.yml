@@ -83,6 +83,8 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
+          FACEBOOK_PAGE_TOKEN:  ${{ secrets.FACEBOOK_PAGE_TOKEN }}
+          FACEBOOK_PAGE_ID:     ${{ secrets.FACEBOOK_PAGE_ID }}
         run: node scripts/notify-telegram.js /tmp/prev/jobs.json
 
       - name: Commit & push data/jobs.json
