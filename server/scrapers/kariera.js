@@ -1,4 +1,4 @@
-ifunction extractJobs(html) {
+function extractJobs(html) {
   const jobs = [];
   const seen = new Set();
 
