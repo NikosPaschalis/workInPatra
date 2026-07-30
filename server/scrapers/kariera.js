@@ -1,114 +1,114 @@
+// server/scrapers/kariera.js
+// Parses the Kariera.gr SSR HTML page directly — no API needed.
+// The v2 API returned 404 after a Kariera backend update (July 2026).
+
 import { parseGreekDate, USER_AGENT } from "./_shared.js";
 
-const API = "https://www.kariera.gr/api/v2/jobseeker/jobs";
-const PAGE_URL = "https://www.kariera.gr/jobs/jobs-in-achaia--patra";
-const LIMIT = 50;
+const BASE_URL  = "https://www.kariera.gr";
+const PAGE_URL  = `${BASE_URL}/jobs/jobs-in-achaia--patra`;
 const MAX_PAGES = 4;
 
 const HEADERS = {
   "User-Agent": USER_AGENT,
-  "Accept": "application/json, text/plain, */*",
+  "Accept":          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
   "Accept-Language": "el-GR,el;q=0.9,en-US;q=0.8,en;q=0.7",
-  "Origin": "https://www.kariera.gr",
-  "Referer": PAGE_URL,
 };
 
-function pick(obj, ...paths) {
-  for (const p of paths) {
-    const v = p.split(".").reduce((o, k) => (o == null ? o : o[k]), obj);
-    if (v != null && v !== "") return v;
+// Extract jobs from the raw HTML of a Kariera results page.
+// Job links look like: /jobs/some-category-jobs/123456
+function parseJobsFromHtml(html) {
+  const jobs = [];
+  const seen = new Set();
+
+  // Match every job anchor: ### [Title](/jobs/category/id)
+  const jobRegex = /###\s+\[([^\]]+)\]\((\/jobs\/[^)]+\/(\d+))\)/g;
+  let match;
+
+  while ((match = jobRegex.exec(html)) !== null) {
+    const title  = match[1].trim();
+    const path   = match[2];
+    const id     = match[3];
+
+    if (seen.has(id)) continue;
+    seen.add(id);
+
+    const url = `${BASE_URL}${path}`;
+
+    // Try to grab the company name that appears just before the job link.
+    // Pattern: [COMPANY NAME](/companies/slug)\n\n### [Job Title]
+    const companyRegex = new RegExp(
+      `\\[([^\\]]+)\\]\\(\\/companies\\/[^)]+\\)\\s*\\n+###\\s+\\[${escapeRegex(title)}\\]`
+    );
+    const companyMatch = companyRegex.exec(html);
+    const company = companyMatch ? companyMatch[1].trim() : "";
+
+    // Try to extract location
+    const locationRegex = new RegExp(
+      `${escapeRegex(title)}[\\s\\S]{0,300}?(Πάτρα|Achaia|Αχαΐα)`,
+      "i"
+    );
+    const locationMatch = locationRegex.exec(html);
+    const location = locationMatch ? locationMatch[1] : "Πάτρα";
+
+    jobs.push({
+      title,
+      company,
+      url,
+      source:   "kariera",
+      dateRaw:  "",
+      date:     null,
+      tags:     [location],
+    });
   }
-  return undefined;
+
+  return jobs;
 }
 
-function normalizeJob(raw) {
-  const title = pick(raw, "title", "jobTitle", "name") || "";
-  const company =
-    pick(raw, "company.name", "companyName", "employer.name", "employer") || "";
-
-  const slug = pick(raw, "slug", "url", "permalink", "seoUrl");
-  const id = pick(raw, "id", "jobId", "_id");
-  let url = "";
-  if (slug) {
-    url = String(slug).startsWith("http")
-      ? slug
-      : `https://www.kariera.gr/${String(slug).replace(/^\//, "")}`;
-  } else if (id) {
-    url = `https://www.kariera.gr/jobs/${id}`;
-  }
-
-  const dateRaw =
-    pick(raw, "publishedAt", "createdAt", "datePosted", "postedAt", "publicationDate", "date") || "";
-
-  const tags = [];
-  const empType = pick(raw, "employmentType", "jobType", "type");
-  if (empType) tags.push(typeof empType === "string" ? empType : empType.name || empType.label);
-  const remote = pick(raw, "remote", "isRemote");
-  if (remote === true) tags.push("Remote");
-  const cats = pick(raw, "categories", "tags", "skills");
-  if (Array.isArray(cats)) {
-    for (const c of cats) {
-      const t = typeof c === "string" ? c : (c?.name || c?.label || "");
-      if (t && tags.length < 6) tags.push(t);
-    }
-  }
-
-  return {
-    title: String(title).trim(),
-    company: String(company).trim(),
-    dateRaw: String(dateRaw),
-    tags: tags.filter(Boolean).map(t => String(t).trim()).filter(t => t.length < 40),
-    url,
-    source: "kariera",
-  };
-}
-
-function extractJobsArray(payload) {
-  if (Array.isArray(payload)) return payload;
-  for (const key of ["jobs", "results", "data", "items", "content", "hits"]) {
-    if (Array.isArray(payload?.[key])) return payload[key];
-  }
-  if (Array.isArray(payload?.data?.jobs)) return payload.data.jobs;
-  if (Array.isArray(payload?.data?.results)) return payload.data.results;
-  return [];
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 export async function scrape() {
-  const all = [];
+  const all  = [];
+  const seen = new Set();
 
   for (let page = 0; page < MAX_PAGES; page++) {
-    const url = `${API}?locationQ=achaia--patra&page=${page}&limit=${LIMIT}`;
+    const url = page === 0
+      ? PAGE_URL
+      : `${PAGE_URL}?page=${page}`;
+
     const res = await fetch(url, { headers: HEADERS });
-
     if (!res.ok) {
-      throw new Error(`kariera API ${res.status} ${res.statusText} on page ${page}`);
+      throw new Error(`kariera HTML ${res.status} ${res.statusText} on page ${page}`);
     }
 
-    const payload = await res.json();
+    const html = await res.text();
+
+    // Log structure on first page for debugging
     if (page === 0) {
-      const topKeys = payload && typeof payload === "object" ? Object.keys(payload).slice(0, 10) : [];
-      console.log(`  [kariera] response keys: ${JSON.stringify(topKeys)}`);
+      const jobCount = (html.match(/\/jobs\/[^)]+\/\d+/g) || []).length;
+      console.log(`  [kariera] page 0 — found ~${jobCount} job links in HTML`);
     }
 
-    const rawJobs = extractJobsArray(payload);
-    if (rawJobs.length === 0) break;
+    const jobs = parseJobsFromHtml(html);
+    if (jobs.length === 0) break;
 
-    for (const r of rawJobs) all.push(normalizeJob(r));
-    if (rawJobs.length < LIMIT) break;
-  }
-
-  return all
-    .filter(j => j.title)
-    .map(j => ({ ...j, date: parseDate(j.dateRaw) }));
-}
-
-function parseDate(raw) {
-  if (!raw) return null;
-  if (/^\d{4}-\d{2}-\d{2}/.test(raw)) {
-    const d = new Date(raw);
-    if (!isNaN(d)) {
-      return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())).toISOString();
+    let newJobs = 0;
+    for (const job of jobs) {
+      if (seen.has(job.url)) continue;
+      seen.add(job.url);
+      all.push(job);
+      newJobs++;
     }
+
+    // If no new jobs on this page, stop paginating
+    if (newJobs === 0) break;
+
+    // Kariera typically shows all jobs on one page for regional searches
+    // Only paginate if we got a full page (50+)
+    if (jobs.length < 50) break;
   }
-  return parseGreekDate(raw);
+
+  console.log(`  [kariera] total parsed: ${all.length} jobs`);
+  return all.filter(j => j.title && j.url);
 }
