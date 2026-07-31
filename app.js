@@ -29,6 +29,7 @@ const SOURCE_LABELS = { jobfind: "JobFind", kariera: "Kariera", xe: "XE" };
 
 const CATEGORY_LABELS = {
   tech:         "💻 Πληροφορική",
+  marketing:    "📣 Marketing & Επικοινωνία",
   sales:        "🛒 Πωλήσεις",
   hospitality:  "🍽 Εστίαση & Τουρισμός",
   health:       "🏥 Υγεία & Φαρμακείο",
@@ -43,6 +44,7 @@ const CATEGORY_LABELS = {
 // Plain (no emoji) labels for SEO meta tags
 const CATEGORY_SEO = {
   tech:         "Πληροφορική",
+  marketing:    "Marketing & Επικοινωνία",
   sales:        "Πωλήσεις",
   hospitality:  "Εστίαση & Τουρισμός",
   health:       "Υγεία & Φαρμακείο",

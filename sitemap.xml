@@ -11,6 +11,11 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://www.workinpatras.gr/?cat=marketing</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://www.workinpatras.gr/?cat=sales</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>

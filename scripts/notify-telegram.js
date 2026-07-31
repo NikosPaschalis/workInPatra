@@ -20,6 +20,7 @@ const MAX_JOBS_IN_MESSAGE = 3;
 
 const CATEGORY_EMOJI = {
   tech:         '💻',
+  marketing:    '📣',
   sales:        '🛒',
   hospitality:  '🍽',
   health:       '🏥',
@@ -33,6 +34,7 @@ const CATEGORY_EMOJI = {
 
 const CATEGORY_LABEL = {
   tech:         'Πληροφορική',
+  marketing:    'Marketing & Επικοινωνία',
   sales:        'Πωλήσεις',
   hospitality:  'Εστίαση & Τουρισμός',
   health:       'Υγεία & Φαρμακείο',
@@ -106,7 +108,7 @@ async function sendTelegram(jobs) {
   const body = await res.json().catch(() => ({}));
   if (!res.ok || !body.ok) {
     console.error('❌ Telegram error:', res.status, body);
-    process.exit(1);
+    throw new Error(`Telegram notification failed with HTTP ${res.status}`);
   }
   console.log(`✅ Telegram: sent message ${body.result?.message_id}`);
 }
@@ -203,11 +205,17 @@ async function main() {
   // Newest first
   added.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  // Send to both channels in parallel — one failing won't block the other
-  await Promise.allSettled([
+  // Send to both channels in parallel so both get a chance to complete.
+  const results = await Promise.allSettled([
     sendTelegram(added),
     sendFacebook(added),
   ]);
+
+  const failures = results.filter((result) => result.status === 'rejected');
+  if (failures.length > 0) {
+    failures.forEach((result) => console.error('Notification failed:', result.reason));
+    process.exitCode = 1;
+  }
 }
 
 main().catch((err) => {
