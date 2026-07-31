@@ -76,32 +76,30 @@ function extractJobs(html) {
 }
 
 
-// Extract dates from job cards
-function extractDates(html) {
-
+// Extract dates without relying on the amount of markup between a job link and
+// its <time> element. Kariera's cards can grow beyond any fixed-size window.
+export function extractDates(html) {
   const dates = {};
+  let pendingJobId = null;
 
-  /*
-    Example:
-    href="/jobs/.../327557"
-    ...
-    dateTime="2026-07-30T01:01:03.474Z"
-  */
-
-  const regex =
-    /href="\/jobs\/[^"]*\/(\d+)"[\s\S]{0,3000}?dateTime="([^"]+)"/g;
-
+  const tokenRegex =
+    /href="\/jobs\/[^"]*\/(\d+)"|<time\b[^>]*\bdatetime="([^"]+)"/gi;
 
   let match;
+  while ((match = tokenRegex.exec(html)) !== null) {
+    if (match[1]) {
+      pendingJobId = match[1];
+      continue;
+    }
 
-  while ((match = regex.exec(html)) !== null) {
+    if (!pendingJobId || !match[2]) continue;
 
-    const id = match[1];
-    const date = match[2];
-
-    dates[id] = date;
+    const parsed = new Date(match[2]);
+    if (!Number.isNaN(parsed.getTime())) {
+      dates[pendingJobId] = parsed.toISOString();
+    }
+    pendingJobId = null;
   }
-
 
   return dates;
 }
