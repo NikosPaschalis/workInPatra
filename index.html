@@ -121,7 +121,7 @@
           </h1>
           <p class="hero-sub">
             Μαζεύουμε τις πιο πρόσφατες αγγελίες από JobFind, Kariera και XE —
-            ενημερωμένες αυτόματα, χωρίς διαφημίσεις, χωρίς εγγραφή.
+            όλες σε ένα μέρος, χωρίς διαφημίσεις και χωρίς εγγραφή.
           </p>
           <div class="social-ctas" aria-label="Ειδοποιήσεις νέων αγγελιών">
             <a
@@ -170,39 +170,10 @@
     </section>
 
     <main class="container main">
-      <!-- Filters -->
-      <section class="filters-bar" aria-label="Φίλτρα αναζήτησης">
-        <div class="filter-group">
-          <span class="filter-label">Πηγή</span>
-          <div class="source-chips">
-            <label class="chip chip-all">
-              <input type="checkbox" value="all" checked id="src-all" />
-              <span>Όλα</span>
-            </label>
-            <label class="chip chip-jobfind">
-              <input type="checkbox" value="jobfind" id="src-jobfind" />
-              <span>JobFind</span>
-            </label>
-            <label class="chip chip-kariera">
-              <input type="checkbox" value="kariera" id="src-kariera" />
-              <span>Kariera</span>
-            </label>
-            <label class="chip chip-xe">
-              <input type="checkbox" value="xe" id="src-xe" />
-              <span>XE</span>
-            </label>
-          </div>
-        </div>
-
-        <div class="filter-group">
-          <span class="filter-label">Διάστημα</span>
-          <div class="period-tabs">
-            <button class="period-tab" data-days="7">7 μέρες</button>
-            <button class="period-tab active" data-days="30">30 μέρες</button>
-          </div>
-        </div>
-
+      <!-- Primary search and filters -->
+      <section class="filters-bar" aria-label="Αναζήτηση και φίλτρα">
         <div class="filter-group filter-search">
+          <label class="filter-label" for="search-input">Τι δουλειά ψάχνεις;</label>
           <div class="search-input-wrap">
             <input
               type="text"
@@ -222,11 +193,77 @@
             </button>
           </div>
         </div>
+
+        <div class="filter-group filter-period">
+          <span class="filter-label">Αγγελίες των τελευταίων</span>
+          <div class="period-tabs" aria-label="Χρονικό διάστημα αγγελιών">
+            <button class="period-tab" data-days="7">7 ημέρες</button>
+            <button class="period-tab active" data-days="30">30 ημέρες</button>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          class="filters-toggle"
+          id="filters-toggle"
+          aria-expanded="false"
+          aria-controls="advanced-filters"
+        >
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M4 6h16M7 12h10M10 18h4" />
+          </svg>
+          <span>Φίλτρα</span>
+          <span class="filters-count hidden" id="filters-count">0</span>
+        </button>
+      </section>
+
+      <section class="advanced-filters hidden" id="advanced-filters" aria-label="Περισσότερα φίλτρα">
+        <div class="advanced-filter-section">
+          <div class="advanced-filter-heading">
+            <div>
+              <strong>Πηγές αγγελιών</strong>
+              <span>Επίλεξε μία ή περισσότερες</span>
+            </div>
+          </div>
+          <div class="source-chips">
+            <label class="chip chip-all">
+              <input type="checkbox" value="all" checked id="src-all" />
+              <span>Όλες</span>
+            </label>
+            <label class="chip chip-jobfind">
+              <input type="checkbox" value="jobfind" id="src-jobfind" />
+              <span>JobFind</span>
+            </label>
+            <label class="chip chip-kariera">
+              <input type="checkbox" value="kariera" id="src-kariera" />
+              <span>Kariera</span>
+            </label>
+            <label class="chip chip-xe">
+              <input type="checkbox" value="xe" id="src-xe" />
+              <span>XE</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="advanced-filter-section">
+          <div class="advanced-filter-heading">
+            <div>
+              <strong>Όλες οι κατηγορίες</strong>
+              <span>Μπορείς να επιλέξεις περισσότερες από μία</span>
+            </div>
+          </div>
+          <div class="advanced-category-grid" id="cat-dropdown-panel"></div>
+        </div>
+
+        <div class="advanced-filter-actions">
+          <button type="button" class="filters-clear" id="filters-clear">Καθαρισμός όλων</button>
+          <button type="button" class="filters-done" id="filters-done">Έτοιμο</button>
+        </div>
       </section>
 
       <!-- Popular searches -->
       <div class="popular-searches" id="popular-searches">
-        <span class="popular-label">Δημοφιλή:</span>
+        <span class="popular-label">Συχνές αναζητήσεις:</span>
         <button class="popular-chip" data-q="Σερβιτόρος">Σερβιτόρος</button>
         <button class="popular-chip" data-q="Οδηγός">Οδηγός</button>
         <button class="popular-chip" data-q="Πωλητής">Πωλητής</button>
@@ -241,36 +278,24 @@
       <div class="category-bar-wrap">
         <div class="category-bar-label">
           Κατηγορίες
-          <span class="cat-hint">— επίλεξε μία ή περισσότερες</span>
-          <span class="beta-badge">Δοκιμαστική Λειτουργία Beta</span>
+          <span class="cat-hint">— γρήγορη επιλογή</span>
         </div>
 
-        <!-- Desktop: pill buttons -->
-        <div class="category-bar" id="category-bar">
-          <button class="cat-btn active" data-cat="all">Όλες</button>
-        </div>
-
-        <!-- Mobile: custom dropdown -->
-        <div class="cat-dropdown" id="cat-dropdown">
+        <div class="category-discovery">
+          <div class="category-bar" id="category-bar">
+            <button class="cat-btn active" data-cat="all">Όλες</button>
+          </div>
           <button
-            class="cat-dropdown-btn"
-            id="cat-dropdown-btn"
-            aria-expanded="false"
+            type="button"
+            class="more-categories-btn"
+            id="more-categories-btn"
+            aria-controls="advanced-filters"
           >
-            <span id="cat-dropdown-label">Όλες οι κατηγορίες</span>
-            <svg
-              class="cat-chevron"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.5"
-            >
-              <polyline points="6 9 12 15 18 9" />
+            Όλες οι κατηγορίες
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+              <polyline points="9 18 15 12 9 6" />
             </svg>
           </button>
-          <div class="cat-dropdown-panel" id="cat-dropdown-panel"></div>
         </div>
       </div>
 

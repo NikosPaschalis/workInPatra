@@ -27,10 +27,14 @@ const btnRefresh  = document.getElementById("btn-refresh");
 const lastUpdated = document.getElementById("last-updated");
 const statTotal   = document.getElementById("stat-total");
 const categoryBar       = document.getElementById("category-bar");
-const catDropdownBtn    = document.getElementById("cat-dropdown-btn");
 const catDropdownPanel  = document.getElementById("cat-dropdown-panel");
-const catDropdownLabel  = document.getElementById("cat-dropdown-label");
 const searchClearBtn    = document.getElementById("search-clear");
+const filtersToggle     = document.getElementById("filters-toggle");
+const advancedFilters   = document.getElementById("advanced-filters");
+const filtersCount      = document.getElementById("filters-count");
+const filtersClear      = document.getElementById("filters-clear");
+const filtersDone       = document.getElementById("filters-done");
+const moreCategoriesBtn = document.getElementById("more-categories-btn");
 
 const SOURCE_LABELS = { jobfind: "JobFind", kariera: "Kariera", xe: "XE" };
 
@@ -63,6 +67,8 @@ const CATEGORY_SEO = {
   other:        "Άλλα",
 };
 
+const QUICK_CATEGORY_LIMIT = 4;
+
 // ── Date helpers ──────────────────────────────────────────────────────────────
 function formatDate(isoStr) {
   if (!isoStr) return "";
@@ -87,6 +93,19 @@ function isCatActive(cat) {
   return state.categories.has(cat);
 }
 
+function createCategoryButton(cat, count, { compact = false } = {}) {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "cat-btn" + (isCatActive(cat) ? " active" : "");
+  if (compact) btn.classList.add("cat-btn-quick");
+  btn.dataset.cat = cat;
+  btn.textContent = cat === "all"
+    ? "Όλες"
+    : `${CATEGORY_LABELS[cat] || cat} (${count})`;
+  btn.addEventListener("click", () => toggleCat(cat));
+  return btn;
+}
+
 function buildCategoryBar() {
   const counts = {};
   // Count only jobs that pass the current date + source filters
@@ -104,46 +123,24 @@ function buildCategoryBar() {
 
   const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
 
-  // ── Desktop pill buttons ──
+  // Quick-access categories: keep the busiest categories immediately visible.
   categoryBar.querySelectorAll(".cat-btn[data-cat]").forEach(b => {
     if (b.dataset.cat !== "all") b.remove();
   });
-  // Update "all" button state
   const allBtnDesktop = categoryBar.querySelector("[data-cat='all']");
   if (allBtnDesktop) allBtnDesktop.classList.toggle("active", isCatActive("all"));
 
-  sorted.forEach(([cat, count]) => {
-    const btn = document.createElement("button");
-    btn.className = "cat-btn" + (isCatActive(cat) ? " active" : "");
-    btn.dataset.cat = cat;
-    btn.textContent = `${CATEGORY_LABELS[cat] || cat} (${count})`;
-    btn.addEventListener("click", () => toggleCat(cat));
-    categoryBar.appendChild(btn);
+  const quickCategories = sorted.slice(0, QUICK_CATEGORY_LIMIT);
+  quickCategories.forEach(([cat, count]) => {
+    categoryBar.appendChild(createCategoryButton(cat, count, { compact: true }));
   });
 
-  // ── Mobile dropdown panel ──
+  // Complete category list inside the expandable filters panel.
   catDropdownPanel.innerHTML = "";
-  const allBtn = document.createElement("button");
-  allBtn.className = "cat-btn" + (isCatActive("all") ? " active" : "");
-  allBtn.dataset.cat = "all";
-  allBtn.textContent = "Όλες";
-  allBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    toggleCat("all");
-  });
-  catDropdownPanel.appendChild(allBtn);
+  catDropdownPanel.appendChild(createCategoryButton("all", 0));
 
   sorted.forEach(([cat, count]) => {
-    const btn = document.createElement("button");
-    btn.className = "cat-btn" + (isCatActive(cat) ? " active" : "");
-    btn.dataset.cat = cat;
-    btn.textContent = `${CATEGORY_LABELS[cat] || cat} (${count})`;
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      toggleCat(cat);
-      // Keep dropdown open for multi-select — user explicitly closes with "Όλες" or outside click
-    });
-    catDropdownPanel.appendChild(btn);
+    catDropdownPanel.appendChild(createCategoryButton(cat, count));
   });
 }
 
@@ -162,27 +159,12 @@ function toggleCat(cat) {
 }
 
 function syncCategoryUI() {
-  // desktop + mobile pills
   document.querySelectorAll(".cat-btn").forEach(b => {
     const cat = b.dataset.cat;
     if (cat === "all") {
       b.classList.toggle("active", isCatActive("all"));
-    } else if (cat) {
-      b.classList.toggle("active", isCatActive(cat));
-    } else {
-      // mobile panel buttons built without data-cat use textContent match
-      const txt = b.textContent.replace(/\s*\(\d+\)$/, "");
-      const match = Object.entries(CATEGORY_LABELS).find(([, label]) => label === txt);
-      if (match) b.classList.toggle("active", isCatActive(match[0]));
-    }
+    } else if (cat) b.classList.toggle("active", isCatActive(cat));
   });
-  // mobile dropdown label
-  const cats = [...state.categories];
-  let label;
-  if (cats.length === 0)      label = "Όλες οι κατηγορίες";
-  else if (cats.length === 1) label = CATEGORY_LABELS[cats[0]] || cats[0];
-  else                        label = `${cats.length} κατηγορίες`;
-  catDropdownLabel.textContent = label;
 }
 
 // ── Popular chips sync ───────────────────────────────────────────────────────
@@ -197,6 +179,31 @@ function syncPopularChips() {
 function syncSearchClear() {
   if (!searchClearBtn) return;
   searchClearBtn.classList.toggle("hidden", !state.search);
+}
+
+function getActiveFilterCount() {
+  let count = state.categories.size;
+  if (state.sources.size !== allSources.length) count += 1;
+  if (state.days !== 30) count += 1;
+  return count;
+}
+
+function syncFilterSummary() {
+  if (!filtersCount) return;
+  const count = getActiveFilterCount();
+  filtersCount.textContent = count;
+  filtersCount.classList.toggle("hidden", count === 0);
+
+  document.querySelectorAll(".period-tab").forEach(btn => {
+    btn.setAttribute("aria-pressed", String(parseInt(btn.dataset.days) === state.days));
+  });
+}
+
+function setAdvancedFiltersOpen(isOpen) {
+  advancedFilters.classList.toggle("hidden", !isOpen);
+  filtersToggle.setAttribute("aria-expanded", String(isOpen));
+  moreCategoriesBtn.setAttribute("aria-expanded", String(isOpen));
+  filtersToggle.classList.toggle("active", isOpen);
 }
 
 // ── URL state (sharable + bookmarkable) ──────────────────────────────────────
@@ -277,13 +284,9 @@ function updateSEO() {
   if (twDesc) twDesc.setAttribute("content", desc);
 }
 
-function closeDropdown() {
-  catDropdownPanel.classList.remove("open");
-  catDropdownBtn.setAttribute("aria-expanded", "false");
-}
-
 // ── Render ────────────────────────────────────────────────────────────────────
 function render() {
+  syncFilterSummary();
   const cutoff = getCalendarCutoff(state.days);
   const normalizedQuery = normalizeSearchText(state.search);
 
@@ -471,15 +474,38 @@ if (searchClearBtn) {
 // ── Category "all" button (desktop) ──────────────────────────────────────────
 categoryBar.querySelector("[data-cat='all']").addEventListener("click", () => toggleCat("all"));
 
-// ── Mobile dropdown toggle ────────────────────────────────────────────────────
-catDropdownBtn.addEventListener("click", e => {
-  e.stopPropagation();
-  const isOpen = catDropdownPanel.classList.toggle("open");
-  catDropdownBtn.setAttribute("aria-expanded", isOpen);
+// ── Expandable filters panel ─────────────────────────────────────────────────
+filtersToggle.addEventListener("click", () => {
+  setAdvancedFiltersOpen(advancedFilters.classList.contains("hidden"));
 });
 
-// Close when clicking outside
-document.addEventListener("click", () => closeDropdown());
+moreCategoriesBtn.addEventListener("click", () => {
+  setAdvancedFiltersOpen(true);
+  advancedFilters.scrollIntoView({ behavior: "smooth", block: "nearest" });
+});
+
+filtersDone.addEventListener("click", () => setAdvancedFiltersOpen(false));
+
+filtersClear.addEventListener("click", () => {
+  state.sources = new Set(allSources);
+  state.days = 30;
+  state.search = "";
+  state.categories.clear();
+  searchInput.value = "";
+
+  document.querySelectorAll(".period-tab").forEach(btn => {
+    btn.classList.toggle("active", parseInt(btn.dataset.days) === 30);
+  });
+
+  syncChipUI();
+  syncCategoryUI();
+  syncPopularChips();
+  syncSearchClear();
+  buildCategoryBar();
+  updateURL();
+  updateSEO();
+  render();
+});
 
 // ── Search & Sort ─────────────────────────────────────────────────────────────
 searchInput.addEventListener("input", e => {

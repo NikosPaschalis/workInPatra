@@ -55,7 +55,7 @@ function esc(s) {
     .replace(/>/g, '&gt;');
 }
 
-function formatTelegramMessage(jobs) {
+export function formatTelegramMessage(jobs) {
   const count = jobs.length;
   const header =
     count === 1
@@ -115,9 +115,12 @@ async function sendTelegram(jobs) {
 
 // ─── Facebook ─────────────────────────────────────────────────────────────────
 
-function formatFacebookMessage(jobs) {
+export function formatFacebookMessage(jobs) {
   const count = jobs.length;
   const shown = jobs.slice(0, MAX_JOBS_IN_MESSAGE);
+  const header = count === 1
+    ? '🆕 1 νέα αγγελία εργασίας στην Πάτρα!'
+    : `🆕 ${count} νέες αγγελίες εργασίας στην Πάτρα!`;
 
   const lines = shown.map((j) => {
     const emoji    = CATEGORY_EMOJI[j.category] || '📌';
@@ -129,7 +132,7 @@ function formatFacebookMessage(jobs) {
   const moreLine  = remaining > 0 ? `+${remaining} ακόμα...` : '';
 
   return [
-    `🆕 ${count} νέες αγγελίες εργασίας στην Πάτρα!`,
+    header,
     '',
     ...lines,
     ...(moreLine ? [moreLine] : []),
@@ -219,7 +222,11 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error('Fatal:', err);
-  process.exit(1);
-});
+const isDirectRun = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+
+if (isDirectRun) {
+  main().catch((err) => {
+    console.error('Fatal:', err);
+    process.exit(1);
+  });
+}

@@ -26,7 +26,8 @@ WorkInPάτρα scrapes job listings from three major Greek job boards and prese
 - **Date filtering** — last 7 or 30 days (30-day default)
 - **"Νέο" badge** — highlights listings posted today
 - **Source filtering** — toggle individual sites on/off
-- **Multi-select categories + popular-keyword chips** with active state and clear (×) button
+- **Search-first filtering** — prominent live search, explicit 7/30-day ranges, quick categories, and expandable source/category filters
+- **Multi-select categories + frequent-search chips** with active state and one-click filter reset
 - **Greek-friendly live search** — filter by title, company, or tags without requiring accents
 - **Deduplication** — same job appearing on multiple sites is shown once
 - **Responsive design** — works on desktop and mobile (iOS/Android)
