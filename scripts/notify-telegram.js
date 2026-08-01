@@ -167,6 +167,7 @@ async function sendFacebook(jobs) {
     console.log(`✅ Facebook: posted ${body.id}`);
   } else {
     console.error('❌ Facebook error:', JSON.stringify(body));
+    throw new Error(`Facebook notification failed with HTTP ${res.status}`);
   }
 }
 

@@ -123,6 +123,24 @@
             Μαζεύουμε τις πιο πρόσφατες αγγελίες από JobFind, Kariera και XE —
             ενημερωμένες αυτόματα, χωρίς διαφημίσεις, χωρίς εγγραφή.
           </p>
+          <div class="social-ctas" aria-label="Ειδοποιήσεις νέων αγγελιών">
+            <a
+              class="social-cta social-cta-telegram"
+              href="https://t.me/workinpatras"
+              target="_blank"
+              rel="noopener"
+            >
+              Νέες αγγελίες στο Telegram
+            </a>
+            <a
+              class="social-cta social-cta-facebook"
+              href="https://www.facebook.com/profile.php?id=61591577415179"
+              target="_blank"
+              rel="noopener"
+            >
+              Ακολούθησε στο Facebook
+            </a>
+          </div>
           <div class="hero-stats">
             <div class="hero-stat">
               <strong id="stat-total">—</strong>
@@ -289,7 +307,7 @@
           <circle cx="11" cy="11" r="8" />
           <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
-        <p>Δεν βρέθηκαν θέσεις για τα επιλεγμένα φίλτρα.</p>
+        <p id="empty-message">Δεν βρέθηκαν θέσεις για τα επιλεγμένα φίλτρα.</p>
       </div>
     </main>
 
@@ -309,6 +327,15 @@
           Δεν φιλοξενούμε αγγελίες — σε παραπέμπουμε στην πηγή.
         </p>
         <div class="footer-links">
+          <a href="https://t.me/workinpatras" target="_blank" rel="noopener"
+            >Telegram</a
+          >
+          <a
+            href="https://www.facebook.com/profile.php?id=61591577415179"
+            target="_blank"
+            rel="noopener"
+            >Facebook</a
+          >
           <a href="/privacy.html">Απόρρητο</a>
           <a href="/terms.html">Όροι Χρήσης</a>
           <a
@@ -351,6 +378,6 @@
       </article>
     </template>
 
-    <script src="app.js"></script>
+    <script type="module" src="app.js"></script>
   </body>
 </html>

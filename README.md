@@ -4,12 +4,13 @@
 
 🔗 **Live:** [www.workinpatras.gr/](https://www.workinpatras.gr/)
 📣 **Telegram channel:** [t.me/workinpatras](https://t.me/workinpatras) — auto-posts every new listing
+📘 **Facebook page:** [WorkInPάτρα on Facebook](https://www.facebook.com/profile.php?id=61591577415179) — auto-posts new-listing summaries
 
 ---
 
 ## What it does
 
-WorkInPάτρα scrapes job listings from three major Greek job boards and presents them in a single responsive UI, filtered to the Patra area. No ads, no registration, no tracking. Whenever a new listing appears, a Telegram bot drops a notification into the public channel.
+WorkInPάτρα scrapes job listings from three major Greek job boards and presents them in a single responsive UI, filtered to the Patra area. No ads, no registration, no tracking. New listings are automatically announced on Telegram and Facebook.
 
 **Sources:**
 - [JobFind.gr](https://www.jobfind.gr)
@@ -26,11 +27,12 @@ WorkInPάτρα scrapes job listings from three major Greek job boards and prese
 - **"Νέο" badge** — highlights listings posted today
 - **Source filtering** — toggle individual sites on/off
 - **Multi-select categories + popular-keyword chips** with active state and clear (×) button
-- **Live search** — filter by title or company name
+- **Greek-friendly live search** — filter by title, company, or tags without requiring accents
 - **Deduplication** — same job appearing on multiple sites is shown once
 - **Responsive design** — works on desktop and mobile (iOS/Android)
 - **Auto-refresh** — scraper runs twice daily via GitHub Actions
-- **Telegram notifications** — new listings auto-post to a public channel
+- **Resilient source updates** — if one scraper fails, its last published jobs are preserved
+- **Social notifications** — new listings auto-post to Telegram and Facebook
 - **SEO optimized** — meta tags, Open Graph, JSON-LD structured data
 - **Zero tracking** — no cookies, no analytics, no user data collection
 
@@ -45,16 +47,16 @@ WorkInPάτρα scrapes job listings from three major Greek job boards and prese
 │   • scrape 3 sites       │
 │   • write data/jobs.json │
 │   • diff vs snapshot     │
-│   • notify Telegram bot  │
 │   • commit + push        │
+│   • notify social feeds  │
 └────────────┬─────────────┘
              │
-             ├──────────────┐
-             ▼              ▼
-┌──────────────────────────┐  ┌──────────────────────────┐
-│   GitHub repo (main)     │  │   Telegram channel       │
-│   data/jobs.json updates │  │   @workinpatras          │
-└────────────┬─────────────┘  └──────────────────────────┘
+             ├──────────────┬─────────────────────────────┐
+             ▼              ▼                             ▼
+┌──────────────────────────┐  ┌──────────────────────────┐  ┌──────────────────────────┐
+│   GitHub repo (main)     │  │   Telegram channel       │  │   Facebook page          │
+│   data/jobs.json updates │  │   @workinpatras          │  │   WorkInPάτρα            │
+└────────────┬─────────────┘  └──────────────────────────┘  └──────────────────────────┘
              │
              ▼
 ┌──────────────────────────┐
@@ -74,7 +76,7 @@ No always-on server. No database. No ongoing costs.
 |---|---|
 | Scraping | [Playwright](https://playwright.dev/) (Node.js) — handles JS-rendered sites |
 | Scheduler | GitHub Actions (cron) |
-| Notifications | Telegram Bot API |
+| Notifications | Telegram Bot API + Facebook Graph API |
 | Hosting | Netlify (static) |
 | Frontend | Vanilla HTML / CSS / JavaScript |
 | Local dev server | [Express.js](https://expressjs.com/) |
@@ -91,16 +93,22 @@ workinpatra/
 ├── terms.html              # Terms of use
 ├── style.css               # All styles (responsive)
 ├── app.js                  # Frontend logic
+├── client-utils.js         # Search, date-window, and sorting helpers
 ├── package.json            # Root deps (for GitHub Actions)
 ├── netlify.toml            # Netlify config
 ├── .github/workflows/
 │   ├── scrape.yml          # GitHub Actions workflow (every 12h)
+│   ├── snapshot.yml        # Monthly dataset snapshots
 │   └── test-telegram.yml   # Manual Telegram smoke test
 ├── data/
-│   └── jobs.json           # Scraped data (auto-updated)
+│   ├── jobs.json           # Scraped data (auto-updated)
+│   └── snapshots/          # Monthly historical snapshots
 ├── scripts/
 │   ├── scrape.js           # Standalone scraper for GH Actions
-│   └── notify-telegram.js  # Diffs old↔new jobs, posts to Telegram
+│   ├── merge-source-results.js # Per-source failure fallback
+│   ├── snapshot.js         # Monthly snapshot generator
+│   └── notify-telegram.js  # Diffs jobs and posts to Telegram/Facebook
+├── test/                   # Node.js regression tests
 └── server/
     ├── index.js            # Express server (local dev only)
     ├── cache.js            # In-memory cache
@@ -114,9 +122,9 @@ workinpatra/
 
 ---
 
-## Telegram Bot
+## Social Notifications
 
-Whenever the scrape finds new URLs that weren't in the previous `data/jobs.json`, the workflow fires `scripts/notify-telegram.js`, which posts a Greek-language summary to the public channel.
+Whenever the scrape finds new URLs that were not in the previous `data/jobs.json`, the workflow runs `scripts/notify-telegram.js`, which posts Greek-language summaries to the [Telegram channel](https://t.me/workinpatras) and the [Facebook page](https://www.facebook.com/profile.php?id=61591577415179). The data commit happens first, so a social API failure cannot prevent fresh jobs from being published.
 
 **Message format** (HTML, with link previews disabled):
 
@@ -139,7 +147,7 @@ Whenever the scrape finds new URLs that weren't in the previous `data/jobs.json`
 
 Top 3 listings are shown inline; anything beyond that becomes a single overflow line.
 
-**Setup (for forks):**
+**Telegram setup (for forks):**
 1. Create a bot via [@BotFather](https://t.me/BotFather), copy the token.
 2. Create a public channel, add the bot as **admin** with post permission.
 3. Get the channel ID (e.g. `@workinpatras` or numeric `-100…`).
@@ -149,6 +157,16 @@ Top 3 listings are shown inline; anything beyond that becomes a single overflow 
 5. Smoke test: **Actions** tab → **Test Telegram** → **Run workflow**.
 
 If either secret is missing the notify step exits cleanly without breaking the scrape — forks keep working without Telegram.
+
+**Facebook setup (optional):**
+
+1. Create or use a Facebook Page and a Meta app with permission to publish to it.
+2. Generate a Page access token and obtain the Page ID.
+3. In **Repo → Settings → Secrets and variables → Actions**, add:
+   - `FACEBOOK_PAGE_TOKEN` — Page access token
+   - `FACEBOOK_PAGE_ID` — Facebook Page ID
+
+Telegram and Facebook are independent: if one channel is not configured or temporarily fails, the other still gets a chance to publish. The workflow marks notification errors without rolling back the already-committed job data.
 
 ---
 
@@ -173,6 +191,8 @@ If either secret is missing the notify step exits cleanly without breaking the s
   "lastFetched": "2026-04-21T06:00:00.000Z"
 }
 ```
+
+`date` is an ISO timestamp when the source date can be parsed safely; otherwise it is `null`. Unknown dates are not labelled as “Νέο” and sort after dated listings.
 
 ---
 
@@ -224,11 +244,11 @@ npm run dev
 The repo is wired up to deploy automatically:
 
 - **Push to `main`** → Netlify redeploys the static site
-- **Every 12 hours** → GitHub Actions runs the scraper, posts new jobs to Telegram, commits the updated `data/jobs.json`, triggers a Netlify redeploy
+- **Every 12 hours** → GitHub Actions runs the scrapers, preserves the previous listings of any temporarily failed source, commits `data/jobs.json`, triggers a Netlify redeploy, and then posts new-job summaries to Telegram and Facebook
 
 To manually trigger a scrape: GitHub → Actions tab → "Scrape Jobs" → "Run workflow".
 
-**Cost:** $0 — GitHub Actions free tier + Netlify free tier + Telegram Bot API are more than enough.
+**Cost:** $0 — GitHub Actions, Netlify, Telegram Bot API, and Facebook Graph API are used within their free allowances.
 
 ---
 
@@ -238,7 +258,7 @@ To manually trigger a scrape: GitHub → Actions tab → "Scrape Jobs" → "Run 
 - **No data hosting** — we only link to the original job postings.
 - See [Privacy Policy](./privacy.html) and [Terms of Use](./terms.html).
 
-Scraping publicly-available data is a legal grey area but widely practiced. The project respects robots.txt where applicable, adds no server load via rate limiting, and always attributes + links back to the source.
+Scraping publicly available data can involve legal and platform-policy considerations. The project runs on a limited twice-daily schedule and always attributes and links back to the original source.
 
 ---
 
@@ -248,6 +268,8 @@ Scraping publicly-available data is a legal grey area but widely practiced. The 
 - **JobFind.gr** hides company names for anonymous listings by design
 - **Indeed.gr** was previously a source but has been removed — Cloudflare anti-bot challenges the scraper from datacenter IPs (GitHub Actions), returning 0 jobs in production
 - Scraper selectors may break if source sites update their HTML — monitor GitHub Actions for failures
+- When one source fails or unexpectedly returns no jobs, its previous listings are retained until a successful run replaces them; workflow logs identify the stale source
+- Unrecognised or invalid source dates are stored as `null` instead of being guessed
 - Category detection is ~80% accurate (keyword heuristic, not ML)
 
 ---

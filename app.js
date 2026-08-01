@@ -1,3 +1,9 @@
+import {
+  compareJobsByDateNewestFirst,
+  getCalendarCutoff,
+  normalizeSearchText,
+} from "./client-utils.js";
+
 // ── State ─────────────────────────────────────────────────────────────────────
 const state = {
   sources:    new Set(["jobfind", "kariera", "xe"]),
@@ -12,6 +18,7 @@ const state = {
 // ── DOM refs ──────────────────────────────────────────────────────────────────
 const grid        = document.getElementById("job-grid");
 const emptyState  = document.getElementById("empty-state");
+const emptyMessage = document.getElementById("empty-message");
 const countLabel  = document.getElementById("count-label");
 const template    = document.getElementById("card-template");
 const searchInput = document.getElementById("search-input");
@@ -61,12 +68,13 @@ function formatDate(isoStr) {
   if (!isoStr) return "";
   const now  = new Date();
   const d    = new Date(isoStr);
+  if (!Number.isFinite(d.getTime())) return "";
   // Compare calendar days (local midnight) — avoids "Σήμερα" for jobs
   // scraped yesterday at an hour that's < 24h ago in absolute ms.
   const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const dateMidnight  = new Date(d.getFullYear(),   d.getMonth(),   d.getDate());
   const diff = Math.round((todayMidnight - dateMidnight) / 86400000);
-  if (diff === 0) return "Σήμερα";
+  if (diff <= 0) return "Σήμερα";
   if (diff === 1) return "Χθες";
   if (diff < 7)  return `${diff} μέρες πριν`;
   if (diff < 14) return "Πριν 1 εβδομάδα";
@@ -82,9 +90,7 @@ function isCatActive(cat) {
 function buildCategoryBar() {
   const counts = {};
   // Count only jobs that pass the current date + source filters
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - state.days);
-  cutoff.setHours(0, 0, 0, 0);
+  const cutoff = getCalendarCutoff(state.days);
 
   state.jobs
     .filter(j =>
@@ -232,12 +238,10 @@ function readURL() {
     state.sort = sort;
     sortSelect.value = sort;
   }
-  const src = params.get("src");
-  if (src) {
+  if (params.has("src")) {
+    const src = params.get("src") || "";
     const parts = src.split(",").filter(s => allSources.includes(s));
-    if (parts.length) {
-      state.sources = new Set(parts);
-    }
+    state.sources = new Set(parts);
   }
   syncCategoryUI();
 }
@@ -280,17 +284,15 @@ function closeDropdown() {
 
 // ── Render ────────────────────────────────────────────────────────────────────
 function render() {
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - state.days);
-  cutoff.setHours(0, 0, 0, 0);
+  const cutoff = getCalendarCutoff(state.days);
+  const normalizedQuery = normalizeSearchText(state.search);
 
   let filtered = state.jobs.filter(j => {
     if (!state.sources.has(j.source)) return false;
     if (j.date && new Date(j.date) < cutoff) return false;
     if (state.categories.size > 0 && !state.categories.has(j.category || "other")) return false;
-    if (state.search) {
-      const q = state.search.toLowerCase();
-      if (!j.title?.toLowerCase().includes(q) && !j.company?.toLowerCase().includes(q)) return false;
+    if (normalizedQuery && !j._searchText.includes(normalizedQuery)) {
+      return false;
     }
     return true;
   });
@@ -298,16 +300,14 @@ function render() {
   if (state.sort === "title") {
     filtered.sort((a, b) => a.title.localeCompare(b.title, "el"));
   } else {
-    filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+    filtered.sort(compareJobsByDateNewestFirst);
   }
 
   grid.innerHTML = "";
   const count = filtered.length;
 
   // Trust stat — count jobs from the last 7 days within the filtered set
-  const weekStart = new Date();
-  weekStart.setDate(weekStart.getDate() - 7);
-  weekStart.setHours(0, 0, 0, 0);
+  const weekStart = getCalendarCutoff(7);
   const newCount = filtered.filter(j => j.date && new Date(j.date) >= weekStart).length;
 
   countLabel.innerHTML = state.loading
@@ -318,6 +318,9 @@ function render() {
         : "");
 
   if (count === 0 && !state.loading) {
+    emptyMessage.textContent = state.sources.size === 0
+      ? "Δεν έχεις επιλέξει καμία πηγή. Επίλεξε μία ή πάτησε «Όλα»."
+      : "Δεν βρέθηκαν θέσεις για τα επιλεγμένα φίλτρα.";
     emptyState.classList.remove("hidden");
     return;
   }
@@ -371,7 +374,12 @@ async function loadJobs(forceRefresh = false) {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
 
-    state.jobs = data.jobs || [];
+    state.jobs = (data.jobs || []).map(job => ({
+      ...job,
+      _searchText: normalizeSearchText(
+        [job.title, job.company, ...(job.tags || [])].filter(Boolean).join(" ")
+      ),
+    }));
     if (statTotal) statTotal.textContent = state.jobs.length;
     if (data.lastFetched) {
       const d = new Date(data.lastFetched);

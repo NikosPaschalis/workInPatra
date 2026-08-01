@@ -28,7 +28,7 @@ export async function withBrowser(fn) {
 }
 
 // Normalizes Greek relative dates → ISO string
-export function parseGreekDate(str) {
+export function parseGreekDate(str, now = new Date()) {
   if (!str) return null;
   const s = str.trim().toLowerCase();
 
@@ -36,8 +36,6 @@ export function parseGreekDate(str) {
   function midnight(d) {
     return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())).toISOString();
   }
-
-  const now = new Date();
 
   if (s.includes("σήμερα") || s.includes("today")) return midnight(now);
 
@@ -57,14 +55,32 @@ export function parseGreekDate(str) {
 
   const monthsMatch = s.match(/(\d+)\s*(μήν|month)/);
   if (monthsMatch) {
-    const d = new Date(now); d.setUTCMonth(d.getUTCMonth() - parseInt(monthsMatch[1])); return midnight(d);
+    const d = new Date(now);
+    const originalDay = d.getUTCDate();
+    d.setUTCDate(1);
+    d.setUTCMonth(d.getUTCMonth() - parseInt(monthsMatch[1]));
+    const lastDay = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate();
+    d.setUTCDate(Math.min(originalDay, lastDay));
+    return midnight(d);
   }
 
   // dd/mm/yyyy or dd-mm-yyyy
   const dateMatch = s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
   if (dateMatch) {
-    return new Date(`${dateMatch[3]}-${dateMatch[2].padStart(2,"0")}-${dateMatch[1].padStart(2,"0")}`).toISOString();
+    const day = Number(dateMatch[1]);
+    const month = Number(dateMatch[2]);
+    const year = Number(dateMatch[3]);
+    const parsed = new Date(Date.UTC(year, month - 1, day));
+    if (
+      month >= 1 && month <= 12 &&
+      parsed.getUTCFullYear() === year &&
+      parsed.getUTCMonth() === month - 1 &&
+      parsed.getUTCDate() === day
+    ) {
+      return parsed.toISOString();
+    }
+    return null;
   }
 
-  return midnight(now); // fallback: treat as today
+  return null;
 }

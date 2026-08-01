@@ -88,7 +88,7 @@ jobs:
             && echo "⏭  No changes — skipping commit" \
             || (git commit -m "chore: update jobs.json" && git push)
 
-      - name: Notify Telegram about new jobs
+      - name: Notify Telegram and Facebook about new jobs
         continue-on-error: true
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
