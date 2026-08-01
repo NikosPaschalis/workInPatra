@@ -3,6 +3,14 @@
 
 # No build command needed — pure static site
 
+# Keep the Netlify deployment URL out of search results and consolidate all
+# public traffic on the canonical custom domain.
+[[redirects]]
+  from = "https://workinpatras.netlify.app/*"
+  to = "https://www.workinpatras.gr/:splat"
+  status = 301
+  force = true
+
 [[headers]]
   for = "/*"
   [headers.values]
