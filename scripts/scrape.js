@@ -3,9 +3,10 @@ import { scrape as scrapeJobfind } from "../server/scrapers/jobfind.js";
 import { scrape as scrapeKariera } from "../server/scrapers/kariera.js";
 import { scrape as scrapeXe }      from "../server/scrapers/xe.js";
 import { categorize }              from "../server/categorize.js";
-import { writeFileSync, mkdirSync } from "fs";
+import { readFileSync, writeFileSync, mkdirSync } from "fs";
 import { fileURLToPath }           from "url";
 import path                        from "path";
+import { mergeSourceResults }      from "./merge-source-results.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -23,7 +24,7 @@ function withTimeout(promise, ms, name) {
   return Promise.race([promise, timeout]);
 }
 
-async function fetchAll() {
+async function fetchAll(previousJobs) {
   console.log("🔄 Scraping all sources...");
   console.log(`⏱  Per-scraper timeout: ${SCRAPER_TIMEOUT_MS / 1000}s\n`);
 
@@ -37,17 +38,26 @@ async function fetchAll() {
     scrapers.map(({ name, fn }) => withTimeout(fn(), SCRAPER_TIMEOUT_MS, name))
   );
 
-  const jobs = results.flatMap((r, i) => {
-    const { name } = scrapers[i];
-    if (r.status === "fulfilled") {
-      console.log(`✅ ${name}: ${r.value.length} jobs`);
-      return r.value;
-    } else {
-      // Timeout and real errors both land here — logged but don't crash the run
-      console.error(`❌ ${name}: ${r.reason?.message}`);
-      return [];
-    }
-  });
+  const {
+    jobs,
+    successfulSources,
+    failedSources,
+    unrecoverableSources,
+  } = mergeSourceResults(results, scrapers, previousJobs);
+
+  // If every source failed, keep the published file byte-for-byte unchanged.
+  // Updating lastFetched in that situation would incorrectly imply fresh data.
+  if (successfulSources.length === 0) {
+    throw new Error(
+      `All scrapers failed (${failedSources.join(", ")}) — keeping existing jobs.json`
+    );
+  }
+
+  if (unrecoverableSources.length > 0) {
+    throw new Error(
+      `No fallback data available for ${unrecoverableSources.join(", ")} — refusing to publish an incomplete jobs.json`
+    );
+  }
 
   // Categorize
   const categorized = jobs.map(j => ({
@@ -73,9 +83,24 @@ async function fetchAll() {
   });
 }
 
+function loadPreviousJobs(jobsPath) {
+  try {
+    const data = JSON.parse(readFileSync(jobsPath, "utf8"));
+    return Array.isArray(data.jobs) ? data.jobs : [];
+  } catch (err) {
+    if (err?.code !== "ENOENT") {
+      console.warn(`⚠️  Could not read existing jobs.json: ${err.message}`);
+    }
+    return [];
+  }
+}
+
 (async () => {
   try {
-    const jobs = await fetchAll();
+    const dataDir = path.join(__dirname, "..", "data");
+    const jobsPath = path.join(dataDir, "jobs.json");
+    const previousJobs = loadPreviousJobs(jobsPath);
+    const jobs = await fetchAll(previousJobs);
 
     if (jobs.length === 0) {
       console.warn("⚠️  No jobs returned from any scraper — aborting write to avoid overwriting good data");
@@ -87,10 +112,9 @@ async function fetchAll() {
       lastFetched: new Date().toISOString(),
     };
 
-    const dataDir = path.join(__dirname, "..", "data");
     mkdirSync(dataDir, { recursive: true });
     writeFileSync(
-      path.join(dataDir, "jobs.json"),
+      jobsPath,
       JSON.stringify(output)
     );
     console.log(`\n✅ Saved ${jobs.length} jobs → data/jobs.json`);

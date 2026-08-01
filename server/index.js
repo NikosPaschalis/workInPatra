@@ -1,37 +1,61 @@
 import express from "express";
 import path from "path";
+import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { isFresh, getCache, setCache, lastFetchedAt } from "./cache.js";
 import { scrape as scrapeJobfind } from "./scrapers/jobfind.js";
 import { scrape as scrapeKariera } from "./scrapers/kariera.js";
 import { scrape as scrapeXe } from "./scrapers/xe.js";
 import { categorize } from "./categorize.js";
+import { mergeSourceResults } from "../scripts/merge-source-results.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const PUBLISHED_JOBS_PATH = path.join(__dirname, "..", "data", "jobs.json");
 const app = express();
 const PORT = 3000;
 
 // Serve frontend from root
 app.use(express.static(path.join(__dirname, "..")));
 
-async function fetchAll() {
-  console.log("🔄 Scraping all sources...");
-  const results = await Promise.allSettled([
-    scrapeJobfind(),
-    scrapeKariera(),
-    scrapeXe(),
-  ]);
+function getPreviousJobs() {
+  const cached = getCache();
+  if (cached.length > 0) return cached;
 
-  const jobs = results.flatMap((r, i) => {
-    const name = ["jobfind", "kariera", "xe"][i];
-    if (r.status === "fulfilled") {
-      console.log(`✅ ${name}: ${r.value.length} jobs`);
-      return r.value;
-    } else {
-      console.error(`❌ ${name}:`, r.reason?.message);
-      return [];
-    }
-  });
+  try {
+    const data = JSON.parse(readFileSync(PUBLISHED_JOBS_PATH, "utf8"));
+    return Array.isArray(data.jobs) ? data.jobs : [];
+  } catch (err) {
+    console.warn(`⚠️  Could not read published jobs for fallback: ${err.message}`);
+    return [];
+  }
+}
+
+async function fetchAll(previousJobs = getPreviousJobs()) {
+  console.log("🔄 Scraping all sources...");
+  const scrapers = [
+    { name: "jobfind", fn: scrapeJobfind },
+    { name: "kariera", fn: scrapeKariera },
+    { name: "xe", fn: scrapeXe },
+  ];
+  const results = await Promise.allSettled(scrapers.map(({ fn }) => fn()));
+  const {
+    jobs,
+    successfulSources,
+    failedSources,
+    unrecoverableSources,
+  } = mergeSourceResults(results, scrapers, previousJobs);
+
+  if (successfulSources.length === 0) {
+    throw new Error(
+      `All scrapers failed (${failedSources.join(", ")}) — keeping existing cache`
+    );
+  }
+
+  if (unrecoverableSources.length > 0) {
+    throw new Error(
+      `No fallback data available for ${unrecoverableSources.join(", ")} — keeping existing cache`
+    );
+  }
 
   // Add category via keyword matching
   const categorized = jobs.map(j => ({ ...j, category: categorize(j.title, j.tags) }));
