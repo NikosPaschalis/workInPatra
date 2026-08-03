@@ -2,7 +2,7 @@
 import { scrape as scrapeJobfind } from "../server/scrapers/jobfind.js";
 import { scrape as scrapeKariera } from "../server/scrapers/kariera.js";
 import { scrape as scrapeXe }      from "../server/scrapers/xe.js";
-import { categorize }              from "../server/categorize.js";
+import { categorizeJob }           from "../server/categorize.js";
 import { readFileSync, writeFileSync, mkdirSync } from "fs";
 import { fileURLToPath }           from "url";
 import path                        from "path";
@@ -62,7 +62,7 @@ async function fetchAll(previousJobs) {
   // Categorize
   const categorized = jobs.map(j => ({
     ...j,
-    category: categorize(j.title, j.tags),
+    category: categorizeJob(j),
   }));
 
   // Deduplicate

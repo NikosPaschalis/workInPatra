@@ -10,10 +10,27 @@ const HEADERS = {
 };
 
 
+// Extract the source category from Kariera's embedded job records. The
+// ItemList used below only contains a job's name and URL, while the richer
+// Next.js payload also includes its category.
+export function extractSourceCategories(html) {
+  const categories = {};
+  const jobRegex =
+    /\\\"id\\\":(\d+),\\\"title\\\":[\s\S]{0,10000}?\\\"category\\\":\\\"([^\"\\]+)\\\"/g;
+
+  let match;
+  while ((match = jobRegex.exec(html)) !== null) {
+    categories[match[1]] = match[2];
+  }
+
+  return categories;
+}
+
 // Extract jobs from ItemList JSON-LD
-function extractJobs(html) {
+export function extractJobs(html) {
   const jobs = [];
   const seen = new Set();
+  const sourceCategories = extractSourceCategories(html);
 
   /*
     Kariera uses Next.js and embeds JSON-LD inside
@@ -58,13 +75,17 @@ function extractJobs(html) {
 
     seen.add(item.url);
 
+    const url = item.url.startsWith("http")
+      ? item.url
+      : `${BASE_URL}${item.url}`;
+    const id = url.match(/(\d+)\/?(?:\?.*)?$/)?.[1];
+
     jobs.push({
       title: item.name.trim(),
       company: "",
-      url: item.url.startsWith("http")
-        ? item.url
-        : `${BASE_URL}${item.url}`,
+      url,
       source: "kariera",
+      sourceCategory: id ? sourceCategories[id] || "" : "",
       dateRaw: "",
       date: null,
       tags: ["Πάτρα"]
@@ -167,6 +188,11 @@ export async function scrape() {
 
   console.log(
     `[kariera] found ${enrichedJobs.length} jobs`
+  );
+
+  const categorizedCount = enrichedJobs.filter(job => job.sourceCategory).length;
+  console.log(
+    `[kariera] source categories found for ${categorizedCount}/${enrichedJobs.length} jobs`
   );
 
 

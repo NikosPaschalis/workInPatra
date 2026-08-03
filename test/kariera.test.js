@@ -1,7 +1,35 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { extractDates } from "../server/scrapers/kariera.js";
+import {
+  extractDates,
+  extractJobs,
+  extractSourceCategories,
+} from "../server/scrapers/kariera.js";
+
+test("extractSourceCategories maps Kariera job ids to their source categories", () => {
+  const html = String.raw`
+    {\"id\":123,\"title\":\"Sales Advisor\",\"shortDescription\":\"Example\",\"category\":\"SALES_BUSINESS_DEVELOPMENT_ACCOUNT_MANAGEMENT\",\"publishedAt\":\"2026-08-02T17:06:10.400Z\"}
+    {\"id\":456,\"title\":\"Food and Beverage Manager\",\"category\":\"TOURISM\",\"publishedAt\":\"2026-08-01T17:06:10.400Z\"}
+  `;
+
+  assert.deepEqual(extractSourceCategories(html), {
+    123: "SALES_BUSINESS_DEVELOPMENT_ACCOUNT_MANAGEMENT",
+    456: "TOURISM",
+  });
+});
+
+test("extractJobs attaches the matching Kariera source category", () => {
+  const html = String.raw`
+    {\"@type\":\"ItemList\",\"itemListElement\":[{\"name\":\"Sales Advisor\",\"url\":\"/jobs/example/123\"}]}
+    {\"id\":123,\"title\":\"Sales Advisor\",\"category\":\"SALES_BUSINESS_DEVELOPMENT_ACCOUNT_MANAGEMENT\"}
+  `;
+
+  assert.equal(
+    extractJobs(html)[0].sourceCategory,
+    "SALES_BUSINESS_DEVELOPMENT_ACCOUNT_MANAGEMENT"
+  );
+});
 
 test("extractDates associates a job with its date across large card markup", () => {
   const html = [

@@ -6,7 +6,7 @@ import { isFresh, getCache, setCache, lastFetchedAt } from "./cache.js";
 import { scrape as scrapeJobfind } from "./scrapers/jobfind.js";
 import { scrape as scrapeKariera } from "./scrapers/kariera.js";
 import { scrape as scrapeXe } from "./scrapers/xe.js";
-import { categorize } from "./categorize.js";
+import { categorizeJob } from "./categorize.js";
 import { mergeSourceResults } from "../scripts/merge-source-results.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -57,8 +57,8 @@ async function fetchAll(previousJobs = getPreviousJobs()) {
     );
   }
 
-  // Add category via keyword matching
-  const categorized = jobs.map(j => ({ ...j, category: categorize(j.title, j.tags) }));
+  // Prefer each site's source category, then fall back to title/tag matching.
+  const categorized = jobs.map(j => ({ ...j, category: categorizeJob(j) }));
 
   // Deduplicate:
   // - named jobs   → dedup by title + company (same job, same company)

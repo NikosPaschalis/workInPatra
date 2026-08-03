@@ -12,39 +12,12 @@
 import { readFileSync, existsSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { CATEGORY_EMOJI, CATEGORY_LABELS } from '../categories.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const JOBS_PATH = path.join(__dirname, '..', 'data', 'jobs.json');
 const SITE_URL  = 'https://www.workinpatras.gr';
 const MAX_JOBS_IN_MESSAGE = 3;
-
-const CATEGORY_EMOJI = {
-  tech:         '💻',
-  marketing:    '📣',
-  sales:        '🛒',
-  hospitality:  '🍽',
-  health:       '🏥',
-  logistics:    '🚛',
-  admin:        '📋',
-  retail:       '🏪',
-  construction: '🔧',
-  education:    '📚',
-  other:        '📌',
-};
-
-const CATEGORY_LABEL = {
-  tech:         'Πληροφορική',
-  marketing:    'Marketing & Επικοινωνία',
-  sales:        'Πωλήσεις',
-  hospitality:  'Εστίαση & Τουρισμός',
-  health:       'Υγεία & Φαρμακείο',
-  logistics:    'Μεταφορές & Αποθήκη',
-  admin:        'Διοίκηση & Λογιστική',
-  retail:       'Λιανική & Εξυπηρέτηση',
-  construction: 'Τεχνικά & Κατασκευές',
-  education:    'Εκπαίδευση',
-  other:        'Άλλα',
-};
 
 // ─── Telegram ────────────────────────────────────────────────────────────────
 
@@ -65,7 +38,7 @@ export function formatTelegramMessage(jobs) {
   const shown = jobs.slice(0, MAX_JOBS_IN_MESSAGE);
   const lines = shown.map((j) => {
     const emoji    = CATEGORY_EMOJI[j.category] || '📌';
-    const catLabel = CATEGORY_LABEL[j.category] || 'Άλλα';
+    const catLabel = CATEGORY_LABELS[j.category] || 'Λοιπά & Υπηρεσίες';
     const title    = esc(j.title);
     const company  = j.company ? esc(j.company) : '—';
     const url      = j.url || SITE_URL;

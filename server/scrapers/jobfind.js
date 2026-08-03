@@ -10,12 +10,14 @@ export async function scrape() {
     return page.evaluate(() => {
       return Array.from(document.querySelectorAll("div.jobitem")).map(card => {
         const link = card.querySelector("a[href]");
+        const sourceCategory = card.querySelector("span.category")?.innerText?.trim() || "";
         return {
           title:   card.querySelector("h3.title")?.innerText?.trim() || "",
           company: card.querySelector("div.company a")?.innerText?.trim()
                    || card.querySelector("div.company")?.innerText?.trim() || "",
           dateRaw: card.querySelector("span.datemob")?.innerText?.trim() || "",
-          tags:    [card.querySelector("span.category")?.innerText?.trim(),
+          sourceCategory,
+          tags:    [sourceCategory,
                     card.querySelector("div.type")?.innerText?.trim()]
                      .filter(Boolean),
           url:     link ? "https://www.jobfind.gr" + link.getAttribute("href") : "",

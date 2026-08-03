@@ -3,6 +3,7 @@ import {
   getCalendarCutoff,
   normalizeSearchText,
 } from "./client-utils.js";
+import { CATEGORY_DEFINITIONS } from "./categories.js";
 
 // ── State ─────────────────────────────────────────────────────────────────────
 const state = {
@@ -38,34 +39,17 @@ const moreCategoriesBtn = document.getElementById("more-categories-btn");
 
 const SOURCE_LABELS = { jobfind: "JobFind", kariera: "Kariera", xe: "XE" };
 
-const CATEGORY_LABELS = {
-  tech:         "💻 Πληροφορική",
-  marketing:    "📣 Marketing & Επικοινωνία",
-  sales:        "🛒 Πωλήσεις",
-  hospitality:  "🍽 Εστίαση & Τουρισμός",
-  health:       "🏥 Υγεία & Φαρμακείο",
-  logistics:    "🚛 Μεταφορές & Αποθήκη",
-  admin:        "📋 Διοίκηση & Λογιστική",
-  retail:       "🏪 Λιανική & Εξυπηρέτηση",
-  construction: "🔧 Τεχνικά & Κατασκευές",
-  education:    "📚 Εκπαίδευση",
-  other:        "📌 Άλλα",
-};
+const CATEGORY_LABELS = Object.fromEntries(
+  CATEGORY_DEFINITIONS.map(category => [
+    category.id,
+    `${category.emoji} ${category.label}`,
+  ])
+);
 
 // Plain (no emoji) labels for SEO meta tags
-const CATEGORY_SEO = {
-  tech:         "Πληροφορική",
-  marketing:    "Marketing & Επικοινωνία",
-  sales:        "Πωλήσεις",
-  hospitality:  "Εστίαση & Τουρισμός",
-  health:       "Υγεία & Φαρμακείο",
-  logistics:    "Μεταφορές & Αποθήκη",
-  admin:        "Διοίκηση & Λογιστική",
-  retail:       "Λιανική & Εξυπηρέτηση",
-  construction: "Τεχνικά & Κατασκευές",
-  education:    "Εκπαίδευση",
-  other:        "Άλλα",
-};
+const CATEGORY_SEO = Object.fromEntries(
+  CATEGORY_DEFINITIONS.map(category => [category.id, category.label])
+);
 
 const QUICK_CATEGORY_LIMIT = 4;
 
@@ -225,7 +209,10 @@ function readURL() {
   const params = new URLSearchParams(window.location.search);
   const cat = params.get("cat");
   if (cat) {
-    const parts = cat.split(",").filter(c => CATEGORY_LABELS[c]);
+    const parts = cat
+      .split(",")
+      .map(c => c === "retail" ? "sales" : c)
+      .filter(c => CATEGORY_LABELS[c]);
     if (parts.length) state.categories = new Set(parts);
   }
   const q = params.get("q");
@@ -379,6 +366,8 @@ async function loadJobs(forceRefresh = false) {
 
     state.jobs = (data.jobs || []).map(job => ({
       ...job,
+      // Compatibility with jobs published before retail was merged into sales.
+      category: job.category === "retail" ? "sales" : job.category,
       _searchText: normalizeSearchText(
         [job.title, job.company, ...(job.tags || [])].filter(Boolean).join(" ")
       ),

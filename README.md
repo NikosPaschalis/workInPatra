@@ -22,7 +22,7 @@ WorkInPάτρα scrapes job listings from three major Greek job boards and prese
 ## Features
 
 - **Aggregated listings** from 3 sources in one place
-- **Keyword-based categorization** — 11 job categories auto-detected from title + tags
+- **Source-aware categorization** — 10 common categories mapped from each site's original category, with title/tag fallback
 - **Date filtering** — last 7 or 30 days (30-day default)
 - **"Νέο" badge** — highlights listings posted today
 - **Source filtering** — toggle individual sites on/off
@@ -186,6 +186,7 @@ Telegram and Facebook are independent: if one channel is not configured or tempo
       "tags": ["React", "Full-time"],
       "url": "https://www.kariera.gr/...",
       "source": "kariera",
+      "sourceCategory": "IT",
       "category": "tech"
     }
   ],
@@ -199,23 +200,24 @@ Telegram and Facebook are independent: if one channel is not configured or tempo
 
 ## Job Categories
 
-Categories are assigned automatically using keyword matching against the job title and tags.
+The original category is preserved in `sourceCategory`. It is mapped to one of
+the common categories below; title and tags are used only when the source value
+is missing, unknown, or too generic.
 
 | ID | Label |
 |---|---|
-| `tech` | Πληροφορική |
-| `marketing` | Marketing & Επικοινωνία |
-| `sales` | Πωλήσεις |
+| `sales` | Πωλήσεις & Λιανική |
 | `hospitality` | Εστίαση & Τουρισμός |
-| `health` | Υγεία & Φαρμακείο |
-| `logistics` | Μεταφορές & Αποθήκη |
-| `admin` | Διοίκηση & Λογιστική |
-| `retail` | Λιανική & Εξυπηρέτηση |
-| `construction` | Τεχνικά & Κατασκευές |
+| `admin` | Γραφείο, Διοίκηση & Οικονομικά |
+| `construction` | Τεχνικά Επαγγέλματα & Κατασκευές |
+| `tech` | Πληροφορική & Digital |
+| `logistics` | Logistics, Παραγωγή & Οδήγηση |
+| `health` | Υγεία & Φροντίδα |
 | `education` | Εκπαίδευση |
-| `other` | Άλλα |
+| `marketing` | Marketing & Δημιουργικά |
+| `other` | Λοιπά & Υπηρεσίες |
 
-> ⚠️ Category detection is keyword-based and experimental — some jobs may be miscategorized.
+Unknown source categories automatically fall back to normalized title/tag matching.
 
 ---
 
