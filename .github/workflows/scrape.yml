@@ -26,37 +26,11 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      # Use pre-installed Chrome on the runner — skips the 170MB CDN download entirely
-      # ubuntu-latest always has google-chrome-stable pre-installed
-      - name: Set Chrome executable path
-        run: |
-          CHROME=$(which google-chrome-stable 2>/dev/null \
-                || which google-chrome       2>/dev/null \
-                || which chromium-browser    2>/dev/null)
-          echo "PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=$CHROME" >> $GITHUB_ENV
-          echo "✅ Using Chrome at: $CHROME"
-          $CHROME --version
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps --only-shell chromium
 
-      # Still needed for system libs (fonts, libgbm, etc.) — fast, no download
-      - name: Install Playwright system dependencies
-        run: npx playwright install-deps chromium
-      - name: Link system Chrome as Playwright headless shell
-        run: |
-          DIR="$HOME/.cache/ms-playwright/chromium_headless_shell-1217/chrome-headless-shell-linux64"
-          mkdir -p "$DIR"
-          ln -sf /usr/bin/google-chrome-stable "$DIR/chrome-headless-shell"
-          echo "✅ Linked: $DIR/chrome-headless-shell"
-        # might need remove
-      - name: Link system Chrome as Playwright headless shell
-        run: |
-          DIR="$HOME/.cache/ms-playwright/chromium_headless_shell-1217/chrome-headless-shell-linux64"
-          mkdir -p "$DIR"
-          ln -sf /usr/bin/google-chrome-stable "$DIR/chrome-headless-shell"
-          echo "✅ Linked: $DIR/chrome-headless-shell"
-
-      
       - name: Snapshot previous jobs.json (for diff)
         run: |
           mkdir -p /tmp/prev
