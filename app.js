@@ -242,7 +242,7 @@ function readURL() {
 
 // ── Dynamic SEO — update title + meta based on active category ──────────────
 function updateSEO() {
-  const baseTitle = "WorkInPάτρα — Θέσεις Εργασίας στην Πάτρα";
+  const baseTitle = "Θέσεις Εργασίας στην Πάτρα | WorkInPάτρα";
   const baseDesc  = "Βρες τις πιο πρόσφατες θέσεις εργασίας στην Πάτρα. Συγκεντρώνουμε αγγελίες από JobFind, Kariera και XE σε ένα μέρος, ενημερωμένες καθημερινά.";
 
   let title = baseTitle;
