@@ -16,7 +16,7 @@ const HEADERS = {
 export function extractSourceCategories(html) {
   const categories = {};
   const jobRegex =
-    /\\\"id\\\":(\d+),\\\"title\\\":[\s\S]{0,10000}?\\\"category\\\":\\\"([^\"\\]+)\\\"/g;
+    /\\\"id\\\":(\d+),\\\"title\\\":[\s\S]{0,10000}?\\\"category\\\":\\\"([^\\"\\]+)\\\"/g;
 
   let match;
   while ((match = jobRegex.exec(html)) !== null) {
@@ -26,62 +26,127 @@ export function extractSourceCategories(html) {
   return categories;
 }
 
-// Extract jobs from ItemList JSON-LD
+// Next.js Flight embeds page data inside JavaScript string literals. Decode
+// those literals before parsing the JSON they contain. The regex only matches
+// complete push([number, "string"]) calls and JSON.parse handles escaped quotes,
+// backslashes, Unicode escapes, and line breaks safely.
+function decodeNextDataChunks(html) {
+  const chunkRegex =
+    /self\\.__next_f\\.push\\(\\[\\s*\\d+\\s*,\\s*("(?:\\\\.|[^"\\\\])*")\\s*\\]\\s*\\)/gs;
+
+  return html.replace(chunkRegex, (original, encodedChunk) => {
+    try {
+      return JSON.parse(encodedChunk);
+    } catch {
+      return original;
+    }
+  });
+}
+
+// Read an array with balanced brackets instead of stopping at the first "]}",
+// which can also occur inside nested objects/arrays within a job record.
+function extractBalancedArray(text, start) {
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+
+  for (let i = start; i < text.length; i++) {
+    const char = text[i];
+
+    if (inString) {
+      if (escaped) escaped = false;
+      else if (char === "\\") escaped = true;
+      else if (char === '"') inString = false;
+      continue;
+    }
+
+    if (char === '"') inString = true;
+    else if (char === "[") depth++;
+    else if (char === "]") {
+      depth--;
+      if (depth === 0) return text.slice(start, i + 1);
+    }
+  }
+
+  return null;
+}
+
+function extractItemListItems(html) {
+  const decodedHtml = decodeNextDataChunks(html);
+
+  // The first candidate handles current Next.js Flight markup. The escaped
+  // candidates retain compatibility with older snapshots and unit fixtures.
+  const candidates = [
+    decodedHtml,
+    html,
+    html.replace(/\\+"/g, '"'),
+  ];
+
+  for (const candidate of candidates) {
+    const itemListRegex =
+      /"@type"\\s*:\\s*"ItemList"[\\s\\S]*?"itemListElement"\\s*:\\s*\\[/g;
+
+    let match;
+    while ((match = itemListRegex.exec(candidate)) !== null) {
+      const arrayStart = itemListRegex.lastIndex - 1;
+      const itemsText = extractBalancedArray(candidate, arrayStart);
+      if (!itemsText) continue;
+
+      try {
+        const items = JSON.parse(itemsText);
+        if (Array.isArray(items)) return items;
+      } catch {
+        // Try the next ItemList/candidate instead of failing on a partial match.
+      }
+    }
+  }
+
+  return [];
+}
+
+// Extract jobs from ItemList JSON-LD. ItemList entries may be direct
+// {name, url} records or Schema.org ListItems containing a nested JobPosting.
 export function extractJobs(html) {
   const jobs = [];
   const seen = new Set();
   const sourceCategories = extractSourceCategories(html);
-
-  /*
-    Kariera uses Next.js and embeds JSON-LD inside
-    self.__next_f.push(...) instead of a normal script tag.
-    We search the HTML for the ItemList structure.
-  */
-
-  const itemListRegex =
-    /\\"@type\\":\\"ItemList\\"[\s\S]*?\\"itemListElement\\":\[(.*?)\]\}/;
-
-  const match = html.match(itemListRegex);
-
-  if (!match) {
-    return [];
-  }
-
-
-  const itemsText = `[${match[1]}]`;
-
-  let items;
-
-  try {
-    items = JSON.parse(
-      itemsText
-        .replace(/\\"/g, '"')
-    );
-  } catch (e) {
-    console.log("[kariera] failed parsing ItemList JSON");
-    return [];
-  }
-
+  const items = extractItemListItems(html);
 
   for (const item of items) {
+    const candidates = [];
+    let current = item;
 
-    if (!item.name || !item.url) {
-      continue;
+    // Unwrap common Schema.org structures without assuming one exact schema.
+    for (let depth = 0; depth < 5 && current && typeof current === "object"; depth++) {
+      candidates.push(current);
+      current = current.item ?? current.job ?? current.mainEntity ?? current.data;
     }
 
-    if (seen.has(item.url)) {
-      continue;
-    }
+    const title = candidates
+      .map((candidate) => candidate.name || candidate.title || candidate.headline || candidate.jobTitle)
+      .find((value) => typeof value === "string" && value.trim());
 
-    seen.add(item.url);
+    const rawUrl = candidates
+      .map((candidate) => candidate.url || candidate["@id"] || candidate.link || candidate.permalink)
+      .find((value) =>
+        typeof value === "string" &&
+        value.trim() &&
+        (/^https?:\\/\\//i.test(value) || value.startsWith("/"))
+      );
 
-    const url = item.url.startsWith("http")
-      ? item.url
-      : `${BASE_URL}${item.url}`;
-    const id = url.match(/(\d+)\/?(?:\?.*)?$/)?.[1];
+    if (!title || !rawUrl) continue;
+
+    const url = /^https?:\\/\\//i.test(rawUrl)
+      ? rawUrl
+      : `${BASE_URL}${rawUrl.startsWith("/") ? "" : "/"}${rawUrl}`;
+
+    if (seen.has(url)) continue;
+    seen.add(url);
+
+    const id = url.match(/(\\d+)\\/?(?:\\?.*)?$/)?.[1];
 
     jobs.push({
-      title: item.name.trim(),
+      title: title.trim(),
       company: "",
       url,
       source: "kariera",
@@ -91,7 +156,6 @@ export function extractJobs(html) {
       tags: ["Πάτρα"]
     });
   }
-
 
   return jobs;
 }
@@ -104,7 +168,7 @@ export function extractDates(html) {
   let pendingJobId = null;
 
   const tokenRegex =
-    /href="\/jobs\/[^"]*\/(\d+)"|<time\b[^>]*\bdatetime="([^"]+)"/gi;
+    /href="\\/jobs\\/[^"]*\\/(\\d+)"|<time\\b[^>]*\\bdatetime="([^"]+)"/gi;
 
   let match;
   while ((match = tokenRegex.exec(html)) !== null) {
@@ -170,7 +234,7 @@ export async function scrape() {
 
   const enrichedJobs = jobs.map(job => {
 
-    const id = job.url.match(/(\d+)$/)?.[1];
+    const id = job.url.match(/(\\d+)$/)?.[1];
 
     const dateRaw = dates[id] || "";
 
