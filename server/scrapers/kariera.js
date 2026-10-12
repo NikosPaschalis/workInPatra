@@ -27,12 +27,10 @@ export function extractSourceCategories(html) {
 }
 
 // Next.js Flight embeds page data inside JavaScript string literals. Decode
-// those literals before parsing the JSON they contain. The regex only matches
-// complete push([number, "string"]) calls and JSON.parse handles escaped quotes,
-// backslashes, Unicode escapes, and line breaks safely.
+// those literals before parsing the JSON they contain.
 function decodeNextDataChunks(html) {
   const chunkRegex =
-    /self\\.__next_f\\.push\\(\\[\\s*\\d+\\s*,\\s*("(?:\\\\.|[^"\\\\])*")\\s*\\]\\s*\\)/gs;
+    /self\.__next_f\.push\(\[\s*\d+\s*,\s*("(?:\\.|[^"\\])*")\s*\]\s*\)/gs;
 
   return html.replace(chunkRegex, (original, encodedChunk) => {
     try {
@@ -73,9 +71,6 @@ function extractBalancedArray(text, start) {
 
 function extractItemListItems(html) {
   const decodedHtml = decodeNextDataChunks(html);
-
-  // The first candidate handles current Next.js Flight markup. The escaped
-  // candidates retain compatibility with older snapshots and unit fixtures.
   const candidates = [
     decodedHtml,
     html,
@@ -84,7 +79,7 @@ function extractItemListItems(html) {
 
   for (const candidate of candidates) {
     const itemListRegex =
-      /"@type"\\s*:\\s*"ItemList"[\\s\\S]*?"itemListElement"\\s*:\\s*\\[/g;
+      /"@type"\s*:\s*"ItemList"[\s\S]*?"itemListElement"\s*:\s*\[/g;
 
     let match;
     while ((match = itemListRegex.exec(candidate)) !== null) {
@@ -116,7 +111,6 @@ export function extractJobs(html) {
     const candidates = [];
     let current = item;
 
-    // Unwrap common Schema.org structures without assuming one exact schema.
     for (let depth = 0; depth < 5 && current && typeof current === "object"; depth++) {
       candidates.push(current);
       current = current.item ?? current.job ?? current.mainEntity ?? current.data;
@@ -131,19 +125,19 @@ export function extractJobs(html) {
       .find((value) =>
         typeof value === "string" &&
         value.trim() &&
-        (/^https?:\\/\\//i.test(value) || value.startsWith("/"))
+        (/^https?:\/\//i.test(value) || value.startsWith("/"))
       );
 
     if (!title || !rawUrl) continue;
 
-    const url = /^https?:\\/\\//i.test(rawUrl)
+    const url = /^https?:\/\//i.test(rawUrl)
       ? rawUrl
       : `${BASE_URL}${rawUrl.startsWith("/") ? "" : "/"}${rawUrl}`;
 
     if (seen.has(url)) continue;
     seen.add(url);
 
-    const id = url.match(/(\\d+)\\/?(?:\\?.*)?$/)?.[1];
+    const id = url.match(/(\d+)\/?(?:\?.*)?$/)?.[1];
 
     jobs.push({
       title: title.trim(),
@@ -168,7 +162,7 @@ export function extractDates(html) {
   let pendingJobId = null;
 
   const tokenRegex =
-    /href="\\/jobs\\/[^"]*\\/(\\d+)"|<time\\b[^>]*\\bdatetime="([^"]+)"/gi;
+    /href="\/jobs\/[^"]*\/(\d+)"|<time\b[^>]*\bdatetime="([^"]+)"/gi;
 
   let match;
   while ((match = tokenRegex.exec(html)) !== null) {
@@ -192,73 +186,39 @@ export function extractDates(html) {
 
 
 export async function scrape() {
-
-  const res = await fetch(PAGE_URL, {
-    headers: HEADERS
-  });
-
+  const res = await fetch(PAGE_URL, { headers: HEADERS });
 
   if (!res.ok) {
-
-    throw new Error(
-      `Kariera HTML request failed: ${res.status}`
-    );
-
+    throw new Error(`Kariera HTML request failed: ${res.status}`);
   }
 
-
   const html = await res.text();
-
-
   const jobs = extractJobs(html);
 
-
-  /*
-    Safety check:
-    If Kariera changes structure or blocks us,
-    do NOT return empty data.
-    The main scraper should fail and keep old database.
-  */
-
+  // If Kariera changes structure or blocks us, do NOT return empty data.
   if (jobs.length === 0) {
-
     throw new Error(
       "Kariera scraper returned 0 jobs - refusing to overwrite existing data"
     );
-
   }
 
-
   const dates = extractDates(html);
-
-
-  const enrichedJobs = jobs.map(job => {
-
-    const id = job.url.match(/(\\d+)$/)?.[1];
-
+  const enrichedJobs = jobs.map((job) => {
+    const id = job.url.match(/(\d+)$/)?.[1];
     const dateRaw = dates[id] || "";
-
 
     return {
       ...job,
       dateRaw,
-      date: dateRaw
-        ? new Date(dateRaw).toISOString()
-        : null
+      date: dateRaw ? new Date(dateRaw).toISOString() : null
     };
-
   });
 
-
-  console.log(
-    `[kariera] found ${enrichedJobs.length} jobs`
-  );
-
-  const categorizedCount = enrichedJobs.filter(job => job.sourceCategory).length;
+  console.log(`[kariera] found ${enrichedJobs.length} jobs`);
+  const categorizedCount = enrichedJobs.filter((job) => job.sourceCategory).length;
   console.log(
     `[kariera] source categories found for ${categorizedCount}/${enrichedJobs.length} jobs`
   );
-
 
   return enrichedJobs;
 }
