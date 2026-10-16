@@ -49,7 +49,7 @@ function renderBreakdown(snapshot, type) {
   const raw = type === 'category' ? snapshot.byCategory : snapshot.bySource;
   const labels = type === 'category' ? CATEGORY_LABELS : SOURCE_LABELS;
   const rows = Object.entries(raw || {}).map(([id, value]) => ({ label: labels[id] || id, value: Number(value) || 0 }))
-    .filter(row => row.value > 0).sort((a, b) => b.value - a.value || a.label.localeCompare(b.label, 'el'));
+    .filter(row => type === 'category' || row.value > 0).sort((a, b) => b.value - a.value || a.label.localeCompare(b.label, 'el'));
   if (!rows.length) { host.innerHTML = '<div class="chart-empty">Δεν υπάρχουν αναλυτικά στοιχεία.</div>'; return; }
   const max = Math.max(...rows.map(row => row.value), 1);
   host.innerHTML = rows.map(row => '<div class="bar-row"><div class="bar-label">' + escapeText(row.label) + '</div><div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:' + (row.value/max*100) + '%"></div></div><div class="bar-value">' + numberFormat.format(row.value) + '</div></div>').join('');
