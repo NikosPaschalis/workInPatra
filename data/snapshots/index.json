@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-16T00:00:00.000Z",
+  "generatedAt": "2026-10-16",
   "snapshotType": "active_inventory",
   "measurementNote": "Counts describe active listings present in jobs.json at capture time; they are not a count of all jobs newly posted during the calendar month.",
   "snapshots": [
