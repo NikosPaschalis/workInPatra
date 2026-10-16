@@ -1,0 +1,35 @@
+{
+  "generatedAt": "2026-10-16T00:00:00.000Z",
+  "snapshotType": "active_inventory",
+  "measurementNote": "Counts describe active listings present in jobs.json at capture time; they are not a count of all jobs newly posted during the calendar month.",
+  "snapshots": [
+    {
+      "month": "2026-06",
+      "file": "2026-06.json",
+      "capturedAt": "2026-07-03T04:41:41.334Z",
+      "lastFetched": "2026-07-02T19:17:52.718Z",
+      "total": 115
+    },
+    {
+      "month": "2026-07",
+      "file": "2026-07.json",
+      "capturedAt": "2026-08-01T10:44:49.867Z",
+      "lastFetched": "2026-08-01T08:11:53.738Z",
+      "total": 79
+    },
+    {
+      "month": "2026-08",
+      "file": "2026-08.json",
+      "capturedAt": "2026-09-01T14:05:12.149Z",
+      "lastFetched": "2026-09-01T10:57:29.586Z",
+      "total": 73
+    },
+    {
+      "month": "2026-09",
+      "file": "2026-09.json",
+      "capturedAt": "2026-10-01T16:15:04.544Z",
+      "lastFetched": "2026-10-01T12:16:37.809Z",
+      "total": 96
+    }
+  ]
+}
