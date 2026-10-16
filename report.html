@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Ιστορικά στοιχεία για τις αγγελίες εργασίας στην Πάτρα από το WorkInΠάτρα.">
+<meta name="robots" content="index, follow"><link rel="canonical" href="https://www.workinpatras.gr/report.html"><link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="/report.css">
+<title>Στατιστικά αγοράς εργασίας στην Πάτρα | WorkInΠάτρα</title>
+</head>
+<body>
+<header class="site-header"><div class="container header-inner">
+<a class="logo" href="/" aria-label="WorkInΠάτρα — αρχική σελίδα"><span class="logo-dot" aria-hidden="true"></span><span>WorkIn<strong>Πάτρα</strong></span></a>
+<nav class="site-nav" aria-label="Κύρια πλοήγηση"><a href="/">Αγγελίες</a><a href="/report.html" aria-current="page">Στατιστικά αγοράς</a></nav>
+</div></header>
+<main class="container">
+<span class="eyebrow">Πάτρα · Αχαΐα</span><h1>Η αγορά εργασίας, σε αριθμούς.</h1>
+<p class="lede">Μια ιστορική εικόνα των αγγελιών που συγκεντρώνει το WorkInΠάτρα από JobFind, Kariera και XE.</p>
+<aside class="method-note" aria-label="Σημαντική σημείωση για τα δεδομένα"><span aria-hidden="true">ⓘ</span><div><strong>Πώς να διαβάζεις τα στοιχεία:</strong> κάθε σημείο δείχνει τις ενεργές αγγελίες που υπήρχαν στο αρχείο μας κατά τη λήψη του snapshot κοντά στο τέλος του μήνα. Δεν είναι μέτρηση όλων των νέων αγγελιών που δημοσιεύτηκαν μέσα στον μήνα. Οι αλλαγές μπορεί επίσης να επηρεάζονται από τη διαθεσιμότητα πηγών και την ταξινόμηση.</div></aside>
+<section id="report-status" class="status" role="status" aria-live="polite">Φόρτωση ιστορικών δεδομένων…</section>
+<div id="report-content" hidden>
+<section class="kpi-grid" aria-label="Βασικοί δείκτες">
+<article class="card"><div class="kpi-label">Αγγελίες στο πιο πρόσφατο snapshot</div><div class="kpi-value" id="kpi-total">—</div><div class="kpi-foot" id="kpi-month">—</div></article>
+<article class="card"><div class="kpi-label">Μεταβολή από το προηγούμενο snapshot</div><div class="kpi-value" id="kpi-change">—</div><div class="kpi-foot" id="kpi-change-note">Σύγκριση διαδοχικών snapshots</div></article>
+<article class="card"><div class="kpi-label">Πηγές δεδομένων</div><div class="kpi-value">3</div><div class="kpi-foot">JobFind · Kariera · XE</div></article>
+</section>
+<div class="panel-grid">
+<section class="card panel"><div class="panel-heading"><div><h2>Εξέλιξη διαθέσιμων αγγελιών</h2><div class="panel-subtitle">Σύνολο ανά snapshot</div></div></div><div id="trend-chart" class="chart-wrap"></div></section>
+<section class="card panel"><div class="panel-heading"><div><h2 id="breakdown-title">Κατανομή ανά κατηγορία</h2><div class="panel-subtitle" id="breakdown-subtitle">Πιο πρόσφατο snapshot</div></div><label class="select-wrap" for="breakdown-type">Προβολή<select id="breakdown-type"><option value="category">Κατηγορία</option><option value="source">Πηγή</option></select></label></div><div id="breakdown-chart" class="bar-list"></div></section>
+</div>
+<section class="card panel"><div class="panel-heading"><div><h2>Ιστορικό ανά μήνα</h2><div class="panel-subtitle">Μεταβολή σε σχέση με το αμέσως προηγούμενο snapshot</div></div></div><div class="table-wrap"><table><thead><tr><th>Μήνας αναφοράς</th><th class="num">Αγγελίες</th><th class="num">Μεταβολή</th><th>Λήψη δεδομένων</th></tr></thead><tbody id="history-rows"></tbody></table></div></section>
+<p class="footer-note" id="data-freshness"></p>
+</div></main><script type="module" src="/report.js"></script>
+</body></html>
