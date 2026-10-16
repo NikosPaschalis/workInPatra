@@ -2,10 +2,16 @@
 <html lang="el">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Ιστορικά στοιχεία για τις αγγελίες εργασίας στην Πάτρα από το WorkInΠάτρα.">
+<meta name="description" content="Δες στατιστικά για την αγορά εργασίας στην Πάτρα: εξέλιξη ενεργών αγγελιών, κατανομή ανά επαγγελματικό κλάδο και πηγή, με ιστορικά δεδομένα του WorkInΠάτρα.">
 <meta name="robots" content="index, follow"><link rel="canonical" href="https://www.workinpatras.gr/report.html"><link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","name":"Στατιστικά αγοράς εργασίας στην Πάτρα","url":"https://www.workinpatras.gr/report.html","description":"Ιστορικά snapshots ενεργών αγγελιών εργασίας στην Πάτρα, με κατανομή ανά επαγγελματική κατηγορία και πηγή.","inLanguage":"el","isPartOf":{"@type":"WebSite","name":"WorkInΠάτρα","url":"https://www.workinpatras.gr/"}}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="/report.css">
 <title>Στατιστικά αγοράς εργασίας στην Πάτρα | WorkInΠάτρα</title>
+<meta property="og:type" content="website"><meta property="og:locale" content="el_GR"><meta property="og:site_name" content="WorkInΠάτρα">
+<meta property="og:title" content="Στατιστικά αγοράς εργασίας στην Πάτρα | WorkInΠάτρα"><meta property="og:description" content="Εξέλιξη αγγελιών εργασίας, επαγγελματικοί κλάδοι και πηγές δεδομένων για την αγορά εργασίας στην Πάτρα."><meta property="og:url" content="https://www.workinpatras.gr/report.html"><meta property="og:image" content="https://www.workinpatras.gr/og-image.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="WorkInΠάτρα — αγγελίες και στατιστικά αγοράς εργασίας στην Πάτρα">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Στατιστικά αγοράς εργασίας στην Πάτρα | WorkInΠάτρα"><meta name="twitter:description" content="Εξέλιξη αγγελιών εργασίας, επαγγελματικοί κλάδοι και πηγές δεδομένων για την αγορά εργασίας στην Πάτρα."><meta name="twitter:image" content="https://www.workinpatras.gr/og-image.png">
 </head>
 <body>
 <header class="site-header"><div class="container header-inner">
@@ -14,7 +20,7 @@
 </div></header>
 <main class="container">
 <span class="eyebrow">Πάτρα · Αχαΐα</span><h1>Η αγορά εργασίας, σε αριθμούς.</h1>
-<p class="lede">Μια ιστορική εικόνα των αγγελιών που συγκεντρώνει το WorkInΠάτρα από JobFind, Kariera και XE.</p>
+<p class="lede">Δες πώς μεταβάλλεται το διαθέσιμο απόθεμα αγγελιών εργασίας στην Πάτρα, σε ποιους επαγγελματικούς κλάδους κατανέμεται και από ποιες πηγές προέρχεται.</p>
 <aside class="method-note" aria-label="Σημαντική σημείωση για τα δεδομένα"><span aria-hidden="true">ⓘ</span><div><strong>Πώς να διαβάζεις τα στοιχεία:</strong> κάθε σημείο δείχνει τις ενεργές αγγελίες που υπήρχαν στο αρχείο μας κατά τη λήψη του snapshot κοντά στο τέλος του μήνα. Δεν είναι μέτρηση όλων των νέων αγγελιών που δημοσιεύτηκαν μέσα στον μήνα. Οι αλλαγές μπορεί επίσης να επηρεάζονται από τη διαθεσιμότητα πηγών και την ταξινόμηση.</div></aside>
 <section id="report-status" class="status" role="status" aria-live="polite">Φόρτωση ιστορικών δεδομένων…</section>
 <div id="report-content" hidden>
@@ -27,20 +33,11 @@
 <section class="card panel"><div class="panel-heading"><div><h2>Εξέλιξη διαθέσιμων αγγελιών</h2><div class="panel-subtitle">Σύνολο ανά snapshot</div></div></div><div id="trend-chart" class="chart-wrap"></div></section>
 <section class="card panel"><div class="panel-heading"><div><h2 id="breakdown-title">Κατανομή ανά κατηγορία</h2><div class="panel-subtitle" id="breakdown-subtitle">Πιο πρόσφατο snapshot</div></div><label class="select-wrap" for="breakdown-type">Προβολή<select id="breakdown-type"><option value="category">Κατηγορία</option><option value="source">Πηγή</option></select></label></div><div id="breakdown-chart" class="bar-list"></div></section>
 </div>
-<section class="card panel"><div class="panel-heading"><div><h2>Οι κατηγορίες που ξεχωρίζουν</h2><div class="panel-subtitle">Τάσεις ανά κατηγορία - αριθμός αγγελιών σε κάθε snapshot</div></div></div><div class="table-wrap"><table class="category-trends-table">
-<thead><tr><th>Κατηγορία</th><th class="num">Ιούνιος</th><th class="num">Ιούλιος</th><th class="num">Αύγουστος</th><th class="num">Σεπτέμβριος</th><th>Τάση Ιουν. → Σεπτ.</th><th>Παρατήρηση</th></tr></thead>
-<tbody>
-<tr><td class="category-name">Πωλήσεις &amp; Λιανική</td><td class="num">22</td><td class="num">16</td><td class="num">26</td><td class="num">32</td><td class="positive">↑ +10</td><td class="trend-note">Ανάκαμψη μετά τον Ιούλιο και υψηλότερη τιμή τον Σεπτέμβριο</td></tr>
-<tr><td class="category-name">Logistics, Παραγωγή &amp; Οδήγηση</td><td class="num">15</td><td class="num">10</td><td class="num">13</td><td class="num">17</td><td class="positive">↑ +2</td><td class="trend-note">Ανάκαμψη μετά τον Ιούλιο</td></tr>
-<tr><td class="category-name">Γραφείο, Διοίκηση &amp; Οικονομικά</td><td class="num">20</td><td class="num">8</td><td class="num">7</td><td class="num">7</td><td class="negative">↓ −13</td><td class="trend-note">Σημαντικά χαμηλότερο επίπεδο από τον Ιούνιο</td></tr>
-<tr><td class="category-name">Εστίαση &amp; Τουρισμός</td><td class="num">14</td><td class="num">10</td><td class="num">10</td><td class="num">9</td><td class="negative">↓ −5</td><td class="trend-note">Σταδιακή πτώση στα τελευταία snapshots</td></tr>
-<tr><td class="category-name">Τεχνικά Επαγγέλματα &amp; Κατασκευές</td><td class="num">12</td><td class="num">8</td><td class="num">7</td><td class="num">13</td><td class="positive">↑ +1</td><td class="trend-note">Ισχυρή ανάκαμψη τον Σεπτέμβριο</td></tr>
-<tr><td class="category-name">Πληροφορική &amp; Digital</td><td class="num">6</td><td class="num">5</td><td class="num"><span class="zero-marker">0*</span></td><td class="num"><span class="zero-marker">0*</span></td><td class="negative">↓ −6</td><td class="trend-note">Δεν καταγράφηκαν αγγελίες τον Αύγουστο και τον Σεπτέμβριο — απαιτείται έλεγχος</td></tr>
-<tr><td class="category-name">Υγεία &amp; Φροντίδα</td><td class="num">5</td><td class="num">2</td><td class="num">3</td><td class="num">3</td><td class="negative">↓ −2</td><td class="trend-note">Μερική ανάκαμψη και σταθεροποίηση</td></tr>
-<tr><td class="category-name">Εκπαίδευση</td><td class="num">0</td><td class="num">1</td><td class="num">1</td><td class="num">2</td><td class="positive">↑ +2</td><td class="trend-note">Μικρός αριθμός αγγελιών, με άνοδο στα τελευταία snapshots</td></tr>
-<tr><td class="category-name">Marketing &amp; Δημιουργικά</td><td class="num">6</td><td class="num">3</td><td class="num">3</td><td class="num">2</td><td class="negative">↓ −4</td><td class="trend-note">Πτωτική τάση στα διαθέσιμα snapshots</td></tr>
-<tr><td class="category-name">Λοιπά &amp; Υπηρεσίες</td><td class="num">15</td><td class="num">16</td><td class="num">3</td><td class="num">11</td><td class="negative">↓ −4</td><td class="trend-note">Μεγάλη διακύμανση, με ανάκαμψη τον Σεπτέμβριο</td></tr>
-</tbody></table></div><p class="footer-note">* Οι μηδενικές τιμές σημαίνουν ότι δεν καταγράφηκαν αγγελίες σε αυτή την κατηγορία στο συγκεκριμένο snapshot. Η παλιά κατηγορία retail έχει ενοποιηθεί με τις Πωλήσεις και Λιανική.</p></section><section class="card panel"><div class="panel-heading"><div><h2>Ιστορικό ανά μήνα</h2><div class="panel-subtitle">Μεταβολή σε σχέση με το αμέσως προηγούμενο snapshot</div></div></div><div class="table-wrap"><table><thead><tr><th>Μήνας αναφοράς</th><th class="num">Αγγελίες</th><th class="num">Μεταβολή</th><th>Λήψη δεδομένων</th></tr></thead><tbody id="history-rows"></tbody></table></div></section>
+<section class="card panel">
+<div class="panel-heading"><div><h2>Τάσεις ανά επαγγελματική κατηγορία</h2><div class="panel-subtitle">Σύγκριση των τελευταίων έως τεσσάρων snapshots</div></div></div>
+<div class="table-wrap"><table class="category-trends-table"><thead id="category-trends-head"></thead><tbody id="category-trends-rows"></tbody></table></div>
+<p class="footer-note">Οι αριθμοί αφορούν ενεργές αγγελίες που υπήρχαν στο αρχείο κατά τη λήψη κάθε snapshot, όχι όλες τις αγγελίες που δημοσιεύτηκαν μέσα στον μήνα. Μηδενική τιμή σημαίνει ότι δεν καταγράφηκαν αγγελίες στην κατηγορία εκείνη τη στιγμή και δεν αποδεικνύει μηδενική ζήτηση.</p>
+</section><section class="card panel"><div class="panel-heading"><div><h2>Ιστορικό ανά μήνα</h2><div class="panel-subtitle">Μεταβολή σε σχέση με το αμέσως προηγούμενο snapshot</div></div></div><div class="table-wrap"><table><thead><tr><th>Μήνας αναφοράς</th><th class="num">Αγγελίες</th><th class="num">Μεταβολή</th><th>Λήψη δεδομένων</th></tr></thead><tbody id="history-rows"></tbody></table></div></section>
 <p class="footer-note" id="data-freshness"></p>
-</div></main><script type="module" src="/report.js"></script>
+</div></main><noscript><p class="container footer-note">Για να εμφανιστούν τα διαγράμματα και οι ιστορικοί πίνακες απαιτείται ενεργοποιημένη JavaScript. Η μεθοδολογία και η περιγραφή των δεδομένων παραμένουν διαθέσιμες παραπάνω.</p></noscript><script type="module" src="/report.js"></script>
 </body></html>
