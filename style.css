@@ -962,3 +962,25 @@ body {
     padding: 4px 10px;
   }
 }
+
+
+/* ── Shared navigation ── */
+.site-nav { display: flex; align-items: center; gap: 8px; }
+.site-nav a {
+  padding: 7px 11px;
+  border-radius: 8px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background var(--transition), color var(--transition);
+}
+.site-nav a:hover,
+.site-nav a[aria-current="page"] { color: var(--accent); background: var(--accent-soft); }
+
+@media (max-width: 700px) {
+  .header-inner { flex-wrap: wrap; height: auto; min-height: 60px; padding-top: 8px; padding-bottom: 8px; row-gap: 4px; }
+  .site-nav { order: 3; width: 100%; }
+  .site-nav a { padding: 6px 9px; }
+}
