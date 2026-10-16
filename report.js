@@ -54,6 +54,99 @@ function renderBreakdown(snapshot, type) {
   const max = Math.max(...rows.map(row => row.value), 1);
   host.innerHTML = rows.map(row => '<div class="bar-row"><div class="bar-label">' + escapeText(row.label) + '</div><div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:' + (row.value/max*100) + '%"></div></div><div class="bar-value">' + numberFormat.format(row.value) + '</div></div>').join('');
 }
+
+function renderCategoryTrends(snapshots) {
+  const head = document.getElementById('category-trends-head');
+  const body = document.getElementById('category-trends-rows');
+  const recent = snapshots.slice(-4);
+  head.replaceChildren();
+  body.replaceChildren();
+  if (!recent.length) {
+    const row = document.createElement('tr');
+    const cell = document.createElement('td');
+    cell.colSpan = 3;
+    cell.textContent = 'Δεν υπάρχουν ιστορικά δεδομένα ανά κατηγορία.';
+    row.appendChild(cell);
+    body.appendChild(row);
+    return;
+  }
+
+  const headerRow = document.createElement('tr');
+  const categoryHeader = document.createElement('th');
+  categoryHeader.scope = 'col';
+  categoryHeader.textContent = 'Κατηγορία';
+  headerRow.appendChild(categoryHeader);
+  recent.forEach(snapshot => {
+    const cell = document.createElement('th');
+    cell.scope = 'col';
+    cell.className = 'num';
+    cell.textContent = formatMonth(snapshot.month);
+    headerRow.appendChild(cell);
+  });
+  const changeHeader = document.createElement('th');
+  changeHeader.scope = 'col';
+  changeHeader.textContent = 'Μεταβολή';
+  headerRow.appendChild(changeHeader);
+  const noteHeader = document.createElement('th');
+  noteHeader.scope = 'col';
+  noteHeader.textContent = 'Παρατήρηση';
+  headerRow.appendChild(noteHeader);
+  head.appendChild(headerRow);
+
+  const first = recent[0];
+  const latest = recent[recent.length - 1];
+  const categories = Object.keys(CATEGORY_LABELS).map(id => ({
+    id,
+    label: CATEGORY_LABELS[id],
+    first: Number(first.byCategory?.[id] ?? 0),
+    latest: Number(latest.byCategory?.[id] ?? 0),
+  })).sort((a, b) => b.latest - a.latest || a.label.localeCompare(b.label, 'el'));
+
+  categories.forEach(category => {
+    const row = document.createElement('tr');
+    const label = document.createElement('th');
+    label.scope = 'row';
+    label.className = 'category-name';
+    label.textContent = category.label;
+    row.appendChild(label);
+
+    recent.forEach(snapshot => {
+      const cell = document.createElement('td');
+      cell.className = 'num';
+      cell.textContent = numberFormat.format(Number(snapshot.byCategory?.[category.id] ?? 0));
+      row.appendChild(cell);
+    });
+
+    const delta = category.latest - category.first;
+    const change = document.createElement('td');
+    change.className = 'num';
+    if (delta > 0) {
+      change.classList.add('positive');
+      change.textContent = '↑ +' + numberFormat.format(delta);
+    } else if (delta < 0) {
+      change.classList.add('negative');
+      change.textContent = '↓ −' + numberFormat.format(Math.abs(delta));
+    } else {
+      change.textContent = '— 0';
+    }
+    row.appendChild(change);
+
+    const note = document.createElement('td');
+    note.className = 'trend-note';
+    if (category.latest === 0) {
+      note.textContent = 'Δεν καταγράφηκαν αγγελίες στο πιο πρόσφατο snapshot· αυτό δεν σημαίνει μηδενική ζήτηση.';
+    } else if (delta > 0) {
+      note.textContent = 'Περισσότερες ενεργές αγγελίες από το πρώτο snapshot της σύγκρισης.';
+    } else if (delta < 0) {
+      note.textContent = 'Λιγότερες ενεργές αγγελίες από το πρώτο snapshot της σύγκρισης.';
+    } else {
+      note.textContent = 'Ίδιος αριθμός ενεργών αγγελιών στα δύο άκρα της σύγκρισης.';
+    }
+    row.appendChild(note);
+    body.appendChild(row);
+  });
+}
+
 function renderHistory(snapshots) {
   document.getElementById('history-rows').innerHTML = snapshots.map((snapshot, index) => {
     const previous = snapshots[index - 1];
@@ -87,7 +180,7 @@ async function loadReport() {
       changeEl.classList.toggle('positive', change > 0); changeEl.classList.toggle('negative', change < 0);
       note.textContent = numberFormat.format(latest.total - previous.total) + ' αγγελίες σε σχέση με ' + formatMonth(previous.month);
     }
-    renderTrend(snapshots); renderBreakdown(latest, document.getElementById('breakdown-type').value); renderHistory(snapshots);
+    renderTrend(snapshots); renderBreakdown(latest, document.getElementById('breakdown-type').value); renderCategoryTrends(snapshots); renderHistory(snapshots);
     document.getElementById('breakdown-type').addEventListener('change', event => renderBreakdown(latest, event.target.value));
     document.getElementById('data-freshness').textContent = 'Τελευταία λήψη στο πιο πρόσφατο snapshot: ' + formatDate(latest.lastFetched) + '. Τα στοιχεία ανανεώνονται όταν δημιουργείται νέο μηνιαίο snapshot.';
     contentEl.hidden = false; statusEl.hidden = true;
