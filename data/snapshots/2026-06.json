@@ -4,20 +4,22 @@
   "lastFetched": "2026-07-02T19:17:52.718Z",
   "total": 115,
   "byCategory": {
-    "marketing": 6,
-    "sales": 21,
-    "logistics": 15,
+    "sales": 22,
+    "hospitality": 14,
     "admin": 20,
     "construction": 12,
     "tech": 6,
-    "hospitality": 14,
-    "other": 15,
-    "retail": 1,
-    "health": 5
+    "logistics": 15,
+    "health": 5,
+    "education": 0,
+    "marketing": 6,
+    "other": 15
   },
   "bySource": {
     "jobfind": 34,
     "kariera": 66,
     "xe": 15
-  }
+  },
+  "snapshotType": "active_inventory",
+  "measurementNote": "Active listings present in jobs.json when this snapshot was captured; not a count of all jobs newly posted during the calendar month."
 }

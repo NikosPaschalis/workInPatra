@@ -6,17 +6,20 @@
   "byCategory": {
     "sales": 32,
     "hospitality": 9,
-    "logistics": 17,
-    "other": 11,
-    "construction": 13,
     "admin": 7,
+    "construction": 13,
+    "tech": 0,
+    "logistics": 17,
+    "health": 3,
     "education": 2,
     "marketing": 2,
-    "health": 3
+    "other": 11
   },
   "bySource": {
     "jobfind": 35,
     "kariera": 41,
     "xe": 20
-  }
+  },
+  "snapshotType": "active_inventory",
+  "measurementNote": "Active listings present in jobs.json when this snapshot was captured; not a count of all jobs newly posted during the calendar month."
 }
