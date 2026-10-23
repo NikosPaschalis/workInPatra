@@ -6,10 +6,10 @@ WorkInPatra brings job listings from JobFind, Kariera, and XE together in one pl
 
 ## Main pages
 
-- [Homepage and current job listings](https://www.workinpatras.gr/): https://www.workinpatras.gr/
-- [Local job-market statistics](https://www.workinpatras.gr/report.html): https://www.workinpatras.gr/report.html
-- [Privacy policy](https://www.workinpatras.gr/privacy.html): https://www.workinpatras.gr/privacy.html
-- [Terms of use](https://www.workinpatras.gr/terms.html): https://www.workinpatras.gr/terms.html
+- [Homepage](https://www.workinpatras.gr/): Current job listings for Patras.
+- [Local job-market statistics](https://www.workinpatras.gr/report.html): An overview of local job-market data.
+- [Privacy policy](https://www.workinpatras.gr/privacy.html): How the site handles privacy.
+- [Terms of use](https://www.workinpatras.gr/terms.html): Terms for using the site.
 
 ## Job listing sources
 
