@@ -1,0 +1,26 @@
+{
+  "month": "2026-10",
+  "capturedAt": "2026-11-01T15:55:23.198Z",
+  "lastFetched": "2026-11-01T12:32:10.248Z",
+  "snapshotType": "active_inventory",
+  "measurementNote": "Active listings present in jobs.json at capture time; not a count of all jobs newly posted during the calendar month.",
+  "total": 81,
+  "byCategory": {
+    "sales": 30,
+    "hospitality": 3,
+    "admin": 9,
+    "construction": 15,
+    "tech": 0,
+    "logistics": 16,
+    "health": 3,
+    "education": 1,
+    "marketing": 1,
+    "other": 3
+  },
+  "bySource": {
+    "jobfind": 35,
+    "kariera": 36,
+    "xe": 10,
+    "unknown": 0
+  }
+}
