@@ -141,7 +141,7 @@ function loadPreviousJobs(jobsPath) {
     const output = { jobs, lastFetched: completedAt };
 
     mkdirSync(dataDir, { recursive: true });
-    writeFileSync(jobsPath, JSON.stringify(output, null, 2) + "\n", "utf8");
+    writeFileSync(jobsPath, JSON.stringify(output), "utf8");
 
     const historyResult = recordScrapeHistory({
       dataDir,
