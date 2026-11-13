@@ -12,7 +12,7 @@ The scraper stores append-only history in two JSON Lines files:
 - `job_key` uses source + URL where possible. A title/company fallback is used only when a URL is unavailable.
 - The first baseline is seeded from the current `jobs.json`. Its timestamp comes from `jobs.json.lastFetched` when valid. This does not reconstruct the true historical first-seen date.
 - A missing job in one run is not marked expired or inactive. Absence can only be evaluated later when source-run completeness is understood.
-- A source that fails or returns no jobs falls back to its previously published listings in `jobs.json`. The run record marks that source as `fallback`; those fallback listings are still observed in the combined dataset for that run, so downstream analysis must consult the source status before interpreting them as fresh observations.
+- A source that fails or returns no jobs falls back to its previously published listings in `jobs.json`. The run record marks that source as `fallback`. Fallback listings are deliberately excluded from new observations because they were not freshly retrieved in that run.
 
 ## Files
 
