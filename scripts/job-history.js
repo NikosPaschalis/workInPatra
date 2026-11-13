@@ -1,4 +1,4 @@
-import { appendFileSync, existsSync, mkdirSync, statSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 
@@ -46,7 +46,7 @@ export function initializeHistory({ dataDir, previousJobs, lastFetched }) {
   const observationsPath = path.join(dataDir, "observations.jsonl");
   const runsPath = path.join(dataDir, "scrape-runs.jsonl");
 
-  if (existsSync(observationsPath) && statSync(observationsPath).size > 0) {
+  if (existsSync(observationsPath) && readFileSync(observationsPath, "utf8").trim().length > 0) {
     return { initialized: false, baselineCount: 0 };
   }
 
