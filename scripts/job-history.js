@@ -1,4 +1,4 @@
-import { appendFileSync, existsSync, mkdirSync, readFileSync, statSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, statSync } from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 
@@ -12,17 +12,16 @@ function makeJobKey(job) {
     try {
       const url = new URL(job.url);
       url.hash = "";
-      // Query parameters are retained: some sources use them as listing identifiers.
       const normalizedUrl = url.toString().replace(/\/+$/, "");
-      return `${source}:${normalizedUrl}`;
+      return source + ":" + normalizedUrl;
     } catch {
-      // Fall through to a title/company identity when the URL is malformed.
+      // Use the title/company fallback when the URL is malformed.
     }
   }
 
   const title = String(job?.title || "").trim().toLocaleLowerCase("el");
   const company = String(job?.company || "").trim().toLocaleLowerCase("el");
-  return `${source}:fallback:${title}|${company}`;
+  return source + ":fallback:" + title + "|" + company;
 }
 
 function toObservation(job, observedAt, runId) {
@@ -42,11 +41,6 @@ function toObservation(job, observedAt, runId) {
   };
 }
 
-/**
- * Seed the history once from the currently published jobs dataset.
- * The baseline timestamp is jobs.json.lastFetched where available. It is not
- * presented as the original publication date or the true first-seen date.
- */
 export function initializeHistory({ dataDir, previousJobs, lastFetched }) {
   mkdirSync(dataDir, { recursive: true });
   const observationsPath = path.join(dataDir, "observations.jsonl");
@@ -60,7 +54,7 @@ export function initializeHistory({ dataDir, previousJobs, lastFetched }) {
   const observedAt = parsedLastFetched && !Number.isNaN(parsedLastFetched.getTime())
     ? parsedLastFetched.toISOString()
     : new Date().toISOString();
-  const runId = `baseline-${observedAt.replace(/[^0-9]/g, "").slice(0, 14)}`;
+  const runId = "baseline-" + observedAt.replace(/[^0-9]/g, "").slice(0, 14);
 
   for (const job of previousJobs) {
     appendJsonl(observationsPath, toObservation(job, observedAt, runId));
@@ -103,13 +97,14 @@ export function recordScrapeHistory({
   const observationsPath = path.join(dataDir, "observations.jsonl");
   const runsPath = path.join(dataDir, "scrape-runs.jsonl");
 
-  for (const job of jobs) {
+  const freshJobs = jobs.filter((job) => sourceStats[job.source]?.status === "success");
+  for (const job of freshJobs) {
     appendJsonl(observationsPath, toObservation(job, completedAt, runId));
   }
 
   const hasFallback = Object.values(sourceStats).some((source) => source.status === "fallback");
   const hasFailure = Object.values(sourceStats).some((source) => source.status === "failed");
-  const status = hasFailure ? "partial" : hasFallback ? "partial" : "success";
+  const status = hasFailure || hasFallback ? "partial" : "success";
 
   appendJsonl(runsPath, {
     run_id: runId,
@@ -117,11 +112,11 @@ export function recordScrapeHistory({
     status,
     started_at: startedAt,
     completed_at: completedAt,
-    total_observed: jobs.length,
+    total_observed: freshJobs.length,
     sources: sourceStats,
   });
 
-  return { runId, status, observedCount: jobs.length };
+  return { runId, status, observedCount: freshJobs.length };
 }
 
 export function recordFailedRun({ dataDir, startedAt, error, runId = randomUUID() }) {
