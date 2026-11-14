@@ -1,13 +1,7 @@
-import { USER_AGENT } from "./_shared.js";
+import { withBrowser } from "./_shared.js";
 
 const BASE_URL = "https://www.kariera.gr";
 const PAGE_URL = `${BASE_URL}/jobs/jobs-in-achaia--patra`;
-
-const HEADERS = {
-  "User-Agent": USER_AGENT,
-  "Accept": "text/html,application/xhtml+xml",
-  "Accept-Language": "el-GR,el;q=0.9,en-US;q=0.8,en;q=0.7",
-};
 
 
 // Extract the source category from Kariera's embedded job records. The
@@ -186,14 +180,28 @@ export function extractDates(html) {
 
 
 export async function scrape() {
-  const res = await fetch(PAGE_URL, { headers: HEADERS });
+  return withBrowser(async (page) => {
+    const response = await page.goto(PAGE_URL, {
+      waitUntil: "domcontentloaded",
+      timeout: 30000,
+    });
 
-  if (!res.ok) {
-    throw new Error(`Kariera HTML request failed: ${res.status}`);
-  }
+    if (!response) {
+      throw new Error("Kariera navigation returned no HTTP response");
+    }
 
-  const html = await res.text();
-  const jobs = extractJobs(html);
+    if (!response.ok()) {
+      const title = await page.title().catch(() => "");
+      const bodyPreview = (await page.locator("body").innerText().catch(() => ""))
+        .replace(/\\s+/g, " ")
+        .slice(0, 240);
+      throw new Error(
+        `Kariera browser request failed: ${response.status()} ${response.statusText()} (title: ${title || "n/a"}; body: ${bodyPreview || "empty"})`
+      );
+    }
+
+    const html = await page.content();
+    const jobs = extractJobs(html);
 
   // If Kariera changes structure or blocks us, do NOT return empty data.
   if (jobs.length === 0) {
@@ -220,5 +228,6 @@ export async function scrape() {
     `[kariera] source categories found for ${categorizedCount}/${enrichedJobs.length} jobs`
   );
 
-  return enrichedJobs;
+    return enrichedJobs;
+  });
 }
