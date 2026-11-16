@@ -1,0 +1,137 @@
+name: Read-only live DOM diagnostics
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout diagnostic branch
+        uses: actions/checkout@v4
+        with:
+          ref: diagnostics/live-dom-inspection
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright@1.59.1
+          npx playwright install --with-deps chromium
+      - name: Inspect source pages (no scraper/data writes)
+        run: |
+          mkdir -p dom-diagnostics
+          node --input-type=module <<'NODE'
+          import { chromium } from 'playwright';
+          import fs from 'node:fs/promises';
+
+          const targets = [
+            {
+              name: 'jobfind',
+              url: 'https://www.jobfind.gr/jobads/all/patra1/gr/theseis_ergasias',
+              selectors: ['div.jobitem', 'h3.title', 'div.company', 'div.company a', 'span.category', 'span.datemob', 'div.type']
+            },
+            {
+              name: 'kariera',
+              url: 'https://www.kariera.gr/jobs/jobs-in-achaia--patra',
+              selectors: ['a[href*="/jobs/"]', '[class*="job"]', '[class*="Job"]', '[class*="card"]', 'time', '[data-testid]']
+            },
+            {
+              name: 'xe',
+              url: 'https://www.xe.gr/εργασία/θέσεις-εργασίας-πάτρα',
+              selectors: ['div.result-list-narrow-item-wrapper', 'a.result-list-narrow-item-link', 'h2.results-item-title', 'div.result-item-footer', '[class*="result"]', '[class*="Result"]']
+            }
+          ];
+
+          const browser = await chromium.launch({ headless: true });
+          const context = await browser.newContext({
+            locale: 'el-GR',
+            viewport: { width: 1920, height: 1080 },
+            userAgent: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36'
+          });
+
+          try {
+            for (const target of targets) {
+              const page = await context.newPage();
+              const errors = [];
+              page.on('pageerror', e => errors.push(String(e)));
+              let status = null;
+              let navigationError = null;
+
+              try {
+                const response = await page.goto(target.url, { waitUntil: 'domcontentloaded', timeout: 45000 });
+                status = response?.status() ?? null;
+                await page.waitForTimeout(5000);
+                await page.locator('body').waitFor({ timeout: 10000 }).catch(() => {});
+              } catch (error) {
+                navigationError = String(error);
+              }
+
+              const diagnostics = await page.evaluate((selectors) => {
+                const counts = {};
+                for (const selector of selectors) {
+                  try { counts[selector] = document.querySelectorAll(selector).length; }
+                  catch (error) { counts[selector] = 'INVALID: ' + String(error); }
+                }
+
+                const candidates = Array.from(document.querySelectorAll('a[href]'))
+                  .filter(a => {
+                    const text = (a.innerText || '').trim();
+                    const href = a.getAttribute('href') || '';
+                    return text.length > 8 && (/job|εργασ|θέση|career/i.test(text + ' ' + href));
+                  })
+                  .slice(0, 35)
+                  .map(a => ({
+                    text: (a.innerText || '').trim().slice(0, 300),
+                    href: a.href,
+                    parent: a.parentElement?.outerHTML?.slice(0, 2500) || ''
+                  }));
+
+                const classCandidates = Array.from(document.querySelectorAll('[class]'))
+                  .map(el => ({ tag: el.tagName.toLowerCase(), cls: String(el.className).slice(0, 240) }))
+                  .filter(x => /job|result|listing|card|vacanc|position/i.test(x.cls))
+                  .slice(0, 100);
+
+                return {
+                  title: document.title,
+                  url: location.href,
+                  bodyText: (document.body?.innerText || '').slice(0, 12000),
+                  selectorCounts: counts,
+                  linkCandidates: candidates,
+                  classCandidates
+                };
+              }, target.selectors);
+
+              await fs.writeFile(`dom-diagnostics/${target.name}.html`, await page.content(), 'utf8');
+              await fs.writeFile(`dom-diagnostics/${target.name}.json`, JSON.stringify({
+                source: target.name, requestedUrl: target.url, status, navigationError,
+                pageErrors: errors, ...diagnostics
+              }, null, 2), 'utf8');
+
+              console.log(JSON.stringify({
+                source: target.name, status, navigationError, title: diagnostics.title,
+                finalUrl: diagnostics.url, selectorCounts: diagnostics.selectorCounts,
+                candidateLinks: diagnostics.linkCandidates.length,
+                candidateClasses: diagnostics.classCandidates.length
+              }));
+              await page.close();
+            }
+          } finally {
+            await browser.close();
+          }
+          NODE
+      - name: Upload HTML and DOM diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-dom-diagnostics
+          path: dom-diagnostics/
+          if-no-files-found: warn
+          retention-days: 3
