@@ -137,6 +137,24 @@ const KARIERA_CATEGORY_MAP = {
   SOCIAL_VOLUNTEER_SERVICES: "other",
 };
 
+const KARIERA_TEXT_CATEGORY_RULES = [
+  ["πωλησεις", "sales"],
+  ["λιανεμποριο", "sales"],
+  ["τηλεφωνικο κεντρο", "sales"],
+  ["μαρκετινγκ", "marketing"],
+  ["παραγωγη", "logistics"],
+  ["τεχνικοι", "construction"],
+  ["μεταφορες", "logistics"],
+  ["οδηγηση", "logistics"],
+  ["αποθηκη", "logistics"],
+  ["λογιστικα", "admin"],
+  ["γενικη διοικηση", "admin"],
+  ["συμβουλος επιχειρησεων", "admin"],
+  ["φαρμακευτικα", "health"],
+  ["υγεια", "health"],
+  ["ασφαλεια", "other"],
+];
+
 const SOURCE_CATEGORY_RULES = {
   jobfind: [
     ["πληροφορικ", "tech"],
@@ -151,11 +169,21 @@ const SOURCE_CATEGORY_RULES = {
     ["τεχνικοι", "construction"],
     ["μηχανικοι", "construction"],
     ["προσωπικο ασφαλειας", "other"],
+    ["εκπαιδευση", "education"],
+    ["τουρισμος", "hospitality"],
+    ["ξενοδοχεια", "hospitality"],
+    ["διοικηση επιχειρησεων", "admin"],
+    ["λογιστηριο", "admin"],
+    ["design photo video", "marketing"],
   ],
   xe: [
+    ["barista", "hospitality"],
+    ["ψηστ", "hospitality"],
+    ["κρεπα", "hospitality"],
     ["marketing", "marketing"],
     ["διαφημισ", "marketing"],
     ["πωλητ", "sales"],
+    ["οδηγ", "logistics"],
     ["ταμι", "sales"],
     ["λιανικ", "sales"],
     ["τηλεφωνικ", "sales"],
@@ -201,9 +229,12 @@ export function mapSourceCategory(source = "", sourceCategory = "") {
 
   if (source === "kariera") {
     const key = String(sourceCategory).trim().toUpperCase();
-    return Object.hasOwn(KARIERA_CATEGORY_MAP, key)
-      ? KARIERA_CATEGORY_MAP[key]
-      : null;
+    if (Object.hasOwn(KARIERA_CATEGORY_MAP, key)) return KARIERA_CATEGORY_MAP[key];
+    const normalized = normalizeCategoryText(sourceCategory);
+    const match = KARIERA_TEXT_CATEGORY_RULES.find(([fragment]) =>
+      normalized.includes(normalizeCategoryText(fragment))
+    );
+    return match?.[1] || null;
   }
 
   const normalized = normalizeCategoryText(sourceCategory);
