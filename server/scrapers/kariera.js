@@ -50,6 +50,25 @@ function extractItemListItems(html) {
   return [];
 }
 
+
+export function extractDates(html) {
+  const dates = {};
+  let pendingJobId = null;
+  const tokenRegex = /href="\/jobs\/[^"]*\/(\d+)"|<time\b[^>]*\bdatetime="([^"]+)"/gi;
+  let match;
+  while ((match = tokenRegex.exec(html)) !== null) {
+    if (match[1]) {
+      pendingJobId = match[1];
+      continue;
+    }
+    if (!pendingJobId || !match[2]) continue;
+    const parsed = new Date(match[2]);
+    if (!Number.isNaN(parsed.getTime())) dates[pendingJobId] = parsed.toISOString();
+    pendingJobId = null;
+  }
+  return dates;
+}
+
 export function extractJobs(html) {
   const jobs = [], seen = new Set(), categories = extractSourceCategories(html);
   for (const item of extractItemListItems(html)) {
