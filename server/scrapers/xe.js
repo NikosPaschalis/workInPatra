@@ -43,9 +43,10 @@ export async function scrape() {
     const cards = await extractJobsFromPage(page);
     const jobs = cards.filter((job) => job.title && job.url).map((job) => {
       const fields = parseFooter(job.footer);
+      const sourceCategory = extractSourceCategory(job.url);
       return {
-        title: job.title, ...fields, tags: [], url: job.url, source: "xe",
-        sourceCategory: extractSourceCategory(job.url), date: parseGreekDate(fields.dateRaw),
+        title: job.title, ...fields, tags: [sourceCategory].filter(Boolean), url: job.url, source: "xe",
+        sourceCategory, date: parseGreekDate(fields.dateRaw),
       };
     });
     const categorizedCount = jobs.filter((job) => job.sourceCategory).length;
