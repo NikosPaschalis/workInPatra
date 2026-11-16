@@ -1,7 +1,9 @@
 name: Read-only live DOM diagnostics
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - diagnostics/live-dom-inspection
 
 permissions:
   contents: read
