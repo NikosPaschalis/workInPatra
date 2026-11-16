@@ -10,13 +10,57 @@ export function extractSourceCategory(url) {
       .split("/")
       .filter(Boolean);
 
-    // Current XE job URLs are /εργασία/θέση-εργασίας/{specialty}/{job-slug}.
     if (parts.length < 4 || !parts[2]) return "";
-
     return decodeURIComponent(parts[2]).replace(/-/g, " ").trim();
   } catch {
     return "";
   }
+}
+
+const DATE_SEGMENT = /(?:σήμερα|χθες|today|yesterday|πριν από\\s*\\d+\\s*(?:λεπτ|ώρ|μέρ|ημέρ|εβδ|μήν)|\\d+\\s*(?:λεπτ|ώρ|μέρ|ημέρ|εβδ|μήν|day|week|month))/i;
+const SALARY_SEGMENT = /(?:€|ευρώ)\\s*(?:\\/|το\\s+)?|\\d[\\d.,\\s]*\\s*(?:€|ευρώ)/i;
+
+export function parseFooter(footer = "") {
+  const parts = String(footer)
+    .replace(/\\u00a0/g, " ")
+    .split(/\\s+-\\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  if (parts.length === 0) {
+    return { company: "", location: "", salaryRaw: "", dateRaw: "" };
+  }
+
+  let dateRaw = "";
+  if (DATE_SEGMENT.test(parts.at(-1))) dateRaw = parts.pop();
+
+  let salaryRaw = "";
+  if (parts.length && SALARY_SEGMENT.test(parts.at(-1))) salaryRaw = parts.pop();
+
+  // The listing is filtered to Patras. A footer with one remaining segment
+  // contains only the location, not a company name.
+  const location = parts.pop() || "";
+  const company = parts.join(" - ");
+
+  return { company, location, salaryRaw, dateRaw };
+}
+
+export async function extractJobsFromPage(page) {
+  return page.locator("div.result-list-narrow-item-wrapper").evaluateAll((wrappers) =>
+    wrappers.map((wrapper) => {
+      const text = (selector) =>
+        wrapper.querySelector(selector)?.innerText?.trim() || "";
+      const link = wrapper.querySelector("a.result-list-narrow-item-link");
+      const footer = text("div.result-item-footer");
+
+      return {
+        title: text("h2.results-item-title"),
+        footer,
+        url: link?.href || "",
+        source: "xe",
+      };
+    })
+  );
 }
 
 export async function scrape() {
@@ -24,40 +68,30 @@ export async function scrape() {
     await page.goto(PAGE_URL, { waitUntil: "networkidle", timeout: 30000 });
     await page.waitForSelector("div.result-list-narrow-item-wrapper", { timeout: 15000 });
 
-    return page.evaluate(() => {
-      return Array.from(document.querySelectorAll("div.result-list-narrow-item-wrapper")).map(wrapper => {
-        const link    = wrapper.querySelector("a.result-list-narrow-item-link");
-        const footer  = wrapper.querySelector("div.result-item-footer")?.innerText?.trim() || "";
-
-        // Footer format: "COMPANY - Πάτρα - πριν από X ημέρες"
-        const parts   = footer.split(" - ");
-        const company = parts[0]?.trim() || "";
-        const dateRaw = parts[parts.length - 1]?.trim() || "";
-
+    const cards = await extractJobsFromPage(page);
+    const parsedJobs = cards
+      .filter((job) => job.title && job.url)
+      .map((job) => {
+        const { company, location, salaryRaw, dateRaw } = parseFooter(job.footer);
         return {
-          title:   wrapper.querySelector("h2.results-item-title")?.innerText?.trim() || "",
+          title: job.title,
           company,
+          location,
+          salaryRaw,
           dateRaw,
-          tags:    [],
-          url:     link?.href || "",
-          source:  "xe",
+          tags: [],
+          url: job.url,
+          source: "xe",
+          sourceCategory: extractSourceCategory(job.url),
+          date: parseGreekDate(dateRaw),
         };
       });
-    }).then(jobs => {
-      const parsedJobs = jobs
-        .filter(j => j.title)
-        .map(j => ({
-          ...j,
-          sourceCategory: extractSourceCategory(j.url),
-          date: parseGreekDate(j.dateRaw),
-        }));
 
-      const categorizedCount = parsedJobs.filter(job => job.sourceCategory).length;
-      console.log(
-        `[xe] source categories found for ${categorizedCount}/${parsedJobs.length} jobs`
-      );
+    const categorizedCount = parsedJobs.filter((job) => job.sourceCategory).length;
+    console.log(
+      `[xe] source categories found for ${categorizedCount}/${parsedJobs.length} jobs`
+    );
 
-      return parsedJobs;
-    });
+    return parsedJobs;
   });
 }
