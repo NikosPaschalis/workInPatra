@@ -130,7 +130,7 @@ export async function scrape() {
       const html = await page.content();
       const dates = extractDates(html);
       jobs = extractJobs(html).map((job) => {
-        const id = job.url.match(/(\\d+)$/)?.[1];
+        const id = job.url.match(/(\d+)$/)?.[1];
         const dateRaw = id ? dates[id] || "" : "";
         return {
           ...job,
