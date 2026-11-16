@@ -127,6 +127,14 @@ test("current Kariera visible category labels map to the common taxonomy", () =>
   assert.equal(mapSourceCategory("kariera", "Μεταφορές / Οδήγηση"), "logistics");
   assert.equal(mapSourceCategory("kariera", "Φαρμακευτικά / Υγεία"), "health");
   assert.equal(mapSourceCategory("kariera", "Λογιστικά"), "admin");
+
+  assert.equal(mapSourceCategory("kariera", "Παραγωγή"), "logistics");
+  assert.equal(mapSourceCategory("kariera", "Τεχνικοί / Service"), "construction");
+  assert.equal(mapSourceCategory("kariera", "Ασφάλεια"), "other");
+  assert.equal(mapSourceCategory("kariera", "Τηλεφωνικό Κέντρο / Εξυπηρέτηση Πελατών"), "sales");
+  assert.equal(mapSourceCategory("kariera", "Αποθήκη / Logistics"), "logistics");
+  assert.equal(mapSourceCategory("kariera", "Γενική Διοίκηση"), "admin");
+  assert.equal(mapSourceCategory("kariera", "Σύμβουλος Επιχειρήσεων"), "admin");
 });
 
 test("XE specialties include hospitality and driver roles", () => {
