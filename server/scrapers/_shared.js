@@ -27,12 +27,11 @@ export async function withBrowser(fn) {
   }
 }
 
-// Normalizes Greek relative dates → ISO string
+// Normalizes Greek relative dates to ISO calendar dates.
 export function parseGreekDate(str, now = new Date()) {
   if (!str) return null;
   const s = str.trim().toLowerCase();
 
-  // Always work at midnight UTC so stored dates are clean calendar days
   function midnight(d) {
     return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())).toISOString();
   }
@@ -40,32 +39,50 @@ export function parseGreekDate(str, now = new Date()) {
   if (s.includes("σήμερα") || s.includes("today")) return midnight(now);
 
   if (s.includes("χθες") || s.includes("yesterday")) {
-    const d = new Date(now); d.setUTCDate(d.getUTCDate() - 1); return midnight(d);
+    const d = new Date(now);
+    d.setUTCDate(d.getUTCDate() - 1);
+    return midnight(d);
   }
 
-  const daysMatch = s.match(/(\d+)\s*(μέρ|ημέρ|day)/);
+  // XE can publish relative ages in hours or minutes, not only days.
+  const hoursMatch = s.match(/(?:πριν από\\s*)?(\\d+)\\s*(?:ώρ|ωρα|hour)/);
+  if (hoursMatch) {
+    const d = new Date(now.getTime() - Number(hoursMatch[1]) * 60 * 60 * 1000);
+    return midnight(d);
+  }
+
+  const minutesMatch = s.match(/(?:πριν από\\s*)?(\\d+)\\s*(?:λεπτ|λεπτο|minute|min)/);
+  if (minutesMatch) {
+    const d = new Date(now.getTime() - Number(minutesMatch[1]) * 60 * 1000);
+    return midnight(d);
+  }
+
+  const daysMatch = s.match(/(\\d+)\\s*(μέρ|ημέρ|day)/);
   if (daysMatch) {
-    const d = new Date(now); d.setUTCDate(d.getUTCDate() - parseInt(daysMatch[1])); return midnight(d);
+    const d = new Date(now);
+    d.setUTCDate(d.getUTCDate() - parseInt(daysMatch[1], 10));
+    return midnight(d);
   }
 
-  const weeksMatch = s.match(/(\d+)\s*(εβδ|week)/);
+  const weeksMatch = s.match(/(\\d+)\\s*(εβδ|week)/);
   if (weeksMatch) {
-    const d = new Date(now); d.setUTCDate(d.getUTCDate() - parseInt(weeksMatch[1]) * 7); return midnight(d);
+    const d = new Date(now);
+    d.setUTCDate(d.getUTCDate() - parseInt(weeksMatch[1], 10) * 7);
+    return midnight(d);
   }
 
-  const monthsMatch = s.match(/(\d+)\s*(μήν|month)/);
+  const monthsMatch = s.match(/(\\d+)\\s*(μήν|month)/);
   if (monthsMatch) {
     const d = new Date(now);
     const originalDay = d.getUTCDate();
     d.setUTCDate(1);
-    d.setUTCMonth(d.getUTCMonth() - parseInt(monthsMatch[1]));
+    d.setUTCMonth(d.getUTCMonth() - parseInt(monthsMatch[1], 10));
     const lastDay = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate();
     d.setUTCDate(Math.min(originalDay, lastDay));
     return midnight(d);
   }
 
-  // dd/mm/yyyy or dd-mm-yyyy
-  const dateMatch = s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  const dateMatch = s.match(/(\\d{1,2})[\\/\\-](\\d{1,2})[\\/\\-](\\d{4})/);
   if (dateMatch) {
     const day = Number(dateMatch[1]);
     const month = Number(dateMatch[2]);
@@ -79,7 +96,6 @@ export function parseGreekDate(str, now = new Date()) {
     ) {
       return parsed.toISOString();
     }
-    return null;
   }
 
   return null;
