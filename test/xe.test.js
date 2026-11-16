@@ -21,3 +21,44 @@ test("extractSourceCategory safely handles non-job and invalid URLs", () => {
   assert.equal(extractSourceCategory("%invalid"), "");
   assert.equal(extractSourceCategory(""), "");
 });
+
+
+import { parseFooter } from "../server/scrapers/xe.js";
+import { parseGreekDate } from "../server/scrapers/_shared.js";
+
+test("parseFooter separates employer, location, salary and relative date", () => {
+  assert.deepEqual(
+    parseFooter("SKROUTZ DELIVERY SERVICES - Πάτρα - 920 € / μήνα - πριν από 2 εβδομάδες"),
+    {
+      company: "SKROUTZ DELIVERY SERVICES",
+      location: "Πάτρα",
+      salaryRaw: "920 € / μήνα",
+      dateRaw: "πριν από 2 εβδομάδες",
+    }
+  );
+});
+
+test("parseFooter does not mistake a location-only footer for a company", () => {
+  assert.deepEqual(parseFooter("Δεμένικα - πριν από 6 ημέρες"), {
+    company: "",
+    location: "Δεμένικα",
+    salaryRaw: "",
+    dateRaw: "πριν από 6 ημέρες",
+  });
+});
+
+test("parseFooter preserves a company when salary is not published", () => {
+  assert.deepEqual(parseFooter("European Academy - Πάτρα - πριν από 7 ημέρες"), {
+    company: "European Academy",
+    location: "Πάτρα",
+    salaryRaw: "",
+    dateRaw: "πριν από 7 ημέρες",
+  });
+});
+
+test("parseGreekDate supports XE relative hours", () => {
+  assert.equal(
+    parseGreekDate("πριν από 21 ώρες", new Date("2026-11-16T08:00:00.000Z")),
+    "2026-11-15T00:00:00.000Z"
+  );
+});

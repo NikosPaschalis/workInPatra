@@ -46,3 +46,12 @@ test("date sorting puts missing or invalid dates last", () => {
   jobs.sort(compareJobsByDateNewestFirst);
   assert.deepEqual(jobs.map(job => job.title), ["new", "old", "unknown", "invalid"]);
 });
+
+
+test("parseGreekDate converts relative hour ages to calendar dates", async () => {
+  const { parseGreekDate } = await import("../server/scrapers/_shared.js");
+  assert.equal(
+    parseGreekDate("πριν από 21 ώρες", new Date("2026-11-16T08:00:00.000Z")),
+    "2026-11-15T00:00:00.000Z"
+  );
+});

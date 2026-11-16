@@ -118,3 +118,28 @@ test("unknown source categories fall back to normalized title matching", () => {
     tags: [],
   }), "tech");
 });
+
+
+test("current Kariera visible category labels map to the common taxonomy", () => {
+  assert.equal(mapSourceCategory("kariera", "Λιανεμπόριο"), "sales");
+  assert.equal(mapSourceCategory("kariera", "Πωλήσεις / Διαχείριση Πελατών"), "sales");
+  assert.equal(mapSourceCategory("kariera", "Μάρκετινγκ / Διαφήμιση"), "marketing");
+  assert.equal(mapSourceCategory("kariera", "Μεταφορές / Οδήγηση"), "logistics");
+  assert.equal(mapSourceCategory("kariera", "Φαρμακευτικά / Υγεία"), "health");
+  assert.equal(mapSourceCategory("kariera", "Λογιστικά"), "admin");
+
+  assert.equal(mapSourceCategory("kariera", "Παραγωγή"), "logistics");
+  assert.equal(mapSourceCategory("kariera", "Τεχνικοί / Service"), "construction");
+  assert.equal(mapSourceCategory("kariera", "Ασφάλεια"), "other");
+  assert.equal(mapSourceCategory("kariera", "Τηλεφωνικό Κέντρο / Εξυπηρέτηση Πελατών"), "sales");
+  assert.equal(mapSourceCategory("kariera", "Αποθήκη / Logistics"), "logistics");
+  assert.equal(mapSourceCategory("kariera", "Γενική Διοίκηση"), "admin");
+  assert.equal(mapSourceCategory("kariera", "Σύμβουλος Επιχειρήσεων"), "admin");
+});
+
+test("XE specialties include hospitality and driver roles", () => {
+  assert.equal(mapSourceCategory("xe", "baristas"), "hospitality");
+  assert.equal(mapSourceCategory("xe", "ψήστες τυλιχτές"), "hospitality");
+  assert.equal(mapSourceCategory("xe", "κρεπαδόροι"), "hospitality");
+  assert.equal(mapSourceCategory("xe", "οδηγοί οχημάτων"), "logistics");
+});

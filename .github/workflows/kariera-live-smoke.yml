@@ -6,7 +6,11 @@ on:
       - "fix/**"
     paths:
       - "server/scrapers/kariera.js"
+      - "server/scrapers/jobfind.js"
+      - "server/scrapers/xe.js"
+      - "server/scrapers/_shared.js"
       - "scripts/kariera-live-smoke.js"
+      - "scripts/listing-live-smoke.js"
       - ".github/workflows/kariera-live-smoke.yml"
   workflow_dispatch:
 
@@ -15,7 +19,7 @@ permissions:
 
 jobs:
   live-smoke:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - name: Checkout repository
@@ -27,5 +31,9 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps --only-shell chromium
+      - name: Fetch live JobFind and XE listings and validate extraction
+        run: node scripts/listing-live-smoke.js
       - name: Fetch live Kariera page and validate parsed listings
         run: node scripts/kariera-live-smoke.js

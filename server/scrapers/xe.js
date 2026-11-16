@@ -4,60 +4,53 @@ const PAGE_URL = "https://www.xe.gr/%CE%B5%CF%81%CE%B3%CE%B1%CF%83%CE%AF%CE%B1/%
 
 export function extractSourceCategory(url) {
   if (!url) return "";
-
   try {
-    const parts = new URL(url, "https://www.xe.gr").pathname
-      .split("/")
-      .filter(Boolean);
-
-    // Current XE job URLs are /εργασία/θέση-εργασίας/{specialty}/{job-slug}.
+    const parts = new URL(url, "https://www.xe.gr").pathname.split("/").filter(Boolean);
     if (parts.length < 4 || !parts[2]) return "";
-
     return decodeURIComponent(parts[2]).replace(/-/g, " ").trim();
-  } catch {
-    return "";
-  }
+  } catch { return ""; }
+}
+
+const DATE_SEGMENT = /(?:σήμερα|χθες|today|yesterday|πριν από\s*\d+\s*(?:λεπτ|ώρ|μέρ|ημέρ|εβδ|μήν)|\d+\s*(?:λεπτ|ώρ|μέρ|ημέρ|εβδ|μήν|day|week|month))/i;
+const SALARY_SEGMENT = /(?:€|ευρώ)\s*(?:\/|το\s+)?|\d[\d.,\s]*\s*(?:€|ευρώ)/i;
+
+export function parseFooter(footer = "") {
+  const parts = String(footer).replace(/\u00a0/g, " ").split(/\s+-\s+/).map((part) => part.trim()).filter(Boolean);
+  if (!parts.length) return { company: "", location: "", salaryRaw: "", dateRaw: "" };
+  let dateRaw = "";
+  if (DATE_SEGMENT.test(parts.at(-1))) dateRaw = parts.pop();
+  let salaryRaw = "";
+  if (parts.length && SALARY_SEGMENT.test(parts.at(-1))) salaryRaw = parts.pop();
+  const location = parts.pop() || "";
+  const company = parts.join(" - ");
+  return { company, location, salaryRaw, dateRaw };
+}
+
+export async function extractJobsFromPage(page) {
+  return page.locator("div.result-list-narrow-item-wrapper").evaluateAll((wrappers) =>
+    wrappers.map((wrapper) => {
+      const text = (selector) => wrapper.querySelector(selector)?.innerText?.trim() || "";
+      const link = wrapper.querySelector("a.result-list-narrow-item-link");
+      return { title: text("h2.results-item-title"), footer: text("div.result-item-footer"), url: link?.href || "", source: "xe" };
+    })
+  );
 }
 
 export async function scrape() {
   return withBrowser(async (page) => {
     await page.goto(PAGE_URL, { waitUntil: "networkidle", timeout: 30000 });
     await page.waitForSelector("div.result-list-narrow-item-wrapper", { timeout: 15000 });
-
-    return page.evaluate(() => {
-      return Array.from(document.querySelectorAll("div.result-list-narrow-item-wrapper")).map(wrapper => {
-        const link    = wrapper.querySelector("a.result-list-narrow-item-link");
-        const footer  = wrapper.querySelector("div.result-item-footer")?.innerText?.trim() || "";
-
-        // Footer format: "COMPANY - Πάτρα - πριν από X ημέρες"
-        const parts   = footer.split(" - ");
-        const company = parts[0]?.trim() || "";
-        const dateRaw = parts[parts.length - 1]?.trim() || "";
-
-        return {
-          title:   wrapper.querySelector("h2.results-item-title")?.innerText?.trim() || "",
-          company,
-          dateRaw,
-          tags:    [],
-          url:     link?.href || "",
-          source:  "xe",
-        };
-      });
-    }).then(jobs => {
-      const parsedJobs = jobs
-        .filter(j => j.title)
-        .map(j => ({
-          ...j,
-          sourceCategory: extractSourceCategory(j.url),
-          date: parseGreekDate(j.dateRaw),
-        }));
-
-      const categorizedCount = parsedJobs.filter(job => job.sourceCategory).length;
-      console.log(
-        `[xe] source categories found for ${categorizedCount}/${parsedJobs.length} jobs`
-      );
-
-      return parsedJobs;
+    const cards = await extractJobsFromPage(page);
+    const jobs = cards.filter((job) => job.title && job.url).map((job) => {
+      const fields = parseFooter(job.footer);
+      const sourceCategory = extractSourceCategory(job.url);
+      return {
+        title: job.title, ...fields, tags: [sourceCategory].filter(Boolean), url: job.url, source: "xe",
+        sourceCategory, date: parseGreekDate(fields.dateRaw),
+      };
     });
+    const categorizedCount = jobs.filter((job) => job.sourceCategory).length;
+    console.log("[xe] source categories found for " + categorizedCount + "/" + jobs.length + " jobs");
+    return jobs;
   });
 }
