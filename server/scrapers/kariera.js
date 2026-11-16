@@ -126,7 +126,19 @@ export async function scrape() {
       throw new Error("Kariera browser request failed: " + response.status() + " " + response.statusText() + " (title: " + (title || "n/a") + "; body: " + (body || "empty") + ")");
     }
     let jobs = await extractCardJobs(page);
-    if (!jobs.length) jobs = extractJobs(await page.content());
+    if (!jobs.length) {
+      const html = await page.content();
+      const dates = extractDates(html);
+      jobs = extractJobs(html).map((job) => {
+        const id = job.url.match(/(\\d+)$/)?.[1];
+        const dateRaw = id ? dates[id] || "" : "";
+        return {
+          ...job,
+          dateRaw,
+          date: dateRaw ? new Date(dateRaw).toISOString() : null,
+        };
+      });
+    }
     if (!jobs.length) throw new Error("Kariera scraper returned 0 jobs - refusing to overwrite existing data");
     const unique = [...new Map(jobs.map((job) => [job.url, job])).values()];
     const valid = unique.filter((job) => job.title && job.url);
