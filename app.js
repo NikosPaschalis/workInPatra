@@ -271,6 +271,40 @@ function updateSEO() {
   if (twDesc) twDesc.setAttribute("content", desc);
 }
 
+// Direct listings open inside the site; only the email action opens the mail app.
+const directDialog = document.getElementById("direct-job-dialog");
+const directClose = document.getElementById("direct-dialog-close");
+directClose.addEventListener("click", () => directDialog.close());
+directDialog.addEventListener("click", event => {
+  if (event.target === directDialog) directDialog.close();
+});
+
+function openDirectJob(job) {
+  document.getElementById("direct-dialog-title").textContent = job.title;
+  document.getElementById("direct-dialog-company").textContent = job.company || "";
+  const meta = document.getElementById("direct-dialog-meta");
+  meta.replaceChildren();
+  [job.location, job.employmentType].filter(Boolean).forEach(value => {
+    const item = document.createElement("span");
+    item.textContent = value;
+    meta.appendChild(item);
+  });
+  document.getElementById("direct-dialog-description").textContent = job.description || "";
+  const benefits = document.getElementById("direct-dialog-benefits");
+  benefits.replaceChildren();
+  (job.benefits || []).forEach(benefit => {
+    const li = document.createElement("li");
+    li.textContent = benefit;
+    benefits.appendChild(li);
+  });
+  document.getElementById("direct-dialog-benefits-section").hidden = !(job.benefits || []).length;
+  document.getElementById("direct-dialog-email").textContent = job.applicationEmail || "";
+  const apply = document.getElementById("direct-dialog-apply-link");
+  apply.href = job.url || "#";
+  apply.hidden = !job.url;
+  directDialog.showModal();
+}
+
 // ── Render ────────────────────────────────────────────────────────────────────
 function render() {
   syncFilterSummary();
@@ -336,27 +370,36 @@ function render() {
     card.querySelector(".card-company").textContent = job.company || "—";
 
     const tagsEl = card.querySelector(".card-tags");
-    (job.tags || []).forEach(t => {
+    const cardTags = job.source === "direct"
+      ? [job.location, job.employmentType].filter(Boolean)
+      : (job.tags || []);
+    cardTags.forEach(t => {
       const span = document.createElement("span");
       span.className = "tag";
       span.textContent = t;
       tagsEl.appendChild(span);
     });
 
-    if (job.source === "direct" && job.description) {
-      const details = document.createElement("p");
-      details.className = "card-direct-description";
-      details.textContent = job.description;
-      card.querySelector(".card-tags").after(details);
-    }
-
     const link = card.querySelector(".card-link");
     if (job.source === "direct") {
-      link.textContent = "Αποστολή βιογραφικού";
+      card.classList.add("job-card-direct");
+      link.textContent = "Προβολή αγγελίας";
       link.removeAttribute("target");
+      link.removeAttribute("href");
+      link.setAttribute("role", "button");
+      link.setAttribute("tabindex", "0");
+      const showDetails = event => {
+        event.preventDefault();
+        openDirectJob(job);
+      };
+      link.addEventListener("click", showDetails);
+      link.addEventListener("keydown", event => {
+        if (event.key === "Enter" || event.key === " ") showDetails(event);
+      });
+    } else {
+      link.href = job.url || "#";
+      if (!job.url) link.style.display = "none";
     }
-    link.href = job.url || "#";
-    if (!job.url) link.style.display = "none";
 
     grid.appendChild(node);
   });
