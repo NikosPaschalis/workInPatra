@@ -2,7 +2,10 @@
 export const KARIERA_DAILY_CRON = "0 18 * * *";
 export const KARIERA_JITTER_MAX_MS = 180_000;
 
-export function shouldRunKariera(eventName, schedule) {
+export function shouldRunKariera(eventName, schedule, pauseUntil = "", now = new Date()) {
+  // Cooldown applies to both scheduled and manually dispatched scraper runs.
+  const deadline = Date.parse(pauseUntil);
+  if (pauseUntil && Number.isFinite(deadline) && now.getTime() < deadline) return false;
   // Local/explicit runs remain useful for diagnosing recovery.
   return eventName !== "schedule" || schedule === KARIERA_DAILY_CRON;
 }

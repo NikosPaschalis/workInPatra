@@ -29,7 +29,7 @@ async function fetchAll(previousJobs) {
   console.log("⏱  Per-scraper timeout: " + SCRAPER_TIMEOUT_MS / 1000 + "s\n");
 
   const eventName = process.env.GITHUB_EVENT_NAME || "";
-  const runKariera = shouldRunKariera(eventName, process.env.KARIERA_CRON || "");
+  const runKariera = shouldRunKariera(eventName, process.env.KARIERA_CRON || "", process.env.KARIERA_PAUSE_UNTIL || "");
   const karieraDelay = runKariera ? karieraJitterMs(eventName) : 0;
 
   const scrapers = [

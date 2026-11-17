@@ -11,6 +11,8 @@ permissions:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  # Pause Kariera for 48h from 2026-11-17 14:00 UTC; resume evening 2026-11-19.
+  KARIERA_PAUSE_UNTIL: '2026-11-19T14:00:00Z'
 
 jobs:
   scrape:
@@ -57,11 +59,14 @@ jobs:
           KARIERA_CRON: ${{ github.event.schedule }}
         run: node scripts/scrape.js
 
+      - name: Apply verified Kariera queue to the same nightly jobs batch
+        run: node scripts/apply-curated-kariera.js
+
       - name: Commit & push data/jobs.json
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/jobs.json data/observations.jsonl data/scrape-runs.jsonl
+          git add data/jobs.json data/observations.jsonl data/scrape-runs.jsonl data/kariera-pending.json
           git diff --staged --quiet \
             && echo "⏭  No changes — skipping commit" \
             || (git commit -m "chore: update jobs.json" && git push)
