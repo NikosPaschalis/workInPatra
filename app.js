@@ -371,7 +371,7 @@ function render() {
 
     const tagsEl = card.querySelector(".card-tags");
     const cardTags = job.source === "direct"
-      ? [job.location, job.employmentType].filter(Boolean)
+      ? [CATEGORY_SEO[job.category] || job.sourceCategory || "Άλλη κατηγορία"]
       : (job.tags || []);
     cardTags.forEach(t => {
       const span = document.createElement("span");
