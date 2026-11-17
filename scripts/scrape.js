@@ -7,6 +7,7 @@ import { readFileSync, writeFileSync, mkdirSync } from "fs";
 import { fileURLToPath } from "url";
 import path from "path";
 import { mergeSourceResults } from "./merge-source-results.js";
+import { shouldRunKariera, karieraJitterMs } from "./kariera-run-policy.js";
 import {
   initializeHistory,
   recordScrapeHistory,
@@ -27,20 +28,34 @@ async function fetchAll(previousJobs) {
   console.log("🔄 Scraping all sources...");
   console.log("⏱  Per-scraper timeout: " + SCRAPER_TIMEOUT_MS / 1000 + "s\n");
 
+  const eventName = process.env.GITHUB_EVENT_NAME || "";
+  const runKariera = shouldRunKariera(eventName, process.env.KARIERA_CRON || "");
+  const karieraDelay = runKariera ? karieraJitterMs(eventName) : 0;
+
   const scrapers = [
     { name: "jobfind", fn: scrapeJobfind },
-    { name: "kariera", fn: scrapeKariera },
+    { name: "kariera", fn: async () => {
+      if (!runKariera) return { skipped: true };
+      if (karieraDelay > 0) {
+        console.log("⏱ Kariera-only delay: " + Math.ceil(karieraDelay / 1000) + " seconds");
+        await new Promise((resolve) => setTimeout(resolve, karieraDelay));
+      }
+      return scrapeKariera();
+    } },
     { name: "xe", fn: scrapeXe },
   ];
 
   const results = await Promise.allSettled(
-    scrapers.map(({ name, fn }) => withTimeout(fn(), SCRAPER_TIMEOUT_MS, name))
+    scrapers.map(({ name, fn }) =>
+      withTimeout(fn(), SCRAPER_TIMEOUT_MS + (name === "kariera" ? karieraDelay : 0), name)
+    )
   );
 
   const {
     jobs,
     successfulSources,
     failedSources,
+    skippedSources,
     unrecoverableSources,
   } = mergeSourceResults(results, scrapers, previousJobs);
 
@@ -83,9 +98,11 @@ async function fetchAll(previousJobs) {
       ? result.value.length
       : 0;
     const fallbackCount = previousJobs.filter((job) => job.source === name).length;
-    const status = successfulSources.includes(name)
-      ? "success"
-      : fallbackCount > 0 ? "fallback" : "failed";
+    const status = skippedSources.includes(name)
+      ? "skipped"
+      : successfulSources.includes(name)
+        ? "success"
+        : fallbackCount > 0 ? "fallback" : "failed";
 
     return [name, {
       status,
