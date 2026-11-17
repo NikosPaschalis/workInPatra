@@ -1,7 +1,7 @@
 name: Scrape Jobs
 on:
   schedule:
-    - cron: '0 6,18 * * *'
+    - cron: '17 3,15 * * *'
   workflow_dispatch:
 
 permissions:
@@ -45,9 +45,10 @@ jobs:
       - name: Random delay (only on scheduled runs)
         if: github.event_name == 'schedule'
         run: |
-          DELAY=$((RANDOM % 90))
-          echo "Sleeping ${DELAY}s to break the cron pattern"
-          sleep $DELAY
+          DELAY=$((RANDOM % 301))
+          echo "Waiting a randomized $DELAY seconds (0–5 minutes) before scraping"
+          sleep "$DELAY"
+          echo "Actual scrape start (UTC): $(date -u '+%Y-%m-%d %H:%M:%S')"
 
       - name: Run scrapers
         timeout-minutes: 20
