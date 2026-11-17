@@ -1,6 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { analyzeJobLifecycle, parseJsonl } from "../scripts/analyze-job-history.js";
+import { analyzeJobLifecycle, parseJsonl, analyzeFiles } from "../scripts/analyze-job-history.js";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const stamp = (day) => "2026-11-" + String(day).padStart(2, "0") + "T12:00:00.000Z";
 const run = (day, kariera, jobfind = "success") => ({
@@ -69,4 +71,13 @@ test("job keys are source-specific and not merged across platforms", () => {
     obs(13, "jobfind:https://example.com/1", "jobfind"),
   ], [run(13, "success", "success")]);
   assert.equal(result.jobs.length, 2);
+});
+
+test("real committed history is parseable and 403 periods do not count as fresh Kariera observations", () => {
+  const dataDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../data");
+  const result = analyzeFiles(dataDir);
+  assert.ok(result.summary.jobs > 0);
+  assert.ok(result.source_quality.kariera.fallback_runs > 0);
+  assert.ok(result.jobs.some(job => job.source === "kariera"));
+  assert.ok(result.jobs.every(job => job.observation_count >= 1));
 });
