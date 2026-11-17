@@ -7,7 +7,7 @@ import { CATEGORY_DEFINITIONS } from "./categories.js";
 
 // ── State ─────────────────────────────────────────────────────────────────────
 const state = {
-  sources:    new Set(["jobfind", "kariera", "xe"]),
+  sources:    new Set(["jobfind", "kariera", "xe", "direct"]),
   days:       30,
   search:     "",
   sort:       "date",
@@ -37,7 +37,7 @@ const filtersClear      = document.getElementById("filters-clear");
 const filtersDone       = document.getElementById("filters-done");
 const moreCategoriesBtn = document.getElementById("more-categories-btn");
 
-const SOURCE_LABELS = { jobfind: "JobFind", kariera: "Kariera", xe: "XE" };
+const SOURCE_LABELS = { jobfind: "JobFind", kariera: "Kariera", xe: "XE", direct: "Απευθείας" };
 
 const CATEGORY_LABELS = Object.fromEntries(
   CATEGORY_DEFINITIONS.map(category => [
@@ -343,7 +343,18 @@ function render() {
       tagsEl.appendChild(span);
     });
 
+    if (job.source === "direct" && job.description) {
+      const details = document.createElement("p");
+      details.className = "card-direct-description";
+      details.textContent = job.description;
+      card.querySelector(".card-tags").after(details);
+    }
+
     const link = card.querySelector(".card-link");
+    if (job.source === "direct") {
+      link.textContent = "Αποστολή βιογραφικού";
+      link.removeAttribute("target");
+    }
     link.href = job.url || "#";
     if (!job.url) link.style.display = "none";
 
@@ -363,8 +374,18 @@ async function loadJobs(forceRefresh = false) {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
+    let directJobs = [];
+    try {
+      const directUrl = `/data/direct-jobs.json${forceRefresh ? "?t=" + Date.now() : ""}`;
+      const directRes = await fetch(directUrl);
+      if (!directRes.ok) throw new Error(`HTTP ${directRes.status}`);
+      const directData = await directRes.json();
+      directJobs = Array.isArray(directData.jobs) ? directData.jobs.filter(job => job.source === "direct" && job.title && job.url) : [];
+    } catch (directError) {
+      console.warn("Could not load direct employer listings:", directError);
+    }
 
-    state.jobs = (data.jobs || []).map(job => ({
+    state.jobs = [...(data.jobs || []), ...directJobs].map(job => ({
       ...job,
       // Compatibility with jobs published before retail was merged into sales.
       category: job.category === "retail" ? "sales" : job.category,
@@ -393,7 +414,7 @@ async function loadJobs(forceRefresh = false) {
 }
 
 // ── Source chips ──────────────────────────────────────────────────────────────
-const allSources = ["jobfind", "kariera", "xe"];
+const allSources = ["jobfind", "kariera", "xe", "direct"];
 
 function syncChipUI() {
   const allChecked = allSources.every(s => state.sources.has(s));
@@ -401,6 +422,7 @@ function syncChipUI() {
   document.getElementById("src-jobfind").checked = state.sources.has("jobfind");
   document.getElementById("src-kariera").checked = state.sources.has("kariera");
   document.getElementById("src-xe").checked      = state.sources.has("xe");
+  document.getElementById("src-direct").checked  = state.sources.has("direct");
 }
 
 document.getElementById("src-all").addEventListener("change", e => {
