@@ -989,3 +989,32 @@ body {
 .chip-direct input:checked + span { background: #176b55; border-color: #176b55; color: #fff; }
 .badge-direct { background: #e0f2e9; color: #176b55; }
 .card-direct-description { margin: 8px 0 12px; color: var(--text-muted); font-size: 13px; line-height: 1.55; }
+
+
+/* Direct job cards keep the same grid rhythm as scraped cards. */
+.job-card-direct { border-color: #cce9dc; background: linear-gradient(180deg, #f8fdfb 0%, var(--surface) 45%); }
+.job-card-direct .card-link { cursor: pointer; }
+.job-card-direct .card-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.direct-job-dialog { width: min(600px, calc(100% - 32px)); max-height: min(88vh, 850px); margin: auto; padding: 0; border: 1px solid var(--border); border-radius: 20px; background: var(--surface); color: var(--text); box-shadow: 0 24px 90px rgba(15,23,42,.24); overflow-y: auto; }
+.direct-job-dialog::backdrop { background: rgba(15,23,42,.56); backdrop-filter: blur(3px); }
+.direct-dialog-layout { padding: clamp(22px, 5vw, 36px); }
+.direct-dialog-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+.direct-dialog-eyebrow { color: #176b55; background: #e0f2e9; border-radius: 999px; padding: 6px 12px; font-size: 12px; font-weight: 700; }
+.direct-dialog-close { width: 36px; height: 36px; border: 1px solid var(--border); border-radius: 50%; background: var(--surface); color: var(--text); cursor: pointer; font-size: 25px; line-height: 1; }
+.direct-dialog-close:hover { background: var(--bg); }
+.direct-dialog-title { font-size: clamp(23px, 4vw, 30px); line-height: 1.2; letter-spacing: -.5px; margin: 0 0 8px; }
+.direct-dialog-company { font-size: 15px; color: var(--text-muted); font-weight: 600; margin-bottom: 16px; }
+.direct-dialog-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 26px; }
+.direct-dialog-meta span { padding: 7px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; font-size: 13px; }
+.direct-dialog-section { padding: 20px 0; border-top: 1px solid var(--border); }
+.direct-dialog-section h3 { font-size: 15px; margin: 0 0 12px; }
+.direct-dialog-section p, .direct-dialog-section li { font-size: 14px; line-height: 1.7; color: var(--text-muted); }
+.direct-dialog-section ul { margin: 0; padding-left: 20px; }
+.direct-dialog-section li + li { margin-top: 6px; }
+.direct-dialog-apply { border-top: 1px solid var(--border); padding-top: 20px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; }
+.direct-dialog-apply strong { font-size: 14px; }
+.direct-dialog-apply p { margin-top: 5px; font-size: 13px; color: var(--text-muted); overflow-wrap: anywhere; }
+.direct-dialog-apply-button { display: inline-flex; align-items: center; justify-content: center; padding: 12px 18px; border-radius: 10px; background: #176b55; color: white; font-size: 13px; font-weight: 700; text-decoration: none; }
+.direct-dialog-apply-button:hover { background: #10533f; }
+.direct-dialog-apply-button:focus-visible, .direct-dialog-close:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+@media (max-width: 640px) { .direct-dialog-apply-button { width: 100%; } }
