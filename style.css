@@ -984,3 +984,8 @@ body {
   .site-nav { order: 3; width: 100%; }
   .site-nav a { padding: 6px 9px; }
 }
+
+/* Direct employer listings */
+.chip-direct input:checked + span { background: #176b55; border-color: #176b55; color: #fff; }
+.badge-direct { background: #e0f2e9; color: #176b55; }
+.card-direct-description { margin: 8px 0 12px; color: var(--text-muted); font-size: 13px; line-height: 1.55; }
