@@ -1,7 +1,9 @@
 name: Scrape Jobs
 on:
   schedule:
-    - cron: '0 6,18 * * *'
+    # Other sources keep both existing times. The schedule string identifies the Kariera slot.
+    - cron: '0 6 * * *'
+    - cron: '0 18 * * *'
   workflow_dispatch:
 
 permissions:
@@ -51,6 +53,8 @@ jobs:
 
       - name: Run scrapers
         timeout-minutes: 20
+        env:
+          KARIERA_CRON: ${{ github.event.schedule }}
         run: node scripts/scrape.js
 
       - name: Commit & push data/jobs.json
