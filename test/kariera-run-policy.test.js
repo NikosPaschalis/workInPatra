@@ -64,3 +64,13 @@ test("scheduled Kariera skip is not recorded as new observation or full-refresh 
     rmSync(dataDir, { recursive: true, force: true });
   }
 });
+
+test("Kariera cooldown suppresses scheduled and manual runs until deadline", () => {
+  const until = "2026-11-19T14:00:00Z";
+  const before = new Date("2026-11-18T18:00:00Z");
+  const after = new Date("2026-11-19T18:00:00Z");
+  assert.equal(shouldRunKariera("schedule", "0 18 * * *", until, before), false);
+  assert.equal(shouldRunKariera("workflow_dispatch", "", until, before), false);
+  assert.equal(shouldRunKariera("schedule", "0 18 * * *", until, after), true);
+  assert.equal(shouldRunKariera("schedule", "0 6 * * *", until, after), false);
+});
