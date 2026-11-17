@@ -408,6 +408,34 @@
       </article>
     </template>
 
+    <!-- In-page details for direct employer listings -->
+    <dialog id="direct-job-dialog" class="direct-job-dialog" aria-labelledby="direct-dialog-title">
+      <div class="direct-dialog-layout">
+        <div class="direct-dialog-top">
+          <span class="direct-dialog-eyebrow">Απευθείας από εργοδότη</span>
+          <button type="button" class="direct-dialog-close" id="direct-dialog-close" aria-label="Κλείσιμο αγγελίας">×</button>
+        </div>
+        <h2 id="direct-dialog-title" class="direct-dialog-title"></h2>
+        <p id="direct-dialog-company" class="direct-dialog-company"></p>
+        <div id="direct-dialog-meta" class="direct-dialog-meta"></div>
+        <section class="direct-dialog-section">
+          <h3>Σχετικά με τη θέση</h3>
+          <p id="direct-dialog-description"></p>
+        </section>
+        <section class="direct-dialog-section" id="direct-dialog-benefits-section">
+          <h3>Τι προσφέρει η εταιρεία</h3>
+          <ul id="direct-dialog-benefits"></ul>
+        </section>
+        <div class="direct-dialog-apply">
+          <div>
+            <strong>Ενδιαφέρεσαι για τη θέση;</strong>
+            <p id="direct-dialog-email"></p>
+          </div>
+          <a id="direct-dialog-apply-link" class="direct-dialog-apply-button" href="#">Αποστολή βιογραφικού ↗</a>
+        </div>
+      </div>
+    </dialog>
+
     <script type="module" src="app.js"></script>
   </body>
 </html>
