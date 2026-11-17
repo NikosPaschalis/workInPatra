@@ -70,3 +70,20 @@ jobs:
           FACEBOOK_PAGE_TOKEN: ${{ secrets.FACEBOOK_PAGE_TOKEN }}
           FACEBOOK_PAGE_ID:    ${{ secrets.FACEBOOK_PAGE_ID }}
         run: node scripts/notify-telegram.js /tmp/prev/jobs.json
+
+      - name: Notify about direct employer listings
+        continue-on-error: true
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          FACEBOOK_PAGE_TOKEN: ${{ secrets.FACEBOOK_PAGE_TOKEN }}
+          FACEBOOK_PAGE_ID: ${{ secrets.FACEBOOK_PAGE_ID }}
+        run: node scripts/notify-direct-jobs.js
+
+      - name: Persist direct notification ledger
+        if: always()
+        run: |
+          git add data/direct-notifications.json
+          git diff --staged --quiet \
+            && echo "No new direct notification receipts" \
+            || (git commit -m "chore: record direct listing notifications" && git push)

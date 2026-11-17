@@ -58,13 +58,13 @@ export function formatTelegramMessage(jobs) {
     .slice(0, 4000);
 }
 
-async function sendTelegram(jobs) {
+export async function sendTelegram(jobs) {
   const token  = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;
 
   if (!token || !chatId) {
     console.log('⏭  Telegram secrets not set — skipping');
-    return;
+    return false;
   }
 
   const res  = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
@@ -84,6 +84,7 @@ async function sendTelegram(jobs) {
     throw new Error(`Telegram notification failed with HTTP ${res.status}`);
   }
   console.log(`✅ Telegram: sent message ${body.result?.message_id}`);
+  return true;
 }
 
 // ─── Facebook ─────────────────────────────────────────────────────────────────
@@ -117,13 +118,13 @@ export function formatFacebookMessage(jobs) {
   ].join('\n');
 }
 
-async function sendFacebook(jobs) {
+export async function sendFacebook(jobs) {
   const token  = process.env.FACEBOOK_PAGE_TOKEN;
   const pageId = process.env.FACEBOOK_PAGE_ID;
 
   if (!token || !pageId) {
     console.log('⏭  Facebook secrets not set — skipping');
-    return;
+    return false;
   }
 
   const res = await fetch(
@@ -141,6 +142,7 @@ async function sendFacebook(jobs) {
   const body = await res.json().catch(() => ({}));
   if (body.id) {
     console.log(`✅ Facebook: posted ${body.id}`);
+    return true;
   } else {
     console.error('❌ Facebook error:', JSON.stringify(body));
     throw new Error(`Facebook notification failed with HTTP ${res.status}`);
