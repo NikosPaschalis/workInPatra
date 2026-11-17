@@ -15,10 +15,19 @@ export function mergeSourceResults(results, scrapers, previousJobs, logger = con
 
   const successfulSources = [];
   const failedSources = [];
+  const skippedSources = [];
   const unrecoverableSources = [];
 
   const jobs = results.flatMap((result, index) => {
     const { name } = scrapers[index];
+    if (result.status === "fulfilled" && result.value?.skipped === true) {
+      skippedSources.push(name);
+      const previous = previousBySource.get(name) || [];
+      if (previous.length === 0) unrecoverableSources.push(name);
+      logger.log(`⏭ ${name}: intentionally skipped by schedule — retaining ${previous.length} existing jobs`);
+      return previous;
+    }
+
     const freshJobs = result.status === "fulfilled" && Array.isArray(result.value)
       ? result.value
       : null;
@@ -42,5 +51,5 @@ export function mergeSourceResults(results, scrapers, previousJobs, logger = con
     return previous;
   });
 
-  return { jobs, successfulSources, failedSources, unrecoverableSources };
+  return { jobs, successfulSources, failedSources, skippedSources, unrecoverableSources };
 }
