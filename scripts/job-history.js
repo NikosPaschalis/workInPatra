@@ -104,7 +104,8 @@ export function recordScrapeHistory({
 
   const hasFallback = Object.values(sourceStats).some((source) => source.status === "fallback");
   const hasFailure = Object.values(sourceStats).some((source) => source.status === "failed");
-  const status = hasFailure || hasFallback ? "partial" : "success";
+  const hasSkipped = Object.values(sourceStats).some((source) => source.status === "skipped");
+  const status = hasFailure || hasFallback || hasSkipped ? "partial" : "success";
 
   appendJsonl(runsPath, {
     run_id: runId,
