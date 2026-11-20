@@ -11,8 +11,9 @@ permissions:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  # Pause Kariera for 48h from 2026-11-17 14:00 UTC; resume evening 2026-11-19.
-  KARIERA_PAUSE_UNTIL: '2026-11-19T14:00:00Z'
+  # Kariera paused until manually re-enabled after recovery tests (planned 2026-11-25).
+  # JobFind/XE and verified Kariera queue continue normally.
+  KARIERA_PAUSE_UNTIL: '2099-01-01T00:00:00Z'
 
 jobs:
   scrape:
