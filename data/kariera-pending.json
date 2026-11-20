@@ -1,3 +1,40 @@
 {
-  "jobs": []
+  "jobs": [
+    {
+      "title": "Σύμβουλος Τηλεφωνικών Πωλήσεων Πάτρα",
+      "company": "Telekom eValue",
+      "location": "Πάτρα",
+      "source": "kariera",
+      "category": "sales",
+      "sourceCategory": "Πωλήσεις / Διαχείριση Πελατών",
+      "employmentType": "Μερική απασχόληση",
+      "experienceLevel": "Χωρίς προϋπηρεσία / Χωρίς εμπειρία",
+      "url": "https://www.kariera.gr/jobs/sales-or-business-development-or-account-management-jobs/362669",
+      "date": "2026-11-20T07:54:53.542Z",
+      "dateRaw": "2026-11-20T07:54:53.542Z",
+      "tags": [
+        "Πωλήσεις / Διαχείριση Πελατών",
+        "Μερική απασχόληση"
+      ],
+      "manuallyVerifiedAt": "2026-11-20T11:29:42.466Z"
+    },
+    {
+      "title": "Τεχνικός Σύμβουλος - Toyota (Πάτρα)",
+      "company": "ΜΟΤΟΔΥΝΑΜΙΚΗ ΑΕΕ",
+      "location": "Πάτρα",
+      "source": "kariera",
+      "category": "other",
+      "sourceCategory": "Άλλη κατηγορία",
+      "employmentType": "Πλήρης απασχόληση",
+      "experienceLevel": "Entry / Αρχάριος",
+      "url": "https://www.kariera.gr/jobs/other-jobs/362528",
+      "date": "2026-11-19T14:39:03.409Z",
+      "dateRaw": "2026-11-19T14:39:03.409Z",
+      "tags": [
+        "Άλλη κατηγορία",
+        "Πλήρης απασχόληση"
+      ],
+      "manuallyVerifiedAt": "2026-11-20T11:29:42.466Z"
+    }
+  ]
 }
