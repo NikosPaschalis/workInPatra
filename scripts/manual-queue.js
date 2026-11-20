@@ -75,9 +75,12 @@ export function validateManualJob(job, { requireApproval = true } = {}) {
     errors.push("manual_approval_required");
   }
   const publication = normalizePublicationDate(job);
+  const blockingWarnings = warnings.filter((warning) =>
+    warning !== "missing_company" && !(warning === "unclear_location" && job?.locationVerified === true)
+  );
   return {
     valid: errors.length === 0,
-    eligible: errors.length === 0 && warnings.every((warning) => warning === "missing_company"),
+    eligible: errors.length === 0 && blockingWarnings.length === 0,
     errors,
     warnings,
     canonicalUrl: url.canonicalUrl,

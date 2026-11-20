@@ -1,6 +1,6 @@
 import { withBrowser, parseGreekDate } from "./_shared.js";
 
-const URL = "https://www.jobfind.gr/jobads/all/patra1/gr/theseis_ergasias";
+export const PAGE_URL = "https://www.jobfind.gr/jobads/all/patra1/gr/theseis_ergasias";
 
 export async function extractJobsFromPage(page) {
   return page.locator("div.jobitem").evaluateAll((cards) =>
@@ -33,7 +33,7 @@ export async function extractJobsFromPage(page) {
 
 export async function scrape() {
   return withBrowser(async (page) => {
-    await page.goto(URL, { waitUntil: "domcontentloaded", timeout: 30000 });
+    await page.goto(PAGE_URL, { waitUntil: "domcontentloaded", timeout: 30000 });
     await page.waitForSelector("div.jobitem", { timeout: 15000 });
 
     const jobs = await extractJobsFromPage(page);

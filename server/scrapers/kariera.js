@@ -1,7 +1,7 @@
 import { withBrowser } from "./_shared.js";
 
 const BASE_URL = "https://www.kariera.gr";
-const PAGE_URL = BASE_URL + "/jobs/jobs-in-achaia--patra";
+export const PAGE_URL = BASE_URL + "/jobs/jobs-in-achaia--patra";
 
 export function extractSourceCategories(html) {
   const categories = {};

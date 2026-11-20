@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>WorkInPatra Desktop Scraper</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">WORKINPATRAS · LOCAL COMPANION</p>
+      <h1>Desktop Scraper</h1>
+    </div>
+    <div id="global-status" class="global-status">Ready</div>
+  </header>
+
+  <main>
+    <section class="panel controls-panel">
+      <div class="section-heading">
+        <div><span class="section-number">01</span><h2>Sources</h2></div>
+        <p>Manual scans only. Sources run independently.</p>
+      </div>
+      <div class="source-grid" id="source-grid">
+        <label class="source-card"><input type="checkbox" value="kariera" checked><span><strong>Kariera</strong><small id="source-kariera-detail">Idle</small></span><i id="source-kariera" class="status-dot idle"></i></label>
+        <label class="source-card"><input type="checkbox" value="jobfind" checked><span><strong>JobFind</strong><small id="source-jobfind-detail">Idle</small></span><i id="source-jobfind" class="status-dot idle"></i></label>
+        <label class="source-card"><input type="checkbox" value="xe" checked><span><strong>XE</strong><small id="source-xe-detail">Idle</small></span><i id="source-xe" class="status-dot idle"></i></label>
+      </div>
+      <div class="action-row">
+        <button id="run-button" class="button primary">Run selected scrapers</button>
+        <button id="cancel-button" class="button danger" disabled>Cancel scan</button>
+        <button id="export-button" class="button ghost">Export JSON</button>
+      </div>
+    </section>
+
+    <section class="metrics" id="metrics"></section>
+
+    <section class="panel results-panel">
+      <div class="section-heading compact">
+        <div><span class="section-number">02</span><h2>Review queue</h2></div>
+        <p>Approval is always explicit.</p>
+      </div>
+      <div class="toolbar">
+        <input id="search" type="search" placeholder="Search title, company, location…" autocomplete="off">
+        <select id="source-filter" aria-label="Filter by source"><option value="">All sources</option><option value="kariera">Kariera</option><option value="jobfind">JobFind</option><option value="xe">XE</option></select>
+        <select id="status-filter" aria-label="Filter by status"><option value="">All statuses</option><option value="new">New</option><option value="review">Review</option><option value="published">Published</option><option value="queued">Queued</option><option value="suspected_duplicate">Suspected duplicate</option><option value="invalid">Invalid</option></select>
+        <button id="approve-eligible" class="button small">Select all eligible</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th><button data-sort="title">Title</button></th><th><button data-sort="company">Company</button></th><th><button data-sort="location">Location</button></th><th><button data-sort="source">Source</button></th><th><button data-sort="category">Category</button></th><th><button data-sort="date">Published</button></th><th><button data-sort="validationStatus">Status</button></th><th>Actions</th></tr></thead>
+          <tbody id="results-body"></tbody>
+        </table>
+        <div id="empty-state" class="empty-state">Run a scraper to collect listings for review.</div>
+      </div>
+      <div class="bulk-actions">
+        <span id="selected-count">0 selected</span>
+        <button id="approve-selected" class="button small primary">Approve</button>
+        <button id="reject-selected" class="button small danger">Reject</button>
+        <button id="reset-selected" class="button small ghost">Reset</button>
+      </div>
+    </section>
+
+    <div class="lower-grid">
+      <section class="panel github-panel">
+        <div class="section-heading compact"><div><span class="section-number">03</span><h2>GitHub queue</h2></div></div>
+        <dl class="github-facts"><div><dt>Status</dt><dd id="github-status">Not authenticated</dd></div><div><dt>Repository</dt><dd>NikosPaschalis/workInPatra</dd></div><div><dt>Branch</dt><dd>main</dd></div><div><dt>Ready</dt><dd id="github-ready">0 approved</dd></div></dl>
+        <div id="auth-form" class="auth-form">
+          <label for="github-token">Fine-grained personal access token</label>
+          <input id="github-token" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…">
+          <label class="inline-check"><input id="persist-token" type="checkbox" checked> Encrypt with Windows credential protection</label>
+          <button id="auth-button" class="button">Authenticate</button>
+        </div>
+        <div class="action-row">
+          <button id="upload-button" class="button primary" disabled>Push approved jobs to GitHub</button>
+          <button id="disconnect-button" class="button ghost" disabled>Disconnect</button>
+        </div>
+        <div id="commit-result" class="commit-result"></div>
+        <div id="upload-error" class="error-text"></div>
+      </section>
+
+      <section class="panel log-panel">
+        <div class="section-heading compact"><div><span class="section-number">04</span><h2>Activity</h2></div><div class="heading-actions"><button id="copy-log" class="text-button">Copy</button><button id="export-log" class="text-button">Export</button><button id="clear-history" class="text-button danger-text">Clear local history</button></div></div>
+        <ol id="activity-log" class="activity-log"></ol>
+      </section>
+    </div>
+  </main>
+
+  <dialog id="detail-dialog">
+    <div class="dialog-header"><div><p class="eyebrow">LISTING INSPECTOR</p><h2 id="detail-title"></h2></div><button id="close-detail" class="icon-button" aria-label="Close">×</button></div>
+    <dl id="detail-fields" class="detail-fields"></dl>
+    <div class="action-row"><button id="detail-open" class="button">Open listing in browser</button><button id="detail-approve" class="button primary">Approve</button><button id="detail-reject" class="button danger">Reject</button></div>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>

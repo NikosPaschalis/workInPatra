@@ -1,15 +1,31 @@
 {
   "name": "workinpatra",
   "version": "1.0.0",
+  "description": "WorkInPatra job aggregator and manual desktop scraping companion",
+  "author": "Nikos Paschalis",
+  "main": "apps/desktop-scraper/main.js",
   "type": "module",
   "scripts": {
     "scrape": "node scripts/scrape.js",
     "start": "node server/index.js",
     "dev": "node --watch server/index.js",
-    "test": "node --test"
+    "test": "node --test",
+    "desktop:start": "node apps/desktop-scraper/scripts/run-forge.js start",
+    "desktop:install-browser": "node apps/desktop-scraper/scripts/install-browser.js",
+    "desktop:package": "npm run desktop:install-browser && node apps/desktop-scraper/scripts/run-forge.js package --platform win32 --arch x64",
+    "desktop:make": "npm run desktop:install-browser && node apps/desktop-scraper/scripts/run-forge.js make --platform win32 --arch x64"
   },
   "dependencies": {
-    "express": "^4.19.2",
+    "express": "^4.22.3",
     "playwright": "^1.44.0"
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "^8.0.1",
+    "@electron-forge/maker-squirrel": "^8.0.1",
+    "@electron-forge/maker-zip": "^8.0.1",
+    "electron": "^45.4.1"
+  },
+  "overrides": {
+    "proxy-addr": "2.0.8"
   }
 }

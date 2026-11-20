@@ -4,3 +4,10 @@ node_modules/
 .DS_Store
 Thumbs.db
 .claude/
+.npm-cache/
+.electron-cache/
+.electron-local/
+.electron-smoke-data/
+.forge-tmp/
+.forge-runtime/
+out/
