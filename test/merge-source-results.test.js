@@ -85,3 +85,17 @@ test("reports a failed source without previous jobs as unrecoverable", () => {
   assert.deepEqual(merged.failedSources, ["xe"]);
   assert.deepEqual(merged.unrecoverableSources, ["xe"]);
 });
+
+test("retains unexpired curated listings missing from a fresh source snapshot", () => {
+  const previousJobs = [{
+    source: "xe", url: "https://www.xe.gr/εργασία/θέση-εργασίας/test/curated",
+    curated: true, curatedUntil: "2999-01-01T00:00:00.000Z",
+  }];
+  const results = [
+    { status: "fulfilled", value: [{ source: "jobfind", url: "new-jobfind" }] },
+    { status: "fulfilled", value: [{ source: "kariera", url: "new-kariera" }] },
+    { status: "fulfilled", value: [{ source: "xe", url: "https://xe.gr/fresh" }] },
+  ];
+  const merged = mergeSourceResults(results, scrapers, previousJobs, silentLogger);
+  assert.equal(merged.jobs.filter((job) => job.source === "xe").length, 2);
+});

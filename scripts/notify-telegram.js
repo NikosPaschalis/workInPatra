@@ -9,13 +9,15 @@
 //
 // Silently skips a channel if its secrets are missing.
 
-import { readFileSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { CATEGORY_EMOJI, CATEGORY_LABELS } from '../categories.js';
+import { notificationIdentity } from './job-identity.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const JOBS_PATH = path.join(__dirname, '..', 'data', 'jobs.json');
+const LEDGER_PATH = path.join(__dirname, '..', 'data', 'notification-ledger.json');
 const SITE_URL  = 'https://www.workinpatras.gr';
 const MAX_JOBS_IN_MESSAGE = 3;
 
@@ -161,6 +163,19 @@ function loadJobs(p) {
   }
 }
 
+export function selectUnannouncedJobs(oldJobs, newJobs, announced = []) {
+  const oldIds = new Set(oldJobs.map(notificationIdentity).filter(Boolean));
+  const announcedIds = new Set(announced);
+  return newJobs.filter((job) => {
+    const id = notificationIdentity(job);
+    return id && !oldIds.has(id) && !announcedIds.has(id);
+  });
+}
+
+export function mergeNotificationLedger(announced, jobs) {
+  return [...new Set([...announced, ...jobs.map(notificationIdentity).filter(Boolean)])];
+}
+
 async function main() {
   const oldPath = process.argv[2];
   if (!oldPath) {
@@ -170,9 +185,10 @@ async function main() {
 
   const oldJobs = loadJobs(oldPath);
   const newJobs = loadJobs(JOBS_PATH);
-
-  const oldUrls = new Set(oldJobs.map((j) => j.url).filter(Boolean));
-  const added   = newJobs.filter((j) => j.url && !oldUrls.has(j.url));
+  const ledger = existsSync(LEDGER_PATH)
+    ? JSON.parse(readFileSync(LEDGER_PATH, 'utf8'))
+    : { announced: [] };
+  const added = selectUnannouncedJobs(oldJobs, newJobs, ledger.announced || []);
 
   console.log(`Old: ${oldJobs.length} · New: ${newJobs.length} · Added: ${added.length}`);
 
@@ -191,6 +207,11 @@ async function main() {
   ]);
 
   const failures = results.filter((result) => result.status === 'rejected');
+  const delivered = results.some((result) => result.status === 'fulfilled' && result.value === true);
+  if (delivered) {
+    const announced = mergeNotificationLedger(ledger.announced || [], added);
+    writeFileSync(LEDGER_PATH, JSON.stringify({ announced }, null, 2) + '\n', 'utf8');
+  }
   if (failures.length > 0) {
     failures.forEach((result) => console.error('Notification failed:', result.reason));
     process.exitCode = 1;

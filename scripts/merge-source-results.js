@@ -5,6 +5,7 @@
  * previously published jobs for that source. This prevents a temporary source
  * outage or selector breakage from removing otherwise valid jobs.
  */
+import { retainCuratedListings } from "./manual-queue.js";
 export function mergeSourceResults(results, scrapers, previousJobs, logger = console) {
   const previousBySource = new Map(
     scrapers.map(({ name }) => [
@@ -35,7 +36,11 @@ export function mergeSourceResults(results, scrapers, previousJobs, logger = con
     if (freshJobs?.length > 0) {
       successfulSources.push(name);
       logger.log(`✅ ${name}: ${freshJobs.length} jobs`);
-      return freshJobs;
+      const retained = retainCuratedListings(freshJobs, previousBySource.get(name) || [], name);
+      if (retained.length > freshJobs.length) {
+        logger.log(`📌 ${name}: retained ${retained.length - freshJobs.length} approved manual listing(s)`);
+      }
+      return retained;
     }
 
     failedSources.push(name);

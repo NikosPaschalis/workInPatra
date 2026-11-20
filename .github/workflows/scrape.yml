@@ -63,11 +63,14 @@ jobs:
       - name: Apply verified Kariera queue to the same nightly jobs batch
         run: node scripts/apply-curated-kariera.js
 
+      - name: Apply verified desktop queue to the same jobs batch
+        run: node scripts/apply-manual-pending.js
+
       - name: Commit & push data/jobs.json
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/jobs.json data/observations.jsonl data/scrape-runs.jsonl data/kariera-pending.json
+          git add data/jobs.json data/observations.jsonl data/scrape-runs.jsonl data/kariera-pending.json data/manual-pending.json
           git diff --staged --quiet \
             && echo "⏭  No changes — skipping commit" \
             || (git commit -m "chore: update jobs.json" && git push)
@@ -93,7 +96,7 @@ jobs:
       - name: Persist direct notification ledger
         if: always()
         run: |
-          git add data/direct-notifications.json
+          git add data/direct-notifications.json data/notification-ledger.json
           git diff --staged --quiet \
             && echo "No new direct notification receipts" \
             || (git commit -m "chore: record direct listing notifications" && git push)

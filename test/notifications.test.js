@@ -4,6 +4,8 @@ import assert from 'node:assert/strict';
 import {
   formatFacebookMessage,
   formatTelegramMessage,
+  mergeNotificationLedger,
+  selectUnannouncedJobs,
 } from '../scripts/notify-telegram.js';
 
 const JOB = {
@@ -37,4 +39,16 @@ test('Facebook uses the correct plural form for multiple new jobs', () => {
   const message = formatFacebookMessage([JOB, JOB]);
 
   assert.match(message, /2 νέες αγγελίες εργασίας στην Πάτρα/);
+});
+
+test('notification selection ignores canonical URL changes and durable receipts', () => {
+  const unnamed = { ...JOB, company: '', url: 'https://www.example.com/job/1?utm_source=feed' };
+  assert.equal(selectUnannouncedJobs([{ ...unnamed, url: 'http://example.com/job/1/' }], [unnamed]).length, 0);
+  const id = mergeNotificationLedger([], [JOB]);
+  assert.equal(selectUnannouncedJobs([], [JOB], id).length, 0);
+});
+
+test('notification ledger collapses cross-source title/company matches', () => {
+  const jobs = [JOB, { ...JOB, source: 'xe', url: 'https://xe.gr/other' }];
+  assert.equal(mergeNotificationLedger([], jobs).length, 1);
 });
