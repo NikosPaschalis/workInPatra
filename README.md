@@ -1,5 +1,9 @@
 # WorkInPάτρα
 
+## Desktop scraping companion
+
+The optional Electron companion under `apps/desktop-scraper/` runs manual local scans for Kariera, JobFind, and XE, supports explicit review, and uploads verified listings only to the shared `data/manual-pending.json` queue. See [apps/desktop-scraper/README.md](apps/desktop-scraper/README.md) for setup, security, packaging, GitHub permissions, production integration, and troubleshooting.
+
 > A job aggregator for the city of Patra, Greece — pulling listings from multiple Greek job boards into one clean, fast interface.
 
 🔗 **Live:** [www.workinpatras.gr/](https://www.workinpatras.gr/)
