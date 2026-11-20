@@ -1,22 +1,3 @@
 {
-  "jobs": [
-    {
-      "title": "Πωλητής-τρια χονδρικής με έδρα την Αχαϊα / Ηλεία",
-      "company": "ΑΦΟΙ Γ. ΦΙΛΝΤΙΣΗ ΙΚΕ",
-      "location": "Πάτρα",
-      "employmentType": "Πλήρης απασχόληση",
-      "salaryRaw": "1.350-1.550 ανά μήνα μικτά",
-      "dateRaw": "",
-      "sourceCategory": "Άλλη κατηγορία",
-      "tags": [
-        "Άλλη κατηγορία",
-        "Πλήρης απασχόληση"
-      ],
-      "url": "https://www.kariera.gr/jobs/other-jobs/362323",
-      "source": "kariera",
-      "date": null,
-      "category": "sales",
-      "manuallyVerifiedAt": "2026-11-19T16:56:55.000Z"
-    }
-  ]
+  "jobs": []
 }
