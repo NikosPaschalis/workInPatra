@@ -12,7 +12,13 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 test("Electron launches the sandboxed desktop review UI", { skip: !enabled }, async () => {
   const localData = path.join(root, ".electron-smoke-data", String(process.pid));
   await mkdir(localData, { recursive: true });
-  const launchEnv = { ...process.env, APPDATA: localData, LOCALAPPDATA: localData, PLAYWRIGHT_BROWSERS_PATH: "0" };
+  const launchEnv = {
+    ...process.env,
+    APPDATA: localData,
+    LOCALAPPDATA: localData,
+    PLAYWRIGHT_BROWSERS_PATH: "0",
+    WORKINPATRA_USER_DATA_DIR: localData,
+  };
   delete launchEnv.ELECTRON_RUN_AS_NODE;
   const packagedExecutable = process.env.PACKAGED_ELECTRON_EXE || "";
   const application = await electron.launch({
@@ -38,11 +44,15 @@ test("Electron launches the sandboxed desktop review UI", { skip: !enabled }, as
     assert.equal(preferences.sandbox, true);
     if (process.env.WORKINPATRA_FIXTURE_DIR) {
       await page.evaluate(() => window.workInPatra.startScan(["kariera", "jobfind", "xe"]));
-      await page.waitForFunction(async () => {
-        const current = await window.workInPatra.getState();
-        return !current.scanRunning && current.results.length === 3;
-      }, null, { timeout: 45_000 });
-      const scanned = await page.evaluate(() => window.workInPatra.getState());
+      let scanned;
+      const deadline = Date.now() + 45_000;
+      do {
+        scanned = await page.evaluate(() => window.workInPatra.getState());
+        if (!scanned.scanRunning &&
+            Object.values(scanned.sources).every((source) => source.status !== "running") &&
+            scanned.results.length === 3) break;
+        await new Promise((resolve) => setTimeout(resolve, 250));
+      } while (Date.now() < deadline);
       assert.deepEqual(Object.values(scanned.sources).map((source) => source.status), ["success", "success", "success"]);
       assert.equal(scanned.results.length, 3);
     }

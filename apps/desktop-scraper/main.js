@@ -11,6 +11,9 @@ import { ScrapeController } from "./src/main/scrape-controller.js";
 import { dashboardCounts, publicState, SOURCES } from "./src/shared/state.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+if (process.env.WORKINPATRA_USER_DATA_DIR) {
+  app.setPath("userData", path.resolve(process.env.WORKINPATRA_USER_DATA_DIR));
+}
 const CHANNELS = new Set([
   "state:get", "scan:start", "scan:cancel", "review:set", "results:export",
   "history:clear", "github:authenticate", "github:disconnect", "github:upload",
@@ -133,9 +136,18 @@ function registerIpc() {
     const sourceOptions = fixtureDirectory
       ? Object.fromEntries(state.selectedSources.map((source) => [source, { fixturePath: path.join(fixtureDirectory, `${source}.html`) }]))
       : {};
-    controller.run(state.selectedSources, sourceOptions).finally(async () => {
+    void controller.run(state.selectedSources, sourceOptions).then(async (settled) => {
+      for (const entry of settled) {
+        if (entry.status !== "fulfilled") continue;
+        const { source, status, detail, jobs } = entry.value;
+        state.sources[source] = { status, detail: redact(detail), count: jobs.length };
+      }
       state.scanRunning = false;
       log("Manual scan finished");
+      await persistAndBroadcast();
+    }).catch(async (error) => {
+      state.scanRunning = false;
+      log(`Manual scan failed: ${error.message}`, "error");
       await persistAndBroadcast();
     });
     return { started: true };

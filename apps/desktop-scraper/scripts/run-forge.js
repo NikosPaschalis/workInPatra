@@ -1,4 +1,4 @@
-import { cpSync, existsSync, mkdirSync, rmSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -13,11 +13,6 @@ const forgeTemp = path.join(root, ".forge-tmp");
 mkdirSync(localData, { recursive: true });
 mkdirSync(forgeTemp, { recursive: true });
 if (!existsSync(electron)) cpSync(electronDist, forgeRuntime, { recursive: true });
-if (["package", "make"].includes(process.argv[2])) {
-  // Packager removes Electron's sample app from every output. Removing it
-  // before the copy avoids persistent Windows scanner locks on that archive.
-  rmSync(path.join(electronDist, "resources", "default_app.asar"), { force: true });
-}
 
 const result = spawnSync(electron, [forgeHost, ...process.argv.slice(2)], {
   cwd: root,
