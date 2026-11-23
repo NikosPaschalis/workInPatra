@@ -7,6 +7,7 @@ export class LocalStore {
     this.directory = directory;
     this.filePath = path.join(directory, filename);
     this.tempPath = `${this.filePath}.tmp`;
+    this.pendingSave = Promise.resolve();
   }
 
   async load() {
@@ -19,8 +20,13 @@ export class LocalStore {
   }
 
   async save(state) {
-    await mkdir(this.directory, { recursive: true });
-    await writeFile(this.tempPath, JSON.stringify(state, null, 2), { encoding: "utf8", mode: 0o600 });
-    await rename(this.tempPath, this.filePath);
+    const serialized = JSON.stringify(state, null, 2);
+    const task = this.pendingSave.then(async () => {
+      await mkdir(this.directory, { recursive: true });
+      await writeFile(this.tempPath, serialized, { encoding: "utf8", mode: 0o600 });
+      await rename(this.tempPath, this.filePath);
+    });
+    this.pendingSave = task.catch(() => {});
+    return task;
   }
 }

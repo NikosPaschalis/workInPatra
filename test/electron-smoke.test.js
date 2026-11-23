@@ -12,7 +12,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 test("Electron launches the sandboxed desktop review UI", { skip: !enabled }, async () => {
   const localData = path.join(root, ".electron-smoke-data", String(process.pid));
   await mkdir(localData, { recursive: true });
-  const launchEnv = { ...process.env, LOCALAPPDATA: localData, PLAYWRIGHT_BROWSERS_PATH: "0" };
+  const launchEnv = { ...process.env, APPDATA: localData, LOCALAPPDATA: localData, PLAYWRIGHT_BROWSERS_PATH: "0" };
   delete launchEnv.ELECTRON_RUN_AS_NODE;
   const packagedExecutable = process.env.PACKAGED_ELECTRON_EXE || "";
   const application = await electron.launch({

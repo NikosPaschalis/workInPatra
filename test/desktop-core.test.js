@@ -26,6 +26,12 @@ test("local persistence atomically restores approved drafts and resets interrupt
   assert.equal(restored.scanRunning, false);
   assert.equal(restored.sources.xe.status, "cancelled");
   assert.equal(restored.results[0].approved, true);
+  await Promise.all([
+    store.save({ ...restored, lastScanAt: "2026-11-20T10:00:00Z" }),
+    store.save({ ...restored, lastScanAt: "2026-11-20T11:00:00Z" }),
+    store.save({ ...restored, lastScanAt: "2026-11-20T12:00:00Z" }),
+  ]);
+  assert.equal((await store.load()).lastScanAt, "2026-11-20T12:00:00Z");
 });
 
 test("access policy stops 403 and challenge pages without retry", () => {
