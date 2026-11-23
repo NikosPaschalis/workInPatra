@@ -1,3 +1,55 @@
 {
-  "jobs": []
+  "jobs": [
+    {
+      "title": "Υπεύθυνος-η Βάρδιας Καταστήματος-Πάτρα",
+      "company": "Pepco",
+      "location": "Πάτρα",
+      "url": "https://www.kariera.gr/jobs/retail-jobs/363088",
+      "source": "kariera",
+      "sourceCategory": "Λιανεμπόριο",
+      "category": "sales",
+      "employmentType": "Πλήρης απασχόληση",
+      "tags": [
+        "Λιανεμπόριο",
+        "Πλήρης απασχόληση"
+      ],
+      "date": null,
+      "dateRaw": "",
+      "manuallyVerifiedAt": "2026-11-23T07:30:58.827Z"
+    },
+    {
+      "title": "Διοικητική & Γραμματειακή Υποστήριξη",
+      "company": "ΑΦΟΙ ΠΛΕΣΣΑ ΑΕ",
+      "location": "Πάτρα",
+      "url": "https://www.kariera.gr/jobs/administrative-or-secretarial-jobs/363066",
+      "source": "kariera",
+      "sourceCategory": "Γραμματειακή Υποστήριξη / Υπάλληλος Γραφείου",
+      "category": "admin",
+      "employmentType": "Πλήρης απασχόληση",
+      "tags": [
+        "Γραμματειακή Υποστήριξη / Υπάλληλος Γραφείου",
+        "Πλήρης απασχόληση"
+      ],
+      "date": null,
+      "dateRaw": "",
+      "manuallyVerifiedAt": "2026-11-23T07:30:58.827Z"
+    },
+    {
+      "title": "Business Developer FT Patra",
+      "company": "Coca-Cola Τρία Έψιλον",
+      "location": "Πάτρα",
+      "url": "https://www.kariera.gr/jobs/sales-or-business-development-or-account-management-jobs/363036",
+      "source": "kariera",
+      "sourceCategory": "Πωλήσεις / Διαχείριση Πελατών",
+      "category": "sales",
+      "employmentType": "Πλήρης απασχόληση",
+      "tags": [
+        "Πωλήσεις / Διαχείριση Πελατών",
+        "Πλήρης απασχόληση"
+      ],
+      "date": null,
+      "dateRaw": "",
+      "manuallyVerifiedAt": "2026-11-23T07:30:58.827Z"
+    }
+  ]
 }
