@@ -19,6 +19,7 @@ import {
   parseFooter,
 } from "../../../../server/scrapers/xe.js";
 import { classifyAccess } from "./access-policy.js";
+import { resolveBrowserExecutable } from "./browser-path.js";
 
 const source = process.argv[2];
 let browser;
@@ -84,7 +85,10 @@ async function parseSource(page, selectedSource) {
 async function run({ fixturePath = null } = {}) {
   const urls = { kariera: KARIERA_URL, jobfind: JOBFIND_URL, xe: XE_URL };
   if (!urls[source]) throw new Error(`Unknown source ${source}`);
-  browser = await chromium.launch({ headless: true });
+  browser = await chromium.launch({
+    headless: true,
+    executablePath: resolveBrowserExecutable(chromium.executablePath()),
+  });
   const context = await browser.newContext({ locale: "el-GR" });
   const page = await context.newPage();
   if (fixturePath) {

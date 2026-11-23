@@ -6,6 +6,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { LocalStore } from "../apps/desktop-scraper/src/main/local-store.js";
 import { classifyAccess } from "../apps/desktop-scraper/src/worker/access-policy.js";
+import { resolveBrowserExecutable } from "../apps/desktop-scraper/src/worker/browser-path.js";
 import { createInitialState } from "../apps/desktop-scraper/src/shared/state.js";
 import { ScrapeController } from "../apps/desktop-scraper/src/main/scrape-controller.js";
 import { EventEmitter } from "node:events";
@@ -38,6 +39,15 @@ test("access policy stops 403 and challenge pages without retry", () => {
   assert.deepEqual(classifyAccess({ status: 403 }), { allowed: false, blocked: true, reason: "Access denied with HTTP 403" });
   assert.equal(classifyAccess({ status: 200, title: "Verify you are human" }).blocked, true);
   assert.equal(classifyAccess({ status: 500 }).blocked, false);
+});
+
+test("packaged browser paths resolve from ASAR to the unpacked runtime", () => {
+  const packed = "C:\\app\\resources\\app.asar\\node_modules\\playwright-core\\.local-browsers\\chrome.exe";
+  assert.equal(
+    resolveBrowserExecutable(packed, (candidate) => candidate.includes("app.asar.unpacked")),
+    packed.replace("app.asar", "app.asar.unpacked")
+  );
+  assert.equal(resolveBrowserExecutable("C:\\repo\\node_modules\\chrome.exe", () => false), "C:\\repo\\node_modules\\chrome.exe");
 });
 
 test("fixture-backed source workers extract all three adapters independently", async () => {
