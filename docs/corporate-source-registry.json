@@ -18,43 +18,48 @@
   {
     "company": "TSMG",
     "provider": "lever",
-    "status": "live_validated",
+    "status": "production_enabled",
     "reviewedCount": 2,
     "evidence": "https://jobs.lever.co/tsmg/?location=Patras",
-    "reviewedOn": "2026-11-24"
+    "reviewedOn": "2026-11-24",
+    "activationNote": "Factual metadata and original links only; no blanket license assertion."
   },
   {
     "company": "Motodynamics",
     "provider": "workable",
-    "status": "live_validated_approval_required",
+    "status": "production_enabled",
     "reviewedCount": 1,
     "evidence": "https://apply.workable.com/motodynamics/",
-    "reviewedOn": "2026-11-24"
+    "reviewedOn": "2026-11-24",
+    "activationNote": "Factual metadata and original links only; no blanket license assertion."
   },
   {
     "company": "Cosmos Sport",
     "provider": "workable",
-    "status": "live_validated_approval_required",
+    "status": "production_enabled",
     "reviewedCount": 3,
     "evidence": "https://apply.workable.com/cosmos-sport-s-dot-a/",
-    "reviewedOn": "2026-11-24"
+    "reviewedOn": "2026-11-24",
+    "activationNote": "Factual metadata and original links only; no blanket license assertion."
   },
   {
     "company": "Πλαίσιο",
     "provider": "workable",
-    "status": "live_validated_approval_required",
+    "status": "production_enabled",
     "reviewedCount": 1,
     "evidence": "https://apply.workable.com/plaisio-careers/",
-    "reviewedOn": "2026-11-24"
+    "reviewedOn": "2026-11-24",
+    "activationNote": "Factual metadata and original links only; no blanket license assertion."
   },
   {
     "company": "Irida Labs",
     "provider": "html",
-    "status": "live_validated_approval_required",
+    "status": "production_enabled",
     "reviewedCount": 4,
     "evidence": "https://iridalabs.com/careers/",
     "reviewedOn": "2026-11-24",
-    "liveValidationRun": "https://github.com/NikosPaschalis/workInPatra/actions/runs/45370791696"
+    "liveValidationRun": "https://github.com/NikosPaschalis/workInPatra/actions/runs/45370791696",
+    "activationNote": "Factual metadata and original links only; no blanket license assertion."
   },
   {
     "company": "EY",
@@ -107,20 +112,22 @@
   {
     "company": "ALTHOM",
     "provider": "html",
-    "status": "live_validated_approval_required",
+    "status": "production_enabled",
     "reviewedCount": 4,
     "evidence": "https://www.althom.de/careers",
     "reviewedOn": "2026-11-24",
-    "liveValidationRun": "https://github.com/NikosPaschalis/workInPatra/actions/runs/45370791696"
+    "liveValidationRun": "https://github.com/NikosPaschalis/workInPatra/actions/runs/45370791696",
+    "activationNote": "Factual metadata and original links only; no blanket license assertion."
   },
   {
     "company": "Noesis Technologies",
     "provider": "html",
-    "status": "live_validated_approval_required",
+    "status": "production_enabled",
     "reviewedCount": 1,
     "evidence": "https://noesis-tech.com/company/careers/",
     "reviewedOn": "2026-11-24",
-    "liveValidationRun": "https://github.com/NikosPaschalis/workInPatra/actions/runs/45370791696"
+    "liveValidationRun": "https://github.com/NikosPaschalis/workInPatra/actions/runs/45370791696",
+    "activationNote": "Factual metadata and original links only; no blanket license assertion."
   },
   {
     "company": "Advisable",
