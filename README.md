@@ -385,3 +385,4 @@ Project code: [MIT](LICENSE). This license does not grant rights to third-party 
 ## Data quality checks
 
 Run `node scripts/data-quality.js data` offline. The scrape workflow records `data/data-quality.json` after applying reviewed queues, and the snapshot workflow checks integrity before capture. Structural errors stop publication; missing metadata, source availability, date drift and volume anomalies are warnings. Monthly snapshots contain source freshness/scope and comparable coverage for common sources with the same collection scope and successful evidence within 36 hours. Like-for-like counts are source-specific listings, not unique vacancies; listing-page coverage remains unverified. Legacy snapshots are unchanged and have no comparable-quality baseline. See [history schema](data/HISTORY_SCHEMA.md).
+ Comparison uses an explicit versioned collection method; bump the version when collection coverage or extraction behavior changes materially.

@@ -145,6 +145,7 @@ export function mergeManualQueue(current, queued, { now = new Date() } = {}) {
   const urls = new Set(current.map((job) => canonicalizeJobUrl(job.url)).filter(Boolean));
   const names = new Set(current.map(titleCompanyIdentity).filter(Boolean));
   const accepted = [];
+  const reviewed = [];
   const rejected = [];
   for (const queuedJob of queued) {
     const validation = validateManualJob(queuedJob);
@@ -153,13 +154,10 @@ export function mergeManualQueue(current, queued, { now = new Date() } = {}) {
       continue;
     }
     const nameKey = titleCompanyIdentity(queuedJob);
-    if (urls.has(validation.canonicalUrl) || (nameKey && names.has(nameKey))) {
-      rejected.push({ job: queuedJob, reason: "duplicate" });
-      continue;
-    }
+    const duplicate=urls.has(validation.canonicalUrl)||(nameKey&&names.has(nameKey));
     const expiry = curatedUntil(queuedJob.manuallyVerifiedAt);
     if (!expiry || new Date(expiry) <= now) {
-      rejected.push({ job: queuedJob, reason: "expired_approval" });
+      rejected.push({ job: queuedJob, reason: duplicate?"duplicate":"expired_approval" });
       continue;
     }
     const job = {
@@ -169,11 +167,13 @@ export function mergeManualQueue(current, queued, { now = new Date() } = {}) {
       curated: true,
       curatedUntil: expiry,
     };
+    reviewed.push(job);
+    if(duplicate){rejected.push({job:queuedJob,reason:"duplicate"});continue;}
     urls.add(validation.canonicalUrl);
     if (nameKey) names.add(nameKey);
     accepted.push(job);
   }
-  return { jobs: [...current, ...accepted], accepted, rejected };
+  return { jobs: [...current, ...accepted], accepted, rejected, reviewed };
 }
 
 export function retainCuratedListings(freshJobs, previousJobs, source, now = new Date()) {

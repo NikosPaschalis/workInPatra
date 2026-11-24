@@ -187,7 +187,8 @@ async function loadReport() {
     document.getElementById('kpi-source-note').textContent = sourceEntries.map(([id]) => SOURCE_LABELS[id] || id).join(' · ');
     const comparison=latest.comparableCoverage;
     const cmpEl=document.getElementById('comparable-coverage');
-    cmpEl.textContent=comparison?.available ? numberFormat.format(comparison.previousCount)+' → '+numberFormat.format(comparison.currentCount)+' καταχωρίσεις στις '+comparison.sources.length+' κοινές πηγές ('+(comparison.delta>0?'+':'')+numberFormat.format(comparison.delta)+'). Μετρώνται καταχωρίσεις ανά πηγή, όχι μοναδικές θέσεις ή συνολική ζήτηση.' : 'Δεν υπάρχει ακόμη συγκρίσιμη βάση με τεκμηριωμένη κάλυψη.';
+    const sourceName=id=>SOURCE_LABELS[id]||latest.corporate?.coverage?.[id]?.company||id.replace(/^corporate:/,'');
+    cmpEl.textContent=comparison?.available ? numberFormat.format(comparison.previousCount)+' → '+numberFormat.format(comparison.currentCount)+' καταχωρίσεις στις '+comparison.sources.length+' κοινές πηγές ('+(comparison.delta>0?'+':'')+numberFormat.format(comparison.delta)+'). Πηγές: '+comparison.sources.map(sourceName).join(', ')+'. Μετρώνται καταχωρίσεις ανά πηγή, όχι μοναδικές θέσεις ή συνολική ζήτηση.' : 'Δεν υπάρχει ακόμη συγκρίσιμη βάση με τεκμηριωμένη κάλυψη.';
     const coverageEl=document.getElementById('quality-coverage');
     coverageEl.textContent=latest.quality ? 'Προειδοποιήσεις ποιότητας: '+latest.quality.warnings.length+'. Πηγές εκτός σύγκρισης: '+(comparison?.excluded?.length??'—')+'. Η κάλυψη των σελίδων αποτελεσμάτων δεν είναι επιβεβαιωμένα πλήρης.' : 'Παλαιότερο snapshot χωρίς καταγραφή ποιότητας.';
     renderCorporate(latest);

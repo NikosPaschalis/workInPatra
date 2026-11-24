@@ -98,6 +98,7 @@ export async function fetchAll(previousJobs, previousCorporate, { boardScrapers,
     return [name, {
       status,
       collection_scope: "listing_page_unverified",
+      collection_method: name+":listing-page:v1",
       scraped_count: freshCount,
       fallback_count: status === "fallback" ? fallbackCount : 0,
       retained_count: deduplicated.filter((job) => job.source === name).length,
@@ -105,7 +106,7 @@ export async function fetchAll(previousJobs, previousCorporate, { boardScrapers,
   }));
 
   for (const [key, stats] of Object.entries(corporate.sourceStats)) {
-    sourceStats[key] = { ...stats, collection_scope:"employer_adapter", retained_count: deduplicated.filter(j => j.sourceKey === key).length };
+    sourceStats[key] = { ...stats, collection_scope:"employer_adapter", collection_method:key+":posting-adapter:v1", retained_count: deduplicated.filter(j => j.sourceKey === key).length };
   }
   const corporateCoverage = Object.fromEntries(Object.entries(corporate.sourceStats).map(([key, stats]) => [key, { ...stats, public_count: deduplicated.filter(j => j.sourceKey === key).length }]));
   // Track all verified corporate observations, even if an existing board has the same listing.
