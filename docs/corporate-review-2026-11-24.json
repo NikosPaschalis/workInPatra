@@ -6,7 +6,7 @@
     "date": "2026-11-18T00:00:00.000Z",
     "url": "https://iridalabs.com/careers/devops-engineer-sr-devops-engineer/",
     "location": "Athens or Patras",
-    "firstSeenAt": "2026-11-24T10:00:00.000Z",
+    "firstSeenAt": "2026-11-24",
     "reviewedAt": "2026-11-24",
     "status": "public_page_reviewed",
     "productionApproved": false
@@ -18,7 +18,7 @@
     "date": "2026-11-18T00:00:00.000Z",
     "url": "https://iridalabs.com/careers/cloud-ml-engineer-senior-cloud-ml-engineer/",
     "location": "Athens or Patras",
-    "firstSeenAt": "2026-11-24T10:00:00.000Z",
+    "firstSeenAt": "2026-11-24",
     "reviewedAt": "2026-11-24",
     "status": "public_page_reviewed",
     "productionApproved": false
@@ -30,7 +30,7 @@
     "date": "2026-11-18T00:00:00.000Z",
     "url": "https://iridalabs.com/careers/backend-senior-backend-engineer-aws-apis-irida-labs-greece/",
     "location": "Athens or Patras",
-    "firstSeenAt": "2026-11-24T10:00:00.000Z",
+    "firstSeenAt": "2026-11-24",
     "reviewedAt": "2026-11-24",
     "status": "public_page_reviewed",
     "productionApproved": false
@@ -42,7 +42,7 @@
     "date": "2026-11-18T00:00:00.000Z",
     "url": "https://iridalabs.com/careers/embedded-software-engineer-edge-ai-ra-rz-irida-labs-athens-patras/",
     "location": "Athens or Patras",
-    "firstSeenAt": "2026-11-24T10:00:00.000Z",
+    "firstSeenAt": "2026-11-24",
     "reviewedAt": "2026-11-24",
     "status": "public_page_reviewed",
     "productionApproved": false
@@ -54,7 +54,7 @@
     "date": "2026-10-30T00:00:00.000Z",
     "url": "https://careers.ey.com/ey/job/Athens-Senior-_NET-Software-Engineer-Athens-Patras-15125/1443143733",
     "location": "Athens or Patras",
-    "firstSeenAt": "2026-11-24T10:00:00.000Z",
+    "firstSeenAt": "2026-11-24",
     "reviewedAt": "2026-11-24",
     "status": "public_page_reviewed",
     "productionApproved": false
@@ -62,13 +62,25 @@
   {
     "companyId": "tsmg",
     "company": "TSMG",
-    "title": "Driver / Data Collector",
+    "title": "Driver / Data Collector in Patras, Greece",
     "date": null,
     "url": "https://jobs.lever.co/tsmg/9d2851f1-f4b0-4bab-9d6c-ac1b51e99e0d",
     "location": "Patras, Greece",
-    "firstSeenAt": "2026-11-24T10:00:00.000Z",
+    "firstSeenAt": "2026-11-24T09:46:20.930Z",
     "reviewedAt": "2026-11-24",
-    "status": "public_page_reviewed",
+    "status": "live_api_reviewed",
+    "productionApproved": false
+  },
+  {
+    "companyId": "tsmg",
+    "company": "TSMG",
+    "title": "Field Data Collection Specialist / Surveyor",
+    "date": null,
+    "url": "https://jobs.lever.co/tsmg/e4d366e1-a1d1-4d69-9060-6dd0502e57b2",
+    "location": "Patras, Greece",
+    "firstSeenAt": "2026-11-24T09:46:20.930Z",
+    "reviewedAt": "2026-11-24",
+    "status": "live_api_reviewed",
     "productionApproved": false
   }
 ]

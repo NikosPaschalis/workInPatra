@@ -1,16 +1,11 @@
 name: Lever read-only pilot
 on:
-  pull_request:
-    branches: [main]
-    paths:
-      - 'server/scrapers/lever.js'
-      - 'scripts/lever-smoke.js'
-      - '.github/workflows/lever-live-validation.yml'
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
   pilot:
-    if: github.head_ref == 'feat/corporate-careers'
+    if: vars.LEVER_REUSE_AUTHORIZED == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 3
     steps:
