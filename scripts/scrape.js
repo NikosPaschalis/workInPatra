@@ -72,7 +72,7 @@ async function fetchAll(previousJobs) {
     );
   }
 
-  const corporate = await collectCorporate(previousJobs, { enabled: process.env.CORPORATE_CAREERS_ENABLED === "true" });
+  const corporate = await collectCorporate(previousJobs, { enabled: process.env.CORPORATE_CAREERS_ENABLED === "true" && process.env.SMARTRECRUITERS_REUSE_AUTHORIZED === "true" });
   const categorized = [...jobs, ...corporate.jobs].map((job) => ({
     ...job,
     category: job.source === "corporate" ? job.category : categorizeJob(job),

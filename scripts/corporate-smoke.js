@@ -1,4 +1,8 @@
 import { collectCorporate, CORPORATE_COMPANIES } from "../server/scrapers/corporate.js";
+if (process.env.SMARTRECRUITERS_REUSE_AUTHORIZED !== "true") {
+  console.error("Live requests disabled pending documented authorization for this use");
+  process.exit(1);
+}
 const result = await collectCorporate([], { enabled: true });
 console.log(JSON.stringify(result, null, 2));
 // The pilot has independently verified public vacancies in Patras on 2026-11-24.
