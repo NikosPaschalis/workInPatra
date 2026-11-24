@@ -13,6 +13,7 @@ test("30 Athens calendar days inclusive; older, future and unknown excluded",()=
   assert.equal(isJobWithinAgeWindow({date:"2026-10-25T22:00:00Z"},30,now),true);
   assert.equal(isJobWithinAgeWindow({date:"2026-10-25"},999,now),false);
   assert.equal(isJobWithinAgeWindow({date:"2026-11-25"},30,now),false);
+  assert.equal(isJobWithinAgeWindow({date:"2026-11-25",firstSeenAt:"2026-11-23"},30,now),false);
   assert.equal(isJobWithinAgeWindow({},30,now),false);
 });
 test("first seen fallback only for unknown dates, never for a known old publication",()=>{

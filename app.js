@@ -1,5 +1,6 @@
 import {
   compareJobsByDateNewestFirst,
+  athensCalendarAge,
   isJobWithinAgeWindow,
   jobAgeBasis,
   normalizeSearchText,
@@ -57,14 +58,8 @@ const QUICK_CATEGORY_LIMIT = 4;
 // ── Date helpers ──────────────────────────────────────────────────────────────
 function formatDate(isoStr) {
   if (!isoStr) return "";
-  const now  = new Date();
-  const d    = new Date(isoStr);
-  if (!Number.isFinite(d.getTime())) return "";
-  // Compare calendar days (local midnight) — avoids "Σήμερα" for jobs
-  // scraped yesterday at an hour that's < 24h ago in absolute ms.
-  const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const dateMidnight  = new Date(d.getFullYear(),   d.getMonth(),   d.getDate());
-  const diff = Math.round((todayMidnight - dateMidnight) / 86400000);
+  const diff = athensCalendarAge(isoStr);
+  if (!Number.isFinite(diff) || diff < 0) return "";
   if (diff <= 0) return "Σήμερα";
   if (diff === 1) return "Χθες";
   if (diff < 7)  return `${diff} μέρες πριν`;

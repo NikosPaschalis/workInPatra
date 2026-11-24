@@ -35,11 +35,12 @@ function calendarDay(value) {
   const parts = Object.fromEntries(athensCalendar.formatToParts(new Date(t)).map(p => [p.type,p.value]));
   return Date.UTC(Number(parts.year), Number(parts.month)-1, Number(parts.day))/86400000;
 }
+export function athensCalendarAge(value, now = new Date()) { return calendarDay(now) - calendarDay(value); }
 export const MAX_VISIBLE_DAYS = 30;
 export function jobAgeBasis(job, now = new Date()) {
   const end = now.getTime();
   const published = Date.parse(job?.date || "");
-  if (Number.isFinite(published) && published <= end) return { date: new Date(published).toISOString(), kind: "published" };
+  if (Number.isFinite(published)) return published <= end ? { date: new Date(published).toISOString(), kind: "published" } : null;
   const firstSeen = Date.parse(job?.firstSeenAt || "");
   if (Number.isFinite(firstSeen) && firstSeen <= end) return { date: new Date(firstSeen).toISOString(), kind: "first_seen" };
   return null;
@@ -47,7 +48,7 @@ export function jobAgeBasis(job, now = new Date()) {
 export function isJobWithinAgeWindow(job, days = MAX_VISIBLE_DAYS, now = new Date()) {
   const basis = jobAgeBasis(job, now);
   if (!basis) return false;
-  const age = calendarDay(now) - calendarDay(basis.date);
+  const age = athensCalendarAge(basis.date, now);
   return age >= 0 && age < Math.min(MAX_VISIBLE_DAYS, Math.max(0, days));
 }
 export function summarizeJobAge(jobs, now = new Date()) {
