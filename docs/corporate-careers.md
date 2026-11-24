@@ -33,3 +33,6 @@ Next source candidates: PwC Greece official search lists Patras facet (7 at rese
 
 ## Visual review
 Netlify PR #18 deploy preview runs scripts/build-corporate-preview.js only for CONTEXT=deploy-preview and REVIEW_ID=18. Six explicitly fictional roles appear in the existing grid with DEMO labels and disabled application links; a separate report demo payload does not change actual snapshots. No API calls, production data changes, or alerts. Production does not run the demo build.
+
+## Homepage UI revision — user feedback 2026-11-24
+No standalone corporate section or special CTA. Corporate jobs use the same list, card, sorting, dates, and professional categories as existing listings. Neutral source label `Εταιρική σελίδα`; advanced source filter `Εταιρικές σελίδες`. Keep per-company collection keys, separate from direct exclusive listings. Preview-only DEMO notice and disabled application links remain mandatory. Statistics retain employer breakdown and source label.

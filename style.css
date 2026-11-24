@@ -1020,6 +1020,7 @@ body {
 @media (max-width: 640px) { .direct-dialog-apply-button { width: 100%; } }
 
 /* Corporate careers */
-.corporate-discovery:not([hidden]){display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;padding:1rem 1.25rem;margin:1rem 0;border:1px solid #c7d2fe;border-radius:12px;background:#eef2ff;color:#312e81}.corporate-discovery h2{font-size:1.1rem;margin:0 0 .25rem}.corporate-discovery p{margin:0;font-size:.9rem}.corporate-discovery a{color:#3730a3;font-weight:600}.badge-corporate{background:#e0e7ff;color:#3730a3}.chip-corporate{color:#3730a3}
+.badge-corporate { background: #f1f5f9; color: #475569; }
+.chip-corporate input:checked + span { background: #475569; border-color: #475569; color: #fff; }
 
 .corporate-preview-notice:not([hidden]){display:block;padding:.85rem 1rem;margin:1rem 0;border:1px solid #d97706;background:#fffbeb;color:#78350f;border-radius:8px;font-size:.9rem}.card-link[aria-disabled="true"]{opacity:.7;cursor:default;pointer-events:none}

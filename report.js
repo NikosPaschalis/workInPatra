@@ -1,7 +1,7 @@
 import { CATEGORY_DEFINITIONS } from './categories.js';
 
 const CATEGORY_LABELS = Object.fromEntries(CATEGORY_DEFINITIONS.map(({ id, label }) => [id, label]));
-const SOURCE_LABELS = { jobfind: 'JobFind', kariera: 'Kariera', xe: 'XE', corporate: 'Εταιρικές ευκαιρίες', unknown: 'Άγνωστη πηγή' };
+const SOURCE_LABELS = { jobfind: 'JobFind', kariera: 'Kariera', xe: 'XE', corporate: 'Εταιρικές σελίδες', unknown: 'Άγνωστη πηγή' };
 const statusEl = document.getElementById('report-status');
 const contentEl = document.getElementById('report-content');
 const numberFormat = new Intl.NumberFormat('el-GR');
