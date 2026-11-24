@@ -1,0 +1,245 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-11-24T16:51:41.047Z",
+  "inventory": 111,
+  "corporateInventory": 16,
+  "observations": 1182,
+  "distinctSourceListings": 196,
+  "runs": 26,
+  "snapshots": 5,
+  "errors": [],
+  "warnings": [
+    {
+      "code": "date_drift",
+      "count": 46
+    },
+    {
+      "code": "legacy_missing_location",
+      "count": 1102
+    },
+    {
+      "code": "category_drift",
+      "count": 4
+    },
+    {
+      "code": "repeated_source_volume",
+      "count": 1,
+      "detail": "jobfind: 35 in 10 runs; coverage unverified"
+    },
+    {
+      "code": "stale_or_unverified_source",
+      "count": 49,
+      "detail": "kariera"
+    }
+  ],
+  "bySource": {
+    "corporate:advisable": {
+      "status": "skipped",
+      "last_success_at": null,
+      "scope": "legacy_unverified",
+      "method": null,
+      "inventory_count": 0,
+      "observed_count": null,
+      "comparable": false,
+      "missing": {
+        "company": 0,
+        "location": 0,
+        "employmentType": 0,
+        "salaryRaw": 0,
+        "date": 0
+      }
+    },
+    "corporate:althom": {
+      "status": "success",
+      "last_success_at": "2026-11-24T16:51:40.742Z",
+      "scope": "employer_adapter",
+      "method": "corporate:althom:posting-adapter:v1",
+      "inventory_count": 4,
+      "observed_count": 4,
+      "comparable": true,
+      "missing": {
+        "company": 0,
+        "location": 0,
+        "employmentType": 4,
+        "salaryRaw": 4,
+        "date": 4
+      }
+    },
+    "corporate:cosmos-sport": {
+      "status": "success",
+      "last_success_at": "2026-11-24T16:51:40.742Z",
+      "scope": "employer_adapter",
+      "method": "corporate:cosmos-sport:posting-adapter:v1",
+      "inventory_count": 3,
+      "observed_count": 3,
+      "comparable": true,
+      "missing": {
+        "company": 0,
+        "location": 0,
+        "employmentType": 0,
+        "salaryRaw": 3,
+        "date": 0
+      }
+    },
+    "corporate:irida-renesas": {
+      "status": "success",
+      "last_success_at": "2026-11-24T16:51:40.742Z",
+      "scope": "employer_adapter",
+      "method": "corporate:irida-renesas:posting-adapter:v1",
+      "inventory_count": 4,
+      "observed_count": 4,
+      "comparable": true,
+      "missing": {
+        "company": 0,
+        "location": 0,
+        "employmentType": 4,
+        "salaryRaw": 4,
+        "date": 0
+      }
+    },
+    "corporate:motodynamics": {
+      "status": "success",
+      "last_success_at": "2026-11-24T16:51:40.742Z",
+      "scope": "employer_adapter",
+      "method": "corporate:motodynamics:posting-adapter:v1",
+      "inventory_count": 1,
+      "observed_count": 1,
+      "comparable": true,
+      "missing": {
+        "company": 0,
+        "location": 0,
+        "employmentType": 0,
+        "salaryRaw": 1,
+        "date": 0
+      }
+    },
+    "corporate:netcompany": {
+      "status": "scheduled_skip",
+      "last_success_at": null,
+      "scope": "legacy_unverified",
+      "method": null,
+      "inventory_count": 0,
+      "observed_count": null,
+      "comparable": false,
+      "missing": {
+        "company": 0,
+        "location": 0,
+        "employmentType": 0,
+        "salaryRaw": 0,
+        "date": 0
+      }
+    },
+    "corporate:noesis": {
+      "status": "success",
+      "last_success_at": "2026-11-24T16:51:40.742Z",
+      "scope": "employer_adapter",
+      "method": "corporate:noesis:posting-adapter:v1",
+      "inventory_count": 1,
+      "observed_count": 1,
+      "comparable": true,
+      "missing": {
+        "company": 0,
+        "location": 0,
+        "employmentType": 1,
+        "salaryRaw": 1,
+        "date": 1
+      }
+    },
+    "corporate:plaisio": {
+      "status": "success",
+      "last_success_at": "2026-11-24T16:51:40.742Z",
+      "scope": "employer_adapter",
+      "method": "corporate:plaisio:posting-adapter:v1",
+      "inventory_count": 1,
+      "observed_count": 1,
+      "comparable": true,
+      "missing": {
+        "company": 0,
+        "location": 0,
+        "employmentType": 0,
+        "salaryRaw": 1,
+        "date": 0
+      }
+    },
+    "corporate:renesas": {
+      "status": "scheduled_skip",
+      "last_success_at": null,
+      "scope": "legacy_unverified",
+      "method": null,
+      "inventory_count": 0,
+      "observed_count": null,
+      "comparable": false,
+      "missing": {
+        "company": 0,
+        "location": 0,
+        "employmentType": 0,
+        "salaryRaw": 0,
+        "date": 0
+      }
+    },
+    "corporate:tsmg": {
+      "status": "success",
+      "last_success_at": "2026-11-24T16:51:40.742Z",
+      "scope": "employer_adapter",
+      "method": "corporate:tsmg:posting-adapter:v1",
+      "inventory_count": 2,
+      "observed_count": 2,
+      "comparable": true,
+      "missing": {
+        "company": 0,
+        "location": 0,
+        "employmentType": 0,
+        "salaryRaw": 2,
+        "date": 2
+      }
+    },
+    "jobfind": {
+      "status": "success",
+      "last_success_at": "2026-11-24T16:51:40.742Z",
+      "scope": "listing_page_unverified",
+      "method": "jobfind:listing-page:v1",
+      "inventory_count": 35,
+      "observed_count": 35,
+      "comparable": true,
+      "missing": {
+        "company": 35,
+        "location": 0,
+        "employmentType": 0,
+        "salaryRaw": 30,
+        "date": 0
+      }
+    },
+    "kariera": {
+      "status": "skipped",
+      "last_success_at": "2026-11-14T13:06:35.072Z",
+      "scope": "legacy_unverified",
+      "method": null,
+      "inventory_count": 49,
+      "observed_count": 32,
+      "comparable": false,
+      "missing": {
+        "company": 32,
+        "location": 31,
+        "employmentType": 38,
+        "salaryRaw": 48,
+        "date": 15
+      }
+    },
+    "xe": {
+      "status": "success",
+      "last_success_at": "2026-11-24T16:51:40.742Z",
+      "scope": "listing_page_unverified",
+      "method": "xe:listing-page:v1",
+      "inventory_count": 11,
+      "observed_count": 11,
+      "comparable": true,
+      "missing": {
+        "company": 4,
+        "location": 0,
+        "employmentType": 11,
+        "salaryRaw": 8,
+        "date": 0
+      }
+    }
+  }
+}
