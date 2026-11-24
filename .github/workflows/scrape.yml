@@ -58,6 +58,7 @@ jobs:
         timeout-minutes: 20
         env:
           KARIERA_CRON: ${{ github.event.schedule }}
+          CORPORATE_CAREERS_ENABLED: ${{ vars.CORPORATE_CAREERS_ENABLED }}
         run: node scripts/scrape.js
 
       - name: Apply verified Kariera queue to the same nightly jobs batch

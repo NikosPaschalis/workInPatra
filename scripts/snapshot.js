@@ -14,7 +14,7 @@ const SNAPSHOT_DIR = path.join(DATA_DIR, 'snapshots');
 const JOBS_FILE = path.join(DATA_DIR, 'jobs.json');
 const MANIFEST_FILE = path.join(SNAPSHOT_DIR, 'index.json');
 const CATEGORY_IDS = CATEGORY_DEFINITIONS.map(({ id }) => id);
-const SOURCE_IDS = ['jobfind', 'kariera', 'xe'];
+const SOURCE_IDS = ['jobfind', 'kariera', 'xe', 'corporate'];
 const CATEGORY_ALIASES = { retail: 'sales' };
 
 function getPreviousMonthLabel(now = new Date()) {
@@ -81,7 +81,7 @@ function validateSnapshot(snapshot) {
   }
 
   mkdirSync(SNAPSHOT_DIR, { recursive: true });
-  const { jobs, lastFetched } = JSON.parse(readFileSync(JOBS_FILE, 'utf8'));
+  const { jobs, lastFetched, corporateCoverage } = JSON.parse(readFileSync(JOBS_FILE, 'utf8'));
   if (!Array.isArray(jobs)) {
     console.error('❌ data/jobs.json does not contain a jobs array');
     process.exit(1);
@@ -107,6 +107,8 @@ function validateSnapshot(snapshot) {
       }
     }
 
+    const corporateJobs = jobs.filter(job => job.source === 'corporate');
+    const corporate = corporateCoverage ? { coverage: corporateCoverage, byCompany: countBy(corporateJobs, 'company'), bySubcategory: countBy(corporateJobs, 'subcategory'), unverified: corporateJobs.filter(j => j.corporateStatus !== 'verified').length } : null;
     const snapshot = {
       month: label,
       capturedAt: new Date().toISOString(),
@@ -116,6 +118,7 @@ function validateSnapshot(snapshot) {
       total: jobs.length,
       byCategory,
       bySource,
+      ...(corporate ? { corporate } : {}),
     };
 
     validateSnapshot(snapshot);

@@ -58,7 +58,8 @@ async function fetchAll(previousJobs = getPreviousJobs()) {
   }
 
   // Prefer each site's source category, then fall back to title/tag matching.
-  const categorized = jobs.map(j => ({ ...j, category: categorizeJob(j) }));
+  // Local refresh must not drop corporate inventory published by GitHub Actions.
+  const categorized = [...jobs, ...previousJobs.filter(j => j.source === "corporate")].map(j => ({ ...j, category: j.source === "corporate" ? j.category : categorizeJob(j) }));
 
   // Deduplicate:
   // - named jobs   → dedup by title + company (same job, same company)

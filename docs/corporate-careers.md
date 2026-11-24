@@ -1,0 +1,20 @@
+# Corporate careers — pilot, 2026-11-24
+
+## Research and rollout
+- Netcompany (Patras Application Support Agent): https://jobs.smartrecruiters.com/netcompany1/744000157155419-application-support-agent
+- Renesas (Patras field applications engineer, 17 Nov): https://jobs.renesas.com/job/online-field-applications-engineer-analog-and-power-in-patras-greece-jid-7643
+- Public Posting API documentation: https://developers.smartrecruiters.com/docs/posting-api and https://developers.smartrecruiters.com/docs/endpoints
+- Irida Labs: recent Athens/Patras roles actually name Renesas; avoid duplicate ingestion: https://iridalabs.com/careers/
+- PwC: Patras filter, seven jobs observed in search listing: https://jobs.gr.pwc.com/gr/en/search-results
+- Deloitte: eleven links to LinkedIn, not independently confirmed active: https://www.deloitte.com/gr/en/careers/explore-your-fit/find-your-possible/career-opportunities-in-patras.html
+- EY: multi-office hybrid roles; verify role-level Patras eligibility: https://careers.ey.com/
+- Patras Science Park: https://psp.org.gr/en/companies/jobs/ — Lödige and Pleiades marked Open (Pleiades older, verify direct); closed historical roles for Brite, InSyBio, π-NET, Space Horizon, H-CAM, Advent, Think Silicon, Satways, Odyssey, Motivian, Codefunnels. Do not ingest closed rows or assume open rows are current.
+- Coffee Island: https://corporate.coffeeisland.gr/en/the-company/career/ — assess actual position and city; prior postings not proof of current openings.
+
+Pilot uses only the two documented ATS identifiers. No LinkedIn scraping or anti-bot bypass. Verify public API live response and applicable reuse terms before enabling. No historical hiring-rate claims or historical backfill.
+Run `node scripts/corporate-smoke.js` (read-only, prints each company's status and normalized listings). Inspect actual links, location and counts. Set repository Actions variable CORPORATE_CAREERS_ENABLED=true only after access/reuse and live validation. Default disabled. Disable again on unexpected access restrictions.
+Run `npm test` for fixture tests. No Electron changes.
+
+## Data contract
+source=corporate for UI and monthly source counts; sourceKey=corporate:<companyId> for run health and observation identity. Each company has independent success, fallback, failed or skipped; validated zero is successful. Failed companies retain only their own inventory, explicitly marked unverified. ATS publication date or null, never first seen as publication date. Exact city allowlist; no generic Greece remote. Parent categories unchanged; role subcategories are additive. Monthly snapshots include coverage, company and role counts when available. Older snapshots are not comparable at constant coverage; don't reinterpret their absence as zero demand.
+Current dedup prioritizes existing job boards on exact title/company matches; distinct ATS IDs otherwise remain. Fuzzy employer aliases, multiple-location variants and an independent per-company retention TTL require further work.

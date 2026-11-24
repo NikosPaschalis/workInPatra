@@ -2,6 +2,7 @@
 import { scrape as scrapeJobfind } from "../server/scrapers/jobfind.js";
 import { scrape as scrapeKariera } from "../server/scrapers/kariera.js";
 import { scrape as scrapeXe } from "../server/scrapers/xe.js";
+import { collectCorporate } from "../server/scrapers/corporate.js";
 import { categorizeJob } from "../server/categorize.js";
 import { readFileSync, writeFileSync, mkdirSync } from "fs";
 import { fileURLToPath } from "url";
@@ -71,14 +72,23 @@ async function fetchAll(previousJobs) {
     );
   }
 
-  const categorized = jobs.map((job) => ({
+  const corporate = await collectCorporate(previousJobs, { enabled: process.env.CORPORATE_CAREERS_ENABLED === "true" });
+  const categorized = [...jobs, ...corporate.jobs].map((job) => ({
     ...job,
-    category: categorizeJob(job),
+    category: job.source === "corporate" ? job.category : categorizeJob(job),
   }));
 
   const namedSeen = new Set();
   const anonSeen = new Set();
+  const corporateUrls = new Set();
   const deduplicated = categorized.filter((job) => {
+    if (job.source === "corporate") {
+      const key = job.url;
+      const namedKey = job.title.toLowerCase().trim() + "|" + (job.company || "").toLowerCase().trim();
+      if (corporateUrls.has(key) || namedSeen.has(namedKey)) return false;
+      corporateUrls.add(key);
+      return true;
+    }
     const title = job.title.toLowerCase().trim();
     const company = job.company?.toLowerCase().trim() || "";
     if (company) {
@@ -112,7 +122,11 @@ async function fetchAll(previousJobs) {
     }];
   }));
 
-  return { jobs: deduplicated, sourceStats };
+  for (const [key, stats] of Object.entries(corporate.sourceStats)) {
+    if (stats.status === "skipped" && stats.retained_count === 0) continue;
+    sourceStats[key] = { ...stats, retained_count: deduplicated.filter(j => j.sourceKey === key).length };
+  }
+  return { jobs: deduplicated, sourceStats, corporateCoverage: corporate.sourceStats };
 }
 
 function loadPreviousJobs(jobsPath) {
@@ -155,7 +169,7 @@ function loadPreviousJobs(jobsPath) {
     }
 
     const completedAt = new Date().toISOString();
-    const output = { jobs, lastFetched: completedAt };
+    const output = { jobs, lastFetched: completedAt, corporateCoverage: result.corporateCoverage };
 
     mkdirSync(dataDir, { recursive: true });
     writeFileSync(jobsPath, JSON.stringify(output), "utf8");

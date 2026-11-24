@@ -1018,3 +1018,6 @@ body {
 .direct-dialog-apply-button:hover { background: #10533f; }
 .direct-dialog-apply-button:focus-visible, .direct-dialog-close:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 @media (max-width: 640px) { .direct-dialog-apply-button { width: 100%; } }
+
+/* Corporate careers */
+.corporate-discovery:not([hidden]){display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;padding:1rem 1.25rem;margin:1rem 0;border:1px solid #c7d2fe;border-radius:12px;background:#eef2ff;color:#312e81}.corporate-discovery h2{font-size:1.1rem;margin:0 0 .25rem}.corporate-discovery p{margin:0;font-size:.9rem}.corporate-discovery a{color:#3730a3;font-weight:600}.badge-corporate{background:#e0e7ff;color:#3730a3}.chip-corporate{color:#3730a3}
