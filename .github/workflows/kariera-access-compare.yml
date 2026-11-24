@@ -1,0 +1,23 @@
+name: Kariera access comparison
+on:
+  pull_request:
+    paths:
+      - 'scripts/kariera-compare-access.js'
+      - '.github/workflows/kariera-access-compare.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  compare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps --only-shell chromium
+      - name: Compare HTTP and Playwright on same runner
+        run: node scripts/kariera-compare-access.js
