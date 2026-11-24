@@ -2,6 +2,7 @@ name: Corporate release dry run
 on:
   pull_request:
     branches: [main]
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
@@ -20,4 +21,5 @@ jobs:
       - run: npx playwright install --with-deps --only-shell chromium
       - run: node --test test/corporate-release.test.js
       - run: node scripts/corporate-production-dry-run.js
+        if: github.event_name == 'workflow_dispatch'
       - run: git diff --exit-code

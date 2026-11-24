@@ -11,5 +11,7 @@ test("corporate jobs share the main grid with a neutral source label",()=>{
   assert.ok(app.includes('corporate: "Εταιρική σελίδα"'));
   assert.ok(app.includes('card.querySelector(".card-company").textContent = job.company || "—"'));
   assert.ok(!app.includes('if (job.source === "corporate") link.textContent'));
-  assert.ok(app.includes("job.previewOnly"));
+  assert.ok(app.includes(".filter(j => !j.previewOnly)"));
+  assert.ok(!app.includes("corporate-preview.js"));
+  assert.ok(!html.includes("corporate-preview-notice"));
 });
