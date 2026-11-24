@@ -1,3 +1,4 @@
+import { isCorporatePreview, loadCorporatePreview } from "./corporate-preview.js?v=review-v2";
 import {
   compareJobsByDateNewestFirst,
   athensCalendarAge,
@@ -418,8 +419,9 @@ async function loadJobs(forceRefresh = false) {
 
   try {
     // Static JSON file — cache-bust on manual refresh
-    const url = `/data/jobs.json${forceRefresh ? "?t=" + Date.now() : ""}`;
-    const res = await fetch(url);
+    const preview = isCorporatePreview(location.hostname);
+    const url = `/data/jobs.json${forceRefresh || preview ? "?t=" + Date.now() : ""}`;
+    const res = await fetch(url, preview ? { cache: "no-store" } : {});
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     let directJobs = [];
@@ -433,7 +435,14 @@ async function loadJobs(forceRefresh = false) {
       console.warn("Could not load direct employer listings:", directError);
     }
 
-    state.jobs = [...(data.jobs || []), ...directJobs].map(job => ({
+    const notice = document.getElementById("corporate-preview-notice");
+    let reviewedJobs = [];
+    if (preview) {
+      notice.hidden = false;
+      try { reviewedJobs = await loadCorporatePreview(location.hostname); }
+      catch (error) { notice.textContent = "PR #18 — αποτυχία φόρτωσης πραγματικών εταιρικών δεδομένων. Δεν εμφανίζονται δοκιμαστικές αγγελίες."; console.error(error); }
+    }
+    state.jobs = [...(data.jobs || []).filter(j => !j.previewOnly && !(j.source === "corporate" && /^demo/i.test(j.company || ""))), ...directJobs, ...reviewedJobs].map(job => ({
       ...job,
       // Compatibility with jobs published before retail was merged into sales.
       category: job.category === "retail" ? "sales" : job.category,
@@ -441,7 +450,7 @@ async function loadJobs(forceRefresh = false) {
         [job.title, job.company, ...(job.tags || [])].filter(Boolean).join(" ")
       ),
     }));
-    document.getElementById("corporate-preview-notice").hidden = !data.corporatePreview;
+    notice.hidden = !preview;
     if (statTotal) statTotal.textContent = state.jobs.filter(j => isJobWithinAgeWindow(j, 30)).length;
     document.getElementById("stat-source-types").textContent = state.jobs.some(j => j.source === "corporate") ? "5" : "4";
     if (data.lastFetched) {

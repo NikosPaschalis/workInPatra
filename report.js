@@ -1,3 +1,4 @@
+import { isCorporatePreview, loadCorporatePreview, corporatePreviewStats } from "./corporate-preview.js?v=review-v2";
 import { CATEGORY_DEFINITIONS } from './categories.js';
 
 const CATEGORY_LABELS = Object.fromEntries(CATEGORY_DEFINITIONS.map(({ id, label }) => [id, label]));
@@ -186,20 +187,15 @@ async function loadReport() {
     document.getElementById('kpi-source-count').textContent = String(sourceEntries.length);
     document.getElementById('kpi-source-note').textContent = sourceEntries.map(([id]) => SOURCE_LABELS[id] || id).join(' · ');
     renderCorporate(latest);
-    // A deploy-preview-only payload demonstrates the panel without altering actual totals.
-    if (location.hostname === "deploy-preview-18--workinpatras.netlify.app") {
+    if (isCorporatePreview(location.hostname)) {
       try {
-        const res = await fetch("/data/corporate-preview-report.json", { cache: "no-store" });
-        if (res.ok) {
-          const demo = await res.json();
-          if (demo.previewOnly === true) {
-            document.getElementById("corporate-report-rows").replaceChildren();
-            document.getElementById("corporate-subcategories").replaceChildren();
-            renderCorporate({ ...latest, corporate: demo.corporate });
-            document.getElementById("corporate-report-note").textContent =  "Προεπισκόπηση — " + demo.total + " καταχωρίσεις από εφάπαξ έλεγχο, " + demo.corporate.ageWindow.visible30 + " στην προβολή 30 ημερών. Δεν περιλαμβάνονται στα πραγματικά μηνιαία σύνολα ή στο ιστορικό.";
-          }
-        }
-      } catch (error) { console.warn("Preview demo unavailable", error); }
+        const reviewed = await loadCorporatePreview(location.hostname);
+        document.getElementById("corporate-report-rows").replaceChildren();
+        document.getElementById("corporate-subcategories").replaceChildren();
+        const corporate = corporatePreviewStats(reviewed);
+        renderCorporate({ ...latest, corporate });
+        document.getElementById("corporate-report-note").textContent = "Προεπισκόπηση — " + reviewed.length + " πραγματικές καταχωρίσεις από εφάπαξ έλεγχο, " + corporate.ageWindow.visible30 + " στην προβολή 30 ημερών. Δεν περιλαμβάνονται στα πραγματικά μηνιαία σύνολα ή στο ιστορικό.";
+      } catch (error) { console.error("Review data unavailable", error); }
     }
     renderTrend(snapshots); renderBreakdown(latest, document.getElementById('breakdown-type').value); renderCategoryTrends(snapshots); renderHistory(snapshots);
     document.getElementById('breakdown-type').addEventListener('change', event => renderBreakdown(latest, event.target.value));
