@@ -108,7 +108,7 @@ function validateSnapshot(snapshot) {
     }
 
     const corporateJobs = jobs.filter(job => job.source === 'corporate');
-    const corporate = corporateCoverage ? { coverage: corporateCoverage, byCompany: countBy(corporateJobs, 'company'), bySubcategory: countBy(corporateJobs, 'subcategory'), unverified: corporateJobs.filter(j => j.corporateStatus !== 'verified').length } : null;
+    const corporate = corporateCoverage ? { coverage: corporateCoverage, byCompany: countBy(corporateJobs, 'company'), bySubcategory: countBy(corporateJobs, 'subcategoryLabel'), unverified: corporateJobs.filter(j => j.corporateStatus !== 'verified').length } : null;
     const snapshot = {
       month: label,
       capturedAt: new Date().toISOString(),

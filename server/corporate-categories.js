@@ -10,13 +10,13 @@ export const CORPORATE_ROLE_RULES = [
   ["cloud-devops", "Cloud & DevOps", "tech", /devops|cloud|site reliability|infrastructure|platform engineer/],
   ["software", "Software & IT", "tech", /software|developer|programmer|frontend|front.end|backend|back.end|embedded|application support|it support|\bqa\b|software test|sap|erp/],
   ["research", "Έρευνα & Ανάπτυξη", "tech", /research|r&d|bioinformatics|researcher/],
-  ["engineering", "Engineering", "construction", /engineer|μηχανικ|technician|electrical|mechanical/],
   ["consulting", "Consulting & Project Management", "admin", /consultant|consulting|business analyst|project manager|project management|delivery lead/],
-  ["finance", "Finance & Audit", "admin", /finance|account|audit|tax|λογιστ/],
+  ["finance", "Finance & Audit", "admin", /finance|accountant|accounting|audit|tax|λογιστ/],
   ["hr", "Human Resources", "admin", /human resources|talent acquisition|\bhr\b|payroll/],
   ["operations", "Operations & Supply Chain", "logistics", /operations|supply chain|manufacturing|production|logistics|warehouse/],
   ["marketing", "Marketing & Communication", "marketing", /marketing|communication|creative/],
   ["sales", "Sales & Business Development", "sales", /sales|business development|account manager/],
+  ["engineering", "Engineering", "construction", /engineer|μηχανικ|technician|electrical|mechanical/],
 ];
 export function categorizeCorporateRole(title, sourceCategory = "") {
   const match = CORPORATE_ROLE_RULES.find(r => r[3].test(normalizeText(title))) ||

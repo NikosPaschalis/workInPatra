@@ -8,6 +8,7 @@ function appendJsonl(filePath, record) {
 
 function makeJobKey(job) {
   const source = String(job?.sourceKey || job?.source || "unknown").trim().toLowerCase();
+  if (job?.source === "corporate" && job.externalId) return source + ":posting:" + job.externalId;
   if (job?.url) {
     try {
       const url = new URL(job.url);

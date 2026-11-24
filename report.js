@@ -210,7 +210,7 @@ function renderCorporate(snapshot) {
     rows.appendChild(tr);
   }
   const sub = document.getElementById("corporate-subcategories");
-  for (const [name, count] of Object.entries(data.bySubcategory || {})) {
+  for (const [name, count] of Object.entries(data.bySubcategory || {}).sort((a, b) => b[1] - a[1])) {
     const p = document.createElement("p"); p.textContent = name + ": " + count; sub.appendChild(p);
   }
 }

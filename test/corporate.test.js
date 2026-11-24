@@ -38,3 +38,20 @@ test("specific categories preserve historical parent IDs",()=>{
   assert.equal(categorizeCorporateRole("Junior Cloud / DevOps Engineer").category,"tech");
   assert.equal(categorizeCorporateRole("Audit Associate").category,"admin");
 });
+
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { recordScrapeHistory } from "../scripts/job-history.js";
+test("history does not treat failed company fallback as observed and uses stable posting id",async()=>{
+  const dir = mkdtempSync(path.join(tmpdir(),"corporate-history-"));
+  try {
+    const [job] = await fetchCompany(net,{now,fetchImpl:async()=>response([posting("123")])});
+    const other = {...job,sourceKey:"corporate:renesas",companyId:"renesas",externalId:"456"};
+    recordScrapeHistory({dataDir:dir,jobs:[job,other],startedAt:now.toISOString(),completedAt:now.toISOString(),sourceStats:{"corporate:netcompany":{status:"success"},"corporate:renesas":{status:"fallback"}}});
+    const records = readFileSync(path.join(dir,"observations.jsonl"),"utf8").trim().split("\n").map(JSON.parse);
+    assert.equal(records.length,1);
+    assert.equal(records[0].job_key,"corporate:netcompany:posting:123");
+    assert.equal(records[0].source_group,"corporate");
+  } finally { rmSync(dir,{recursive:true,force:true}); }
+});

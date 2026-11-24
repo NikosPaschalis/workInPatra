@@ -126,7 +126,10 @@ async function fetchAll(previousJobs) {
     if (stats.status === "skipped" && stats.retained_count === 0) continue;
     sourceStats[key] = { ...stats, retained_count: deduplicated.filter(j => j.sourceKey === key).length };
   }
-  return { jobs: deduplicated, sourceStats, corporateCoverage: corporate.sourceStats };
+  const corporateCoverage = Object.fromEntries(Object.entries(corporate.sourceStats).map(([key, stats]) => [key, { ...stats, retained_count: deduplicated.filter(j => j.sourceKey === key).length }]));
+  // Track all verified corporate observations, even if an existing board has the same listing.
+  const historyJobs = [...deduplicated.filter(j => j.source !== "corporate"), ...corporate.jobs];
+  return { jobs: deduplicated, historyJobs, sourceStats, corporateCoverage };
 }
 
 function loadPreviousJobs(jobsPath) {
@@ -176,7 +179,7 @@ function loadPreviousJobs(jobsPath) {
 
     const historyResult = recordScrapeHistory({
       dataDir,
-      jobs,
+      jobs: result.historyJobs,
       startedAt,
       completedAt,
       sourceStats,

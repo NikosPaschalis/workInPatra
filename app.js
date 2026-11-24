@@ -368,7 +368,7 @@ function render() {
       card.querySelector(".card-new-badge").classList.remove("hidden");
     }
     card.querySelector(".card-title").textContent   = job.title;
-    card.querySelector(".card-company").textContent = job.company || "—";
+    card.querySelector(".card-company").textContent = job.source === "corporate" ? [job.company, job.location].filter(Boolean).join(" · ") : job.company || "—";
 
     const tagsEl = card.querySelector(".card-tags");
     const cardTags = job.source === "direct"

@@ -26,6 +26,7 @@ export function normalizePosting(post, company, now = new Date()) {
   const sourceCategory = post.function?.label || post.department?.label || "";
   const role = categorizeCorporateRole(post.name, sourceCategory);
   // SmartRecruiters canonical job URL includes the posting ID and a title slug.
+  if (post.company?.identifier && String(post.company.identifier).toLowerCase() !== company.identifier.toLowerCase()) throw new Error("Company identifier mismatch");
   const slug = normalizeText(post.name).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "job";
   return {
     source: "corporate", sourceKey: corporateSourceKey(company.id), companyId: company.id,
@@ -46,13 +47,14 @@ export async function fetchCompany(company, { fetchImpl = globalThis.fetch, now 
   let expectedTotal;
   for (let page = 0; page < maxPages; page++) {
     const url = new URL("https://api.smartrecruiters.com/v1/companies/" + company.identifier + "/postings");
-    url.search = new URLSearchParams({ country: "gr", limit: String(limit), offset: String(page * limit) }).toString();
+    url.search = new URLSearchParams({ country: "GR", limit: String(limit), offset: String(page * limit) }).toString();
     const res = await fetchImpl(url, { headers: { Accept: "application/json" }, signal: AbortSignal.timeout(8000) });
     if (!res.ok) throw new Error("HTTP " + res.status);
     const body = await res.json();
     if (!Array.isArray(body.content) || !Number.isSafeInteger(body.totalFound) || body.totalFound < 0) {
       throw new Error("Unexpected API response");
     }
+    if (body.offset !== undefined && body.offset !== page * limit) throw new Error("Unexpected pagination offset");
     if (expectedTotal === undefined) expectedTotal = body.totalFound;
     if (body.totalFound !== expectedTotal) throw new Error("Posting count changed during pagination");
     if (body.content.length > limit || (body.content.length === 0 && seen.size < expectedTotal)) {
