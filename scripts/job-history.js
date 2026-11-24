@@ -6,8 +6,9 @@ function appendJsonl(filePath, record) {
   appendFileSync(filePath, JSON.stringify(record) + "\n", "utf8");
 }
 
-function makeJobKey(job) {
-  const source = String(job?.source || "unknown").trim().toLowerCase();
+export function makeJobKey(job) {
+  const source = String(job?.sourceKey || job?.source || "unknown").trim().toLowerCase();
+  if (job?.source === "corporate" && job.externalId) return source + ":posting:" + job.externalId;
   if (job?.url) {
     try {
       const url = new URL(job.url);
@@ -29,13 +30,15 @@ function toObservation(job, observedAt, runId) {
     observed_at: observedAt,
     run_id: runId,
     job_key: makeJobKey(job),
-    source: job.source || "unknown",
+    source: job.sourceKey || job.source || "unknown",
+    ...(job.sourceKey ? { source_group: job.source, company_id: job.companyId, subcategory: job.subcategory } : {}),
     title: job.title || "",
     company: job.company || "",
     url: job.url || "",
     source_category: job.sourceCategory || "",
     category: job.category || "other",
     source_published_at: job.date || null,
+    first_seen_at: job.firstSeenAt || null,
     source_date_raw: job.dateRaw || "",
     tags: Array.isArray(job.tags) ? job.tags : [],
   };
@@ -62,7 +65,7 @@ export function initializeHistory({ dataDir, previousJobs, lastFetched }) {
 
   const bySource = {};
   for (const job of previousJobs) {
-    const source = job.source || "unknown";
+    const source = job.sourceKey || job.source || "unknown";
     bySource[source] = (bySource[source] || 0) + 1;
   }
 
@@ -97,7 +100,7 @@ export function recordScrapeHistory({
   const observationsPath = path.join(dataDir, "observations.jsonl");
   const runsPath = path.join(dataDir, "scrape-runs.jsonl");
 
-  const freshJobs = jobs.filter((job) => sourceStats[job.source]?.status === "success");
+  const freshJobs = jobs.filter((job) => sourceStats[job.sourceKey || job.source]?.status === "success");
   for (const job of freshJobs) {
     appendJsonl(observationsPath, toObservation(job, completedAt, runId));
   }

@@ -1,0 +1,21 @@
+name: Workable read-only pilot
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pilot:
+    if: vars.WORKABLE_APPROVED_COMPANIES != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node --test test/workable.test.js
+      - run: node scripts/workable-smoke.js
+        env:
+          WORKABLE_APPROVED_COMPANIES: ${{ vars.WORKABLE_APPROVED_COMPANIES }}

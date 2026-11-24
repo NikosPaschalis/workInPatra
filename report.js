@@ -1,7 +1,7 @@
 import { CATEGORY_DEFINITIONS } from './categories.js';
 
 const CATEGORY_LABELS = Object.fromEntries(CATEGORY_DEFINITIONS.map(({ id, label }) => [id, label]));
-const SOURCE_LABELS = { jobfind: 'JobFind', kariera: 'Kariera', xe: 'XE', unknown: 'Άγνωστη πηγή' };
+const SOURCE_LABELS = { jobfind: 'JobFind', kariera: 'Kariera', xe: 'XE', corporate: 'Εταιρικές σελίδες', unknown: 'Άγνωστη πηγή' };
 const statusEl = document.getElementById('report-status');
 const contentEl = document.getElementById('report-content');
 const numberFormat = new Intl.NumberFormat('el-GR');
@@ -172,6 +172,8 @@ async function loadReport() {
     const latest = snapshots[snapshots.length - 1], previous = snapshots[snapshots.length - 2];
     document.getElementById('kpi-total').textContent = numberFormat.format(latest.total);
     document.getElementById('kpi-month').textContent = 'Snapshot: ' + formatMonth(latest.month);
+    const age = latest.ageWindow;
+    document.getElementById('kpi-recent').textContent = age ? 'Προβολή 30 ημερών: ' + numberFormat.format(age.visible30) + ' (δημοσιεύσεις: ' + age.published30 + ', πρώτοι εντοπισμοί: ' + age.firstSeen30 + ')' : 'Προβολή 30 ημερών: — (μη διαθέσιμη ιστορική μέτρηση)';
     const change = previous ? percentChange(latest.total, previous.total) : null;
     const changeEl = document.getElementById('kpi-change'), note = document.getElementById('kpi-change-note');
     if (change === null) { changeEl.textContent = '—'; note.textContent = 'Χρειάζονται τουλάχιστον δύο snapshots για σύγκριση.'; }
@@ -180,6 +182,10 @@ async function loadReport() {
       changeEl.classList.toggle('positive', change > 0); changeEl.classList.toggle('negative', change < 0);
       note.textContent = numberFormat.format(latest.total - previous.total) + ' αγγελίες σε σχέση με ' + formatMonth(previous.month);
     }
+    const sourceEntries = Object.entries(latest.bySource || {}).filter(([id, count]) => id !== 'unknown' && count > 0);
+    document.getElementById('kpi-source-count').textContent = String(sourceEntries.length);
+    document.getElementById('kpi-source-note').textContent = sourceEntries.map(([id]) => SOURCE_LABELS[id] || id).join(' · ');
+    renderCorporate(latest);
     renderTrend(snapshots); renderBreakdown(latest, document.getElementById('breakdown-type').value); renderCategoryTrends(snapshots); renderHistory(snapshots);
     document.getElementById('breakdown-type').addEventListener('change', event => renderBreakdown(latest, event.target.value));
     document.getElementById('data-freshness').textContent = 'Τελευταία λήψη στο πιο πρόσφατο snapshot: ' + formatDate(latest.lastFetched) + '. Τα στοιχεία ανανεώνονται όταν δημιουργείται νέο μηνιαίο snapshot.';
@@ -189,3 +195,25 @@ async function loadReport() {
   }
 }
 loadReport();
+
+function renderCorporate(snapshot) {
+  const data = snapshot.corporate;
+  if (!data || !Object.values(data.coverage || {}).some(s => s.status !== "skipped" || s.retained_count > 0)) return;
+  const panel = document.getElementById("corporate-report");
+  panel.hidden = false;
+  document.getElementById("corporate-report-note").textContent = "Κάλυψη στο snapshot " + formatMonth(snapshot.month) + ". Μη επανελεγμένες καταχωρίσεις: " + (data.unverified || 0) + ". Παλαιότερα snapshots δεν είχαν την ίδια κάλυψη.";
+  if (data.ageWindow) document.getElementById("corporate-report-note").textContent += " Εταιρικό αρχείο: " + data.ageWindow.total + " καταχωρίσεις πριν την αφαίρεση διπλοεγγραφών μεταξύ πηγών. Εντός 30 ημερών: " + data.ageWindow.visible30 + ". Στη συγκεντρωτική προβολή: " + (data.publicAgeWindow?.visible30 ?? data.ageWindow.visible30) + ". Οι αριθμοί ανά εταιρεία δεν προστίθενται στα συνολικά μεγέθη του snapshot.";
+  const rows = document.getElementById("corporate-report-rows");
+  const labels = {success:"Επιτυχία",fallback:"Προηγούμενα δεδομένα",failed:"Αποτυχία",skipped:"Παράλειψη"};
+  for (const s of Object.values(data.coverage)) {
+    const tr = document.createElement("tr");
+    for (const value of [s.company, s.status === "success" || s.retained_count > 0 ? String(data.byCompany?.[s.company] || 0) : "—", labels[s.status] || s.status]) {
+      const td = document.createElement("td"); td.textContent = value; tr.appendChild(td);
+    }
+    rows.appendChild(tr);
+  }
+  const sub = document.getElementById("corporate-subcategories");
+  for (const [name, count] of Object.entries(data.bySubcategory || {}).sort((a, b) => b[1] - a[1])) {
+    const p = document.createElement("p"); p.textContent = name + ": " + count; sub.appendChild(p);
+  }
+}

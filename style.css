@@ -1018,3 +1018,10 @@ body {
 .direct-dialog-apply-button:hover { background: #10533f; }
 .direct-dialog-apply-button:focus-visible, .direct-dialog-close:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 @media (max-width: 640px) { .direct-dialog-apply-button { width: 100%; } }
+
+/* Corporate careers */
+.badge-corporate { background: #f1f5f9; color: #475569; }
+.chip-corporate input:checked + span { background: #475569; border-color: #475569; color: #fff; }
+
+
+.chip-corporate[hidden] { display: none; }

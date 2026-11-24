@@ -2,6 +2,7 @@
 // in normal runs. A persistent per-channel ledger prevents re-posts on edits.
 // Each listing needs a stable unique id; never change it when editing the listing.
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { isJobWithinAgeWindow } from '../client-utils.js';
 import { sendTelegram, sendFacebook } from './notify-telegram.js';
 
 const DATA_PATH = 'data/direct-jobs.json';
@@ -33,7 +34,7 @@ async function main() {
   let failed = false;
   for (const [channel, send] of [['telegram', sendTelegram], ['facebook', sendFacebook]]) {
     const sent = new Set(ledger[channel]);
-    const pending = jobs.filter(job => job.source === 'direct' && job.title && job.company && !sent.has(job.id));
+    const pending = jobs.filter(job => job.source === 'direct' && job.title && job.company && !sent.has(job.id) && isJobWithinAgeWindow(job, 30));
     if (!pending.length) {
       console.log(channel + ': no new direct jobs');
       continue;

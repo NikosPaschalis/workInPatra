@@ -7,6 +7,7 @@ import { scrape as scrapeJobfind } from "./scrapers/jobfind.js";
 import { scrape as scrapeKariera } from "./scrapers/kariera.js";
 import { scrape as scrapeXe } from "./scrapers/xe.js";
 import { categorizeJob } from "./categorize.js";
+import { mergeCorporateListings, previousCorporateInventory } from "./corporate-inventory.js";
 import { mergeSourceResults } from "../scripts/merge-source-results.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -57,29 +58,10 @@ async function fetchAll(previousJobs = getPreviousJobs()) {
     );
   }
 
-  // Prefer each site's source category, then fall back to title/tag matching.
-  const categorized = jobs.map(j => ({ ...j, category: categorizeJob(j) }));
+  let corporate=previousJobs.filter(j=>j.source==="corporate");
+  try { corporate=previousCorporateInventory(JSON.parse(readFileSync(PUBLISHED_JOBS_PATH,"utf8"))); } catch {}
+  return mergeCorporateListings(jobs.map(j=>({...j,category:categorizeJob(j)})),corporate);
 
-  // Deduplicate:
-  // - named jobs   → dedup by title + company (same job, same company)
-  // - anonymous    → dedup by title only (jobfind hides company names)
-  const namedSeen = new Set(); // "title|company"
-  const anonSeen  = new Set(); // "title"
-
-  return categorized.filter(j => {
-    const t = j.title.toLowerCase().trim();
-    const c = j.company?.toLowerCase().trim() || "";
-
-    if (c) {
-      const key = `${t}|${c}`;
-      if (namedSeen.has(key)) return false;
-      namedSeen.add(key);
-    } else {
-      if (anonSeen.has(t)) return false;
-      anonSeen.add(t);
-    }
-    return true;
-  });
 }
 
 // GET /api/jobs — returns cached or fresh jobs

@@ -6,6 +6,8 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'fs';
 import { fileURLToPath } from 'url';
 import path from 'path';
+import { corporateStatistics } from '../server/corporate-statistics.js';
+import { summarizeJobAge } from '../client-utils.js';
 import { CATEGORY_DEFINITIONS } from '../categories.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -14,7 +16,7 @@ const SNAPSHOT_DIR = path.join(DATA_DIR, 'snapshots');
 const JOBS_FILE = path.join(DATA_DIR, 'jobs.json');
 const MANIFEST_FILE = path.join(SNAPSHOT_DIR, 'index.json');
 const CATEGORY_IDS = CATEGORY_DEFINITIONS.map(({ id }) => id);
-const SOURCE_IDS = ['jobfind', 'kariera', 'xe'];
+const SOURCE_IDS = ['jobfind', 'kariera', 'xe', 'corporate'];
 const CATEGORY_ALIASES = { retail: 'sales' };
 
 function getPreviousMonthLabel(now = new Date()) {
@@ -81,7 +83,8 @@ function validateSnapshot(snapshot) {
   }
 
   mkdirSync(SNAPSHOT_DIR, { recursive: true });
-  const { jobs, lastFetched } = JSON.parse(readFileSync(JOBS_FILE, 'utf8'));
+  const data = JSON.parse(readFileSync(JOBS_FILE, 'utf8'));
+  const { jobs, lastFetched } = data;
   if (!Array.isArray(jobs)) {
     console.error('❌ data/jobs.json does not contain a jobs array');
     process.exit(1);
@@ -107,15 +110,19 @@ function validateSnapshot(snapshot) {
       }
     }
 
+    const capturedAt = new Date();
+    const corporate = corporateStatistics(data, capturedAt);
     const snapshot = {
       month: label,
-      capturedAt: new Date().toISOString(),
+      capturedAt: capturedAt.toISOString(),
       lastFetched: lastFetched || null,
       snapshotType: 'active_inventory',
       measurementNote: 'Active listings present in jobs.json at capture time; not a count of all jobs newly posted during the calendar month.',
       total: jobs.length,
+      ageWindow: summarizeJobAge(jobs, capturedAt),
       byCategory,
       bySource,
+      ...(corporate ? { corporate } : {}),
     };
 
     validateSnapshot(snapshot);

@@ -3,6 +3,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { loadFirstSeen, stampFirstSeen } from "./first-seen.js";
 
 const normalize = (s) => String(s || "").trim().toLocaleLowerCase("el").replace(/\s+/g, " ");
 const identity = (job) => normalize(job.title) + "|" + normalize(job.company);
@@ -49,7 +50,10 @@ if (isDirect) {
     }
     // Write the queue first only after successful validation. If a subsequent write fails,
     // the original queue remains recoverable via Git; repeated runs are URL-deduplicated.
-    writeFileSync(jobsPath, JSON.stringify({ ...existing, jobs: result.jobs }), "utf8");
+    const now = new Date();
+    const firstSeen = await loadFirstSeen({ dataDir: path.dirname(jobsPath), previousJobs: existing.jobs, previousFetchedAt: existing.lastFetched, now });
+    const stamped = stampFirstSeen(result.jobs, firstSeen, { now, isFresh: job => result.accepted.includes(job) });
+    writeFileSync(jobsPath, JSON.stringify({ ...existing, jobs: stamped }), "utf8");
     writeFileSync(queuePath, JSON.stringify({ jobs: [] }, null, 2) + "\n", "utf8");
     console.log("Kariera curated: accepted=" + result.accepted.length + ", duplicates=" + result.rejected.length);
   } catch (error) {

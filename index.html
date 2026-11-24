@@ -145,11 +145,11 @@
           <div class="hero-stats">
             <div class="hero-stat">
               <strong id="stat-total">—</strong>
-              <span>θέσεις διαθέσιμες</span>
+              <span>θέσεις τελευταίων 30 ημερών</span>
             </div>
             <div class="hero-stat-divider"></div>
             <div class="hero-stat">
-              <strong>4</strong>
+              <strong id="stat-source-types">4</strong>
               <span>τύποι πηγών</span>
             </div>
             <div class="hero-stat-divider"></div>
@@ -247,6 +247,7 @@
               <input type="checkbox" value="direct" id="src-direct" />
               <span>Απευθείας από εργοδότες</span>
             </label>
+            <label class="chip chip-corporate" hidden><input type="checkbox" value="corporate" id="src-corporate" /><span>Εταιρικές σελίδες</span></label>
           </div>
         </div>
 
@@ -436,6 +437,6 @@
       </div>
     </dialog>
 
-    <script type="module" src="app.js"></script>
+    <script type="module" src="app.js?v=corporate-1"></script>
   </body>
 </html>

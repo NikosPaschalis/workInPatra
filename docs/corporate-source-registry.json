@@ -1,0 +1,270 @@
+[
+  {
+    "company": "Netcompany",
+    "provider": "smartrecruiters",
+    "status": "live_validated_approval_required",
+    "reviewedCount": 5,
+    "evidence": "https://netcompany.com/careers/greece/vacancies/",
+    "reviewedOn": "2026-11-24"
+  },
+  {
+    "company": "Renesas",
+    "provider": "smartrecruiters",
+    "status": "live_validated_approval_required",
+    "reviewedCount": 1,
+    "evidence": "https://jobs.renesas.com/",
+    "reviewedOn": "2026-11-24"
+  },
+  {
+    "company": "TSMG",
+    "provider": "lever",
+    "status": "live_validated",
+    "reviewedCount": 2,
+    "evidence": "https://jobs.lever.co/tsmg/?location=Patras",
+    "reviewedOn": "2026-11-24"
+  },
+  {
+    "company": "Motodynamics",
+    "provider": "workable",
+    "status": "live_validated_approval_required",
+    "reviewedCount": 1,
+    "evidence": "https://apply.workable.com/motodynamics/",
+    "reviewedOn": "2026-11-24"
+  },
+  {
+    "company": "Cosmos Sport",
+    "provider": "workable",
+    "status": "live_validated_approval_required",
+    "reviewedCount": 3,
+    "evidence": "https://apply.workable.com/cosmos-sport-s-dot-a/",
+    "reviewedOn": "2026-11-24"
+  },
+  {
+    "company": "Πλαίσιο",
+    "provider": "workable",
+    "status": "live_validated_approval_required",
+    "reviewedCount": 1,
+    "evidence": "https://apply.workable.com/plaisio-careers/",
+    "reviewedOn": "2026-11-24"
+  },
+  {
+    "company": "Irida Labs",
+    "provider": "html",
+    "status": "live_validated_approval_required",
+    "reviewedCount": 4,
+    "evidence": "https://iridalabs.com/careers/",
+    "reviewedOn": "2026-11-24",
+    "liveValidationRun": "https://github.com/NikosPaschalis/workInPatra/actions/runs/45370791696"
+  },
+  {
+    "company": "EY",
+    "provider": "successfactors",
+    "status": "manual_verified_automation_pending",
+    "reviewedCount": 2,
+    "evidence": "https://careers.ey.com/",
+    "reviewedOn": "2026-11-24"
+  },
+  {
+    "company": "PwC",
+    "provider": "phenom/workday",
+    "status": "individual_records_not_fully_verified",
+    "reviewedCount": null,
+    "evidence": "https://jobs.gr.pwc.com/gr/en/search-results",
+    "reviewedOn": "2026-11-24"
+  },
+  {
+    "company": "Deloitte",
+    "provider": "html/linkedin",
+    "status": "individual_records_not_fully_verified",
+    "reviewedCount": null,
+    "evidence": "https://www.deloitte.com/gr/en/careers/explore-your-fit/find-your-possible/career-opportunities-in-patras.html",
+    "reviewedOn": "2026-11-24"
+  },
+  {
+    "company": "Lödige",
+    "provider": "html",
+    "status": "manual_verified_automation_pending",
+    "reviewedCount": 1,
+    "evidence": "https://www.lodige.com/en-global/career/careerdetail/devops-developer/",
+    "reviewedOn": "2026-11-24"
+  },
+  {
+    "company": "Vestas",
+    "provider": "successfactors",
+    "status": "manual_verified_automation_pending",
+    "reviewedCount": 1,
+    "evidence": "https://careers.vestas.com/",
+    "reviewedOn": "2026-11-24"
+  },
+  {
+    "company": "Lidl",
+    "provider": "html",
+    "status": "manual_verified_automation_pending",
+    "reviewedCount": 1,
+    "evidence": "https://team.lidl.gr/jobs",
+    "reviewedOn": "2026-11-24"
+  },
+  {
+    "company": "ALTHOM",
+    "provider": "html",
+    "status": "live_validated_approval_required",
+    "reviewedCount": 4,
+    "evidence": "https://www.althom.de/careers",
+    "reviewedOn": "2026-11-24",
+    "liveValidationRun": "https://github.com/NikosPaschalis/workInPatra/actions/runs/45370791696"
+  },
+  {
+    "company": "Noesis Technologies",
+    "provider": "html",
+    "status": "live_validated_approval_required",
+    "reviewedCount": 1,
+    "evidence": "https://noesis-tech.com/company/careers/",
+    "reviewedOn": "2026-11-24",
+    "liveValidationRun": "https://github.com/NikosPaschalis/workInPatra/actions/runs/45370791696"
+  },
+  {
+    "company": "Advisable",
+    "provider": "html",
+    "status": "403_manual_review_required",
+    "reviewedCount": 1,
+    "evidence": "https://www.advisable.com/careers",
+    "reviewedOn": "2026-11-24",
+    "liveValidationRun": "https://github.com/NikosPaschalis/workInPatra/actions/runs/45370791696"
+  },
+  {
+    "company": "Patras Bags",
+    "provider": "html",
+    "status": "old_dated_listings_not_recent",
+    "reviewedCount": null,
+    "evidence": "https://www.patrasbags.gr/en/careers",
+    "reviewedOn": "2026-11-24"
+  },
+  {
+    "company": "π-NET",
+    "provider": "workable",
+    "status": "official_no_open_positions",
+    "reviewedCount": 0,
+    "evidence": "https://p-net.gr/careers/",
+    "reviewedOn": "2026-11-24"
+  },
+  {
+    "company": "Pleiades",
+    "provider": "html",
+    "status": "old_listing_needs_reconfirmation",
+    "reviewedCount": null,
+    "evidence": "https://psp.org.gr/en/companies/jobs/",
+    "reviewedOn": "2026-11-24"
+  },
+  {
+    "company": "Coffee Island",
+    "provider": "html",
+    "status": "no_confirmed_recent_local_opening",
+    "reviewedCount": null,
+    "evidence": "https://corporate.coffeeisland.gr/en/the-company/career/",
+    "reviewedOn": "2026-11-24"
+  },
+  {
+    "company": "Codefunnels",
+    "provider": "workable",
+    "status": "historical_only_current_not_verified",
+    "reviewedCount": null,
+    "evidence": "https://apply.workable.com/codefunnels/",
+    "reviewedOn": "2026-11-24"
+  },
+  {
+    "company": "Satways",
+    "provider": "html",
+    "status": "no_confirmed_current_local_opening",
+    "reviewedCount": null,
+    "evidence": "https://www.satways.net/career/",
+    "reviewedOn": "2026-11-24"
+  },
+  {
+    "company": "Motivian",
+    "provider": "html",
+    "status": "403_manual_review_required",
+    "reviewedCount": null,
+    "evidence": "https://www.motivian.com/aboutus",
+    "reviewedOn": "2026-11-24"
+  },
+  {
+    "company": "Brite Solar",
+    "provider": "unknown",
+    "status": "historical_only_current_not_verified",
+    "reviewedCount": null,
+    "evidence": "https://psp.org.gr/en/companies/jobs/",
+    "reviewedOn": "2026-11-24"
+  },
+  {
+    "company": "InSyBio",
+    "provider": "unknown",
+    "status": "historical_only_current_not_verified",
+    "reviewedCount": null,
+    "evidence": "https://psp.org.gr/en/companies/jobs/",
+    "reviewedOn": "2026-11-24"
+  },
+  {
+    "company": "Think Silicon / Applied Materials",
+    "provider": "unknown",
+    "status": "historical_only_current_not_verified",
+    "reviewedCount": null,
+    "evidence": "https://psp.org.gr/en/companies/jobs/",
+    "reviewedOn": "2026-11-24"
+  },
+  {
+    "company": "Odyssey",
+    "provider": "unknown",
+    "status": "historical_only_current_not_verified",
+    "reviewedCount": null,
+    "evidence": "https://psp.org.gr/en/companies/jobs/",
+    "reviewedOn": "2026-11-24"
+  },
+  {
+    "company": "Advent Technologies",
+    "provider": "unknown",
+    "status": "historical_only_current_not_verified",
+    "reviewedCount": null,
+    "evidence": "https://psp.org.gr/en/companies/jobs/",
+    "reviewedOn": "2026-11-24"
+  },
+  {
+    "company": "Space Horizon",
+    "provider": "unknown",
+    "status": "historical_only_current_not_verified",
+    "reviewedCount": null,
+    "evidence": "https://psp.org.gr/en/companies/jobs/",
+    "reviewedOn": "2026-11-24"
+  },
+  {
+    "company": "H-CAM",
+    "provider": "unknown",
+    "status": "historical_only_current_not_verified",
+    "reviewedCount": null,
+    "evidence": "https://psp.org.gr/en/companies/jobs/",
+    "reviewedOn": "2026-11-24"
+  },
+  {
+    "company": "INBIT",
+    "provider": "unknown",
+    "status": "historical_only_current_not_verified",
+    "reviewedCount": null,
+    "evidence": "https://psp.org.gr/en/companies/jobs/",
+    "reviewedOn": "2026-11-24"
+  },
+  {
+    "company": "EASN-TIS",
+    "provider": "unknown",
+    "status": "historical_only_current_not_verified",
+    "reviewedCount": null,
+    "evidence": "https://psp.org.gr/en/companies/jobs/",
+    "reviewedOn": "2026-11-24"
+  },
+  {
+    "company": "AviSense",
+    "provider": "unknown",
+    "status": "historical_only_current_not_verified",
+    "reviewedCount": null,
+    "evidence": "https://psp.org.gr/en/companies/jobs/",
+    "reviewedOn": "2026-11-24"
+  }
+]

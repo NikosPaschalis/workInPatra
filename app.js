@@ -1,13 +1,15 @@
 import {
   compareJobsByDateNewestFirst,
-  getCalendarCutoff,
+  athensCalendarAge,
+  isJobWithinAgeWindow,
+  jobAgeBasis,
   normalizeSearchText,
 } from "./client-utils.js";
 import { CATEGORY_DEFINITIONS } from "./categories.js";
 
 // ── State ─────────────────────────────────────────────────────────────────────
 const state = {
-  sources:    new Set(["jobfind", "kariera", "xe", "direct"]),
+  sources:    new Set(["jobfind", "kariera", "xe", "direct", "corporate"]),
   days:       30,
   search:     "",
   sort:       "date",
@@ -37,7 +39,7 @@ const filtersClear      = document.getElementById("filters-clear");
 const filtersDone       = document.getElementById("filters-done");
 const moreCategoriesBtn = document.getElementById("more-categories-btn");
 
-const SOURCE_LABELS = { jobfind: "JobFind", kariera: "Kariera", xe: "XE", direct: "Απευθείας" };
+const SOURCE_LABELS = { jobfind: "JobFind", kariera: "Kariera", xe: "XE", direct: "Απευθείας", corporate: "Εταιρική σελίδα" };
 
 const CATEGORY_LABELS = Object.fromEntries(
   CATEGORY_DEFINITIONS.map(category => [
@@ -56,14 +58,8 @@ const QUICK_CATEGORY_LIMIT = 4;
 // ── Date helpers ──────────────────────────────────────────────────────────────
 function formatDate(isoStr) {
   if (!isoStr) return "";
-  const now  = new Date();
-  const d    = new Date(isoStr);
-  if (!Number.isFinite(d.getTime())) return "";
-  // Compare calendar days (local midnight) — avoids "Σήμερα" for jobs
-  // scraped yesterday at an hour that's < 24h ago in absolute ms.
-  const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const dateMidnight  = new Date(d.getFullYear(),   d.getMonth(),   d.getDate());
-  const diff = Math.round((todayMidnight - dateMidnight) / 86400000);
+  const diff = athensCalendarAge(isoStr);
+  if (!Number.isFinite(diff) || diff < 0) return "";
   if (diff <= 0) return "Σήμερα";
   if (diff === 1) return "Χθες";
   if (diff < 7)  return `${diff} μέρες πριν`;
@@ -93,12 +89,12 @@ function createCategoryButton(cat, count, { compact = false } = {}) {
 function buildCategoryBar() {
   const counts = {};
   // Count only jobs that pass the current date + source filters
-  const cutoff = getCalendarCutoff(state.days);
+  const now = new Date();
 
   state.jobs
     .filter(j =>
       state.sources.has(j.source) &&
-      !(j.date && new Date(j.date) < cutoff)
+      isJobWithinAgeWindow(j, state.days, now)
     )
     .forEach(j => {
       const cat = j.category || "other";
@@ -308,12 +304,12 @@ function openDirectJob(job) {
 // ── Render ────────────────────────────────────────────────────────────────────
 function render() {
   syncFilterSummary();
-  const cutoff = getCalendarCutoff(state.days);
+  const now = new Date();
   const normalizedQuery = normalizeSearchText(state.search);
 
   let filtered = state.jobs.filter(j => {
     if (!state.sources.has(j.source)) return false;
-    if (j.date && new Date(j.date) < cutoff) return false;
+    if (!isJobWithinAgeWindow(j, state.days, now)) return false;
     if (state.categories.size > 0 && !state.categories.has(j.category || "other")) return false;
     if (normalizedQuery && !j._searchText.includes(normalizedQuery)) {
       return false;
@@ -331,8 +327,7 @@ function render() {
   const count = filtered.length;
 
   // Trust stat — count jobs from the last 7 days within the filtered set
-  const weekStart = getCalendarCutoff(7);
-  const newCount = filtered.filter(j => j.date && new Date(j.date) >= weekStart).length;
+  const newCount = filtered.filter(j => jobAgeBasis(j, now)?.kind === "published" && isJobWithinAgeWindow(j, 7, now)).length;
 
   countLabel.innerHTML = state.loading
     ? "Φόρτωση…"
@@ -358,19 +353,23 @@ function render() {
     const badge = card.querySelector(".card-source-badge");
     badge.textContent = SOURCE_LABELS[job.source] || job.source;
     badge.classList.add(`badge-${job.source}`);
+    if (job.source === "corporate" && job.corporateStatus !== "verified") badge.textContent += " · Μη επανελεγμένη";
 
-    const dateLabel = formatDate(job.date);
-    card.querySelector(".card-date").textContent = dateLabel;
+    const basis = jobAgeBasis(job, now);
+    const dateLabel = formatDate(basis?.date);
+    const dateEl = card.querySelector(".card-date");
+    dateEl.textContent = basis?.kind === "first_seen" ? "Εντοπίστηκε: " + dateLabel : dateLabel;
+    if (basis?.kind === "first_seen") dateEl.title = "Άγνωστη ημερομηνία δημοσίευσης — εμφανίζεται ο πρώτος καταγεγραμμένος εντοπισμός.";
 
     // "Νέο" badge — visible only for today's listings
-    if (dateLabel === "Σήμερα") {
+    if (basis?.kind === "published" && dateLabel === "Σήμερα") {
       card.querySelector(".card-new-badge").classList.remove("hidden");
     }
     card.querySelector(".card-title").textContent   = job.title;
     card.querySelector(".card-company").textContent = job.company || "—";
 
     const tagsEl = card.querySelector(".card-tags");
-    const cardTags = job.source === "direct"
+    const cardTags = job.source === "corporate" ? [...(job.tags || []), job.location, job.locationNote].filter(Boolean) : job.source === "direct"
       ? [CATEGORY_SEO[job.category] || job.sourceCategory || "Άλλη κατηγορία"]
       : (job.tags || []);
     cardTags.forEach(t => {
@@ -428,7 +427,7 @@ async function loadJobs(forceRefresh = false) {
       console.warn("Could not load direct employer listings:", directError);
     }
 
-    state.jobs = [...(data.jobs || []), ...directJobs].map(job => ({
+    state.jobs = [...(data.jobs || []), ...directJobs].filter(j => !j.previewOnly).map(job => ({
       ...job,
       // Compatibility with jobs published before retail was merged into sales.
       category: job.category === "retail" ? "sales" : job.category,
@@ -436,7 +435,10 @@ async function loadJobs(forceRefresh = false) {
         [job.title, job.company, ...(job.tags || [])].filter(Boolean).join(" ")
       ),
     }));
-    if (statTotal) statTotal.textContent = state.jobs.length;
+    if (statTotal) statTotal.textContent = state.jobs.filter(j => isJobWithinAgeWindow(j, 30)).length;
+    const corporateAvailable = state.jobs.some(j => j.source === "corporate" && isJobWithinAgeWindow(j, 30));
+    document.getElementById("stat-source-types").textContent = corporateAvailable ? "5" : "4";
+    document.getElementById("src-corporate").closest("label").hidden = !corporateAvailable;
     if (data.lastFetched) {
       const d = new Date(data.lastFetched);
       const label = d.toLocaleString("el-GR", {
@@ -457,7 +459,7 @@ async function loadJobs(forceRefresh = false) {
 }
 
 // ── Source chips ──────────────────────────────────────────────────────────────
-const allSources = ["jobfind", "kariera", "xe", "direct"];
+const allSources = ["jobfind", "kariera", "xe", "direct", "corporate"];
 
 function syncChipUI() {
   const allChecked = allSources.every(s => state.sources.has(s));
@@ -466,6 +468,7 @@ function syncChipUI() {
   document.getElementById("src-kariera").checked = state.sources.has("kariera");
   document.getElementById("src-xe").checked      = state.sources.has("xe");
   document.getElementById("src-direct").checked  = state.sources.has("direct");
+  document.getElementById("src-corporate").checked = state.sources.has("corporate");
 }
 
 document.getElementById("src-all").addEventListener("change", e => {
