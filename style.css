@@ -1025,3 +1025,73 @@ body {
 
 
 .chip-corporate[hidden] { display: none; }
+
+
+/* Compact job discovery: one search surface, fixed quick categories, progressive filters. */
+.filters-bar {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px 12px;
+  padding: 14px 18px;
+  margin-bottom: 12px;
+}
+.filter-search { grid-column: 1; }
+.filters-toggle { grid-column: 2; align-self: end; }
+.search-input-wrap .search-input { padding-left: 39px; background: var(--surface); }
+.search-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: #67677a; pointer-events: none; }
+.search-options { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px 22px; flex-wrap: wrap; min-width: 0; }
+.filter-period { flex-direction: row; align-items: center; gap: 8px; min-width: 0; }
+.filter-period .filter-label, .popular-label { color: #66667a; font-size: 12px; font-weight: 500; }
+.period-tabs { gap: 4px; }
+.period-tab { min-height: 34px; border-radius: 999px; padding: 4px 12px; font-size: 12px; }
+.popular-searches { margin: 0; padding: 0; border: 0; background: transparent; gap: 6px; flex: 1 1 auto; min-width: 0; }
+.popular-label { text-transform: none; letter-spacing: 0; margin: 0 2px 0 0; }
+.popular-chip { font-size: 12px; padding: 4px 10px; min-height: 32px; }
+.popular-chip.active { padding-right: 24px; }
+.category-bar-wrap { margin-bottom: 12px; }
+.category-discovery { align-items: center; flex-direction: row; flex-wrap: wrap; gap: 6px 12px; }
+.category-discovery .category-bar { flex: 1 1 auto; min-width: 0; width: auto; overflow: visible; flex-wrap: wrap; padding: 0; gap: 6px; }
+.cat-btn { padding: 5px 12px; min-height: 36px; font-size: 13px; color: #626276; }
+.more-categories-btn { min-height: 36px; padding: 5px 3px; font-size: 13px; }
+.more-categories-btn[aria-expanded="true"] svg { transform: rotate(180deg); }
+.selected-extra-categories { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.selected-category-remove { border: 1px solid var(--accent); background: var(--accent-soft); color: #4338ca; border-radius: 999px; font: inherit; font-size: 12px; padding: 5px 12px; min-height: 36px; cursor: pointer; }
+.stats-bar { gap: 8px 16px; margin-bottom: 12px; }
+#count-label { min-width: 0; color: #66667a; }
+.sort-select { min-height: 36px; }
+.chip { position: relative; }
+.chip input { display: block; position: absolute; opacity: 0; width: 1px; height: 1px; }
+.chip input:focus-visible + span, .filters-bar button:focus-visible, .category-bar-wrap button:focus-visible, .advanced-filters button:focus-visible, .sort-select:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.advanced-filter-heading strong:focus { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+.chip-all input:indeterminate + span { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+@media (max-width: 820px) {
+  .search-options { align-items: flex-start; flex-direction: column; gap: 8px; }
+  .advanced-filters { grid-template-columns: 1fr; gap: 16px; }
+}
+@media (max-width: 640px) {
+  .main { padding: 16px 16px 48px; }
+  .filters-bar { padding: 12px; gap: 8px; }
+  .filter-search { grid-column: 1; min-width: 0; }
+  .filters-toggle { grid-column: 2; min-height: 44px; padding: 8px 10px; gap: 5px; }
+  .search-input { font-size: 16px; min-height: 44px; }
+  .search-input-wrap .search-input { padding-right: 32px; padding-left: 32px; }
+  .search-icon { left: 9px; width: 16px; }
+  .search-clear { right: 5px; }
+  .search-options { gap: 7px; }
+  .period-tab { min-height: 40px; padding: 6px 12px; }
+  .popular-searches { width: 100%; gap: 5px; }
+  .popular-label { width: 100%; margin: 0; }
+  .popular-chip { min-height: 36px; padding: 4px 9px; }
+  .category-discovery { gap: 4px; }
+  .category-discovery .category-bar { flex: 1 1 100%; gap: 6px; }
+  .cat-btn { min-height: 40px; padding: 5px 11px; font-size: 12px; }
+  .more-categories-btn { min-height: 36px; margin-left: auto; }
+  .stats-bar { flex-direction: row; align-items: flex-start; flex-wrap: wrap; }
+  .sort-wrap { margin-left: auto; }
+  .sort-select { min-height: 40px; }
+  .advanced-filters { padding: 12px; }
+  .chip span { min-height: 40px; display: inline-flex; align-items: center; }
+  .filters-clear, .filters-done { min-height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .filters-bar button, .category-bar-wrap button { transition: none; }
+}

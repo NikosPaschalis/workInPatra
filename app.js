@@ -53,7 +53,15 @@ const CATEGORY_SEO = Object.fromEntries(
   CATEGORY_DEFINITIONS.map(category => [category.id, category.label])
 );
 
-const QUICK_CATEGORY_LIMIT = 4;
+// Fixed order keeps controls predictable across days and source filters.
+const QUICK_CATEGORIES = [
+  { id: "sales", label: "Πωλήσεις & Λιανική" },
+  { id: "logistics", label: "Logistics" },
+  { id: "construction", label: "Τεχνικά" },
+];
+const QUICK_LABELS = Object.fromEntries(QUICK_CATEGORIES.map(c => [c.id,c.label]));
+const selectedExtraCategories = document.getElementById("selected-extra-categories");
+let filterOpener = null;
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
 function formatDate(isoStr) {
@@ -81,7 +89,9 @@ function createCategoryButton(cat, count, { compact = false } = {}) {
   btn.dataset.cat = cat;
   btn.textContent = cat === "all"
     ? "Όλες"
-    : `${CATEGORY_LABELS[cat] || cat} (${count})`;
+    : `${compact ? QUICK_LABELS[cat] : CATEGORY_LABELS[cat] || cat} (${count})`;
+  btn.setAttribute("aria-pressed", String(isCatActive(cat)));
+  if (compact) btn.setAttribute("aria-label", `${CATEGORY_SEO[cat]} (${count})`);
   btn.addEventListener("click", () => toggleCat(cat));
   return btn;
 }
@@ -94,34 +104,25 @@ function buildCategoryBar() {
   state.jobs
     .filter(j =>
       state.sources.has(j.source) &&
-      isJobWithinAgeWindow(j, state.days, now)
+      isJobWithinAgeWindow(j, state.days, now) &&
+      (!state.search || j._searchText.includes(normalizeSearchText(state.search)))
     )
     .forEach(j => {
       const cat = j.category || "other";
       counts[cat] = (counts[cat] || 0) + 1;
     });
 
-  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  categoryBar.querySelectorAll(".cat-btn[data-cat]:not([data-cat='all'])").forEach(b=>b.remove());
+  for (const { id } of QUICK_CATEGORIES) {
+    categoryBar.appendChild(createCategoryButton(id, counts[id] || 0, { compact: true }));
+  }
 
-  // Quick-access categories: keep the busiest categories immediately visible.
-  categoryBar.querySelectorAll(".cat-btn[data-cat]").forEach(b => {
-    if (b.dataset.cat !== "all") b.remove();
-  });
-  const allBtnDesktop = categoryBar.querySelector("[data-cat='all']");
-  if (allBtnDesktop) allBtnDesktop.classList.toggle("active", isCatActive("all"));
-
-  const quickCategories = sorted.slice(0, QUICK_CATEGORY_LIMIT);
-  quickCategories.forEach(([cat, count]) => {
-    categoryBar.appendChild(createCategoryButton(cat, count, { compact: true }));
-  });
-
-  // Complete category list inside the expandable filters panel.
-  catDropdownPanel.innerHTML = "";
-  catDropdownPanel.appendChild(createCategoryButton("all", 0));
-
-  sorted.forEach(([cat, count]) => {
-    catDropdownPanel.appendChild(createCategoryButton(cat, count));
-  });
+  // Show the entire stable taxonomy, including empty or currently selected categories.
+  catDropdownPanel.replaceChildren(createCategoryButton("all", 0));
+  for (const { id } of CATEGORY_DEFINITIONS) {
+    catDropdownPanel.appendChild(createCategoryButton(id, counts[id] || 0));
+  }
+  syncCategoryUI();
 }
 
 function toggleCat(cat) {
@@ -139,11 +140,23 @@ function toggleCat(cat) {
 }
 
 function syncCategoryUI() {
+  // Selections outside the shortcuts remain visible and individually removable.
+  selectedExtraCategories.replaceChildren();
+  for (const {id,label} of CATEGORY_DEFINITIONS) {
+    if (!state.categories.has(id) || QUICK_LABELS[id]) continue;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "selected-category-remove";
+    btn.textContent = label + " ×";
+    btn.setAttribute("aria-label", "Αφαίρεση κατηγορίας: " + label);
+    btn.addEventListener("click", () => { toggleCat(id); moreCategoriesBtn.focus(); });
+    selectedExtraCategories.appendChild(btn);
+  }
+  selectedExtraCategories.classList.toggle("hidden", !selectedExtraCategories.childElementCount);
   document.querySelectorAll(".cat-btn").forEach(b => {
-    const cat = b.dataset.cat;
-    if (cat === "all") {
-      b.classList.toggle("active", isCatActive("all"));
-    } else if (cat) b.classList.toggle("active", isCatActive(cat));
+    const active = isCatActive(b.dataset.cat);
+    b.classList.toggle("active", active);
+    b.setAttribute("aria-pressed", String(active));
   });
 }
 
@@ -151,7 +164,9 @@ function syncCategoryUI() {
 function syncPopularChips() {
   document.querySelectorAll(".popular-chip").forEach(chip => {
     const q = chip.dataset.q || "";
-    chip.classList.toggle("active", state.search === q && q !== "");
+    const active = state.search === q && q !== "";
+    chip.classList.toggle("active", active);
+    chip.setAttribute("aria-pressed", String(active));
   });
 }
 
@@ -179,11 +194,13 @@ function syncFilterSummary() {
   });
 }
 
-function setAdvancedFiltersOpen(isOpen) {
+function setAdvancedFiltersOpen(isOpen, opener = null) {
+  if (isOpen && opener) filterOpener = opener;
   advancedFilters.classList.toggle("hidden", !isOpen);
   filtersToggle.setAttribute("aria-expanded", String(isOpen));
   moreCategoriesBtn.setAttribute("aria-expanded", String(isOpen));
   filtersToggle.classList.toggle("active", isOpen);
+  if (!isOpen && filterOpener) { filterOpener.focus({preventScroll:true}); filterOpener = null; }
 }
 
 // ── URL state (sharable + bookmarkable) ──────────────────────────────────────
@@ -464,6 +481,7 @@ const allSources = ["jobfind", "kariera", "xe", "direct", "corporate"];
 function syncChipUI() {
   const allChecked = allSources.every(s => state.sources.has(s));
   document.getElementById("src-all").checked     = allChecked;
+  document.getElementById("src-all").indeterminate = !allChecked && state.sources.size > 0;
   document.getElementById("src-jobfind").checked = state.sources.has("jobfind");
   document.getElementById("src-kariera").checked = state.sources.has("kariera");
   document.getElementById("src-xe").checked      = state.sources.has("xe");
@@ -509,9 +527,9 @@ document.querySelectorAll(".popular-chip").forEach(chip => {
     }
     syncPopularChips();
     syncSearchClear();
+    buildCategoryBar();
     updateURL();
     render();
-    document.getElementById("job-grid").scrollIntoView({ behavior: "smooth", block: "start" });
   });
 });
 
@@ -522,6 +540,7 @@ if (searchClearBtn) {
     searchInput.value = "";
     syncPopularChips();
     syncSearchClear();
+    buildCategoryBar();
     updateURL();
     render();
     searchInput.focus();
@@ -533,15 +552,21 @@ categoryBar.querySelector("[data-cat='all']").addEventListener("click", () => to
 
 // ── Expandable filters panel ─────────────────────────────────────────────────
 filtersToggle.addEventListener("click", () => {
-  setAdvancedFiltersOpen(advancedFilters.classList.contains("hidden"));
+  const opening = advancedFilters.classList.contains("hidden");
+  setAdvancedFiltersOpen(opening, filtersToggle);
+  if (opening) document.getElementById("advanced-source-heading").focus({preventScroll:true});
 });
 
 moreCategoriesBtn.addEventListener("click", () => {
-  setAdvancedFiltersOpen(true);
-  advancedFilters.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  const opening = advancedFilters.classList.contains("hidden");
+  setAdvancedFiltersOpen(opening, moreCategoriesBtn);
+  if (opening) document.getElementById("advanced-category-heading").focus({preventScroll:true});
 });
 
 filtersDone.addEventListener("click", () => setAdvancedFiltersOpen(false));
+advancedFilters.addEventListener("keydown", event => {
+  if (event.key === "Escape") { event.preventDefault(); setAdvancedFiltersOpen(false); }
+});
 
 filtersClear.addEventListener("click", () => {
   state.sources = new Set(allSources);
@@ -569,6 +594,7 @@ searchInput.addEventListener("input", e => {
   state.search = e.target.value.trim();
   syncPopularChips();
   syncSearchClear();
+  buildCategoryBar();
   updateURL();
   render();
 });
