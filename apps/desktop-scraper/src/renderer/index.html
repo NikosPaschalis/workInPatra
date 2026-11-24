@@ -24,14 +24,17 @@
       </div>
       <div class="source-grid" id="source-grid">
         <label class="source-card"><input type="checkbox" value="kariera" checked><span><strong>Kariera</strong><small id="source-kariera-detail">Idle</small></span><i id="source-kariera" class="status-dot idle"></i></label>
-        <label class="source-card"><input type="checkbox" value="jobfind" checked><span><strong>JobFind</strong><small id="source-jobfind-detail">Idle</small></span><i id="source-jobfind" class="status-dot idle"></i></label>
-        <label class="source-card"><input type="checkbox" value="xe" checked><span><strong>XE</strong><small id="source-xe-detail">Idle</small></span><i id="source-xe" class="status-dot idle"></i></label>
+        <label class="source-card"><input type="checkbox" value="jobfind"><span><strong>JobFind</strong><small id="source-jobfind-detail">Idle</small></span><i id="source-jobfind" class="status-dot idle"></i></label>
+        <label class="source-card"><input type="checkbox" value="xe"><span><strong>XE</strong><small id="source-xe-detail">Idle</small></span><i id="source-xe" class="status-dot idle"></i></label>
       </div>
       <div class="action-row">
         <button id="run-button" class="button primary">Run selected scrapers</button>
+        <button id="open-kariera-button" class="button">Open Kariera window</button>
+        <button id="save-kariera-button" class="button">Save &amp; process Kariera snapshot</button>
         <button id="cancel-button" class="button danger" disabled>Cancel scan</button>
         <button id="export-button" class="button ghost">Export JSON</button>
       </div>
+      <p class="inline-note">If Cloudflare asks for verification, complete it manually in the Kariera window before saving. The app never solves or retries the challenge.</p>
     </section>
 
     <section class="metrics" id="metrics"></section>
@@ -71,6 +74,7 @@
           <input id="github-token" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…">
           <label class="inline-check"><input id="persist-token" type="checkbox" checked> Encrypt with Windows credential protection</label>
           <button id="auth-button" class="button">Authenticate</button>
+          <p class="inline-note">Authenticate before processing for live duplicate checks against GitHub main. Uploads remain queued until the scheduled batch.</p>
         </div>
         <div class="action-row">
           <button id="upload-button" class="button primary" disabled>Push approved jobs to GitHub</button>

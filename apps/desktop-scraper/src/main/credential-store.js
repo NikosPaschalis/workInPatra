@@ -12,13 +12,16 @@ export class CredentialStore {
   async set(token, { persist = true } = {}) {
     const value = String(token || "").trim();
     if (!value) throw new Error("A GitHub token is required");
-    this.sessionToken = value;
-    if (!persist) return;
+    if (!persist) {
+      this.sessionToken = value;
+      return;
+    }
     if (!await this.safeStorage.isAsyncEncryptionAvailable()) {
       throw new Error("OS credential encryption is unavailable; use session-only authentication");
     }
     await mkdir(this.directory, { recursive: true });
     await writeFile(this.filePath, await this.safeStorage.encryptStringAsync(value), { mode: 0o600 });
+    this.sessionToken = value;
   }
 
   async get() {

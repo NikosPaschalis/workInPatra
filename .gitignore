@@ -11,3 +11,4 @@ Thumbs.db
 .forge-tmp/
 .forge-runtime/
 out/
+data/kariera-html-snapshots/*.html

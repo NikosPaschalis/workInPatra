@@ -5,6 +5,8 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { LocalStore } from "../apps/desktop-scraper/src/main/local-store.js";
+import { isAllowedKarieraSnapshotUrl, isAllowedKarieraUrl, KARIERA_PATRAS_URL } from "../apps/desktop-scraper/src/main/kariera-browser-policy.js";
+import { karieraSnapshotDirectory, resolveProjectRoot } from "../apps/desktop-scraper/src/main/project-paths.js";
 import { classifyAccess } from "../apps/desktop-scraper/src/worker/access-policy.js";
 import { resolveBrowserExecutable } from "../apps/desktop-scraper/src/worker/browser-path.js";
 import { createInitialState } from "../apps/desktop-scraper/src/shared/state.js";
@@ -13,6 +15,37 @@ import { EventEmitter } from "node:events";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const fixture = (source) => path.join(root, "fixtures", "desktop", `${source}.html`);
+
+test("embedded Kariera browser is restricted to HTTPS Kariera hosts", () => {
+  assert.equal(isAllowedKarieraUrl(KARIERA_PATRAS_URL), true);
+  assert.equal(isAllowedKarieraUrl("https://employers.kariera.gr/terms-and-conditions"), true);
+  assert.equal(isAllowedKarieraUrl("http://www.kariera.gr/jobs"), false);
+  assert.equal(isAllowedKarieraUrl("https://kariera.gr.example.com/jobs"), false);
+  assert.equal(isAllowedKarieraUrl("https://example.com/redirect"), false);
+  assert.equal(isAllowedKarieraUrl("not a url"), false);
+  assert.equal(isAllowedKarieraSnapshotUrl(KARIERA_PATRAS_URL), true);
+  assert.equal(isAllowedKarieraSnapshotUrl(`${KARIERA_PATRAS_URL}/`), true);
+  assert.equal(isAllowedKarieraSnapshotUrl("https://www.kariera.gr/jobs/technology-jobs/123"), false);
+  assert.equal(isAllowedKarieraSnapshotUrl("https://employers.kariera.gr/jobs/jobs-in-achaia--patra"), false);
+});
+
+test("Kariera snapshots resolve inside the project in source and packaged layouts", () => {
+  assert.equal(
+    resolveProjectRoot({ isPackaged: false, appPath: "C:\\repo", execPath: "C:\\ignored\\electron.exe" }),
+    path.resolve("C:\\repo")
+  );
+  const packagedRoot = resolveProjectRoot({
+    isPackaged: true,
+    appPath: "C:\\repo\\out\\app\\resources\\app.asar",
+    execPath: "C:\\repo\\out\\app\\WorkInPatraScraper.exe",
+  });
+  assert.equal(packagedRoot, path.resolve("C:\\repo"));
+  assert.equal(karieraSnapshotDirectory(packagedRoot), path.join(path.resolve("C:\\repo"), "data", "kariera-html-snapshots"));
+});
+
+test("Kariera is the only default desktop source", () => {
+  assert.deepEqual(createInitialState().selectedSources, ["kariera"]);
+});
 
 test("local persistence atomically restores approved drafts and resets interrupted scans", async () => {
   const directory = await mkdtemp(path.join(tmpdir(), "workinpatra-store-"));

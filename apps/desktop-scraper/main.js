@@ -1,12 +1,14 @@
 import { app, BrowserWindow, dialog, ipcMain, safeStorage, session, shell } from "electron";
-import { readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { canonicalizeJobUrl } from "../../scripts/job-identity.js";
 import { classifyManualCandidates, validateSourceUrl } from "../../scripts/manual-queue.js";
 import { CredentialStore } from "./src/main/credential-store.js";
-import { GitHubClient, uploadApprovedJobs } from "./src/main/github-client.js";
+import { GitHubClient, readGitHubBaseline, uploadApprovedJobs } from "./src/main/github-client.js";
+import { isAllowedKarieraSnapshotUrl, isAllowedKarieraUrl, KARIERA_PATRAS_URL } from "./src/main/kariera-browser-policy.js";
 import { LocalStore } from "./src/main/local-store.js";
+import { karieraSnapshotDirectory, resolveProjectRoot } from "./src/main/project-paths.js";
 import { ScrapeController } from "./src/main/scrape-controller.js";
 import { dashboardCounts, publicState, SOURCES } from "./src/shared/state.js";
 
@@ -17,10 +19,11 @@ if (process.env.WORKINPATRA_USER_DATA_DIR) {
 const CHANNELS = new Set([
   "state:get", "scan:start", "scan:cancel", "review:set", "results:export",
   "history:clear", "github:authenticate", "github:disconnect", "github:upload",
-  "external:open", "diagnostics:export",
+  "external:open", "diagnostics:export", "kariera:open", "kariera:snapshot",
 ]);
 
 let window;
+let karieraWindow;
 let store;
 let credentials;
 let controller;
@@ -116,10 +119,165 @@ function createClient(token) {
   return new GitHubClient({ token });
 }
 
+function reclassifyCurrentResults() {
+  if (!state.results.length) return;
+  const previous = state.results;
+  const classified = classifyManualCandidates(previous, baseline);
+  state.results = attachIds(classified, previous).map((job) => {
+    const reviewable = ["new", "review", "suspected_duplicate"].includes(job.validationStatus);
+    return reviewable ? job : { ...job, approved: false, rejected: false, manuallyVerifiedAt: null };
+  });
+}
+
+async function refreshBaselineFromGitHub(client) {
+  const remote = await readGitHubBaseline(client);
+  baseline = {
+    ...baseline,
+    published: remote.published,
+    karieraPending: remote.karieraPending,
+    manualPending: remote.manualPending,
+  };
+  reclassifyCurrentResults();
+  state.lastBaselineRefresh = {
+    at: new Date().toISOString(),
+    published: remote.published.length,
+    queued: remote.karieraPending.length + remote.manualPending.length,
+  };
+  log(`Refreshed GitHub baseline: ${remote.published.length} published, ${state.lastBaselineRefresh.queued} queued`);
+  if (remote.manualPendingMissing) log("GitHub manual queue does not exist yet; it will be created by the first approved upload", "warning");
+  return remote;
+}
+
+function openKarieraWindow() {
+  if (karieraWindow && !karieraWindow.isDestroyed()) {
+    karieraWindow.show();
+    karieraWindow.focus();
+    return { opened: true, reused: true };
+  }
+
+  karieraWindow = new BrowserWindow({
+    parent: window,
+    width: 1280,
+    height: 900,
+    minWidth: 900,
+    minHeight: 650,
+    title: "Kariera - Patra jobs",
+    backgroundColor: "#ffffff",
+    show: false,
+    webPreferences: {
+      contextIsolation: true,
+      sandbox: true,
+      nodeIntegration: false,
+      webSecurity: true,
+    },
+  });
+  karieraWindow.removeMenu();
+
+  karieraWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (isAllowedKarieraUrl(url)) {
+      queueMicrotask(() => {
+        if (karieraWindow && !karieraWindow.isDestroyed()) void karieraWindow.loadURL(url).catch(() => {});
+      });
+    }
+    return { action: "deny" };
+  });
+  karieraWindow.webContents.on("will-navigate", (event, url) => {
+    if (!isAllowedKarieraUrl(url)) event.preventDefault();
+  });
+  karieraWindow.webContents.on("will-redirect", (event, url) => {
+    if (!isAllowedKarieraUrl(url)) event.preventDefault();
+  });
+  karieraWindow.webContents.on("did-navigate", (_event, url, statusCode) => {
+    log(`Kariera window navigation: HTTP ${statusCode} ${new URL(url).pathname}`);
+    void persistAndBroadcast();
+  });
+  karieraWindow.webContents.on("did-fail-load", (_event, errorCode, errorDescription, validatedURL, isMainFrame) => {
+    if (!isMainFrame || errorCode === -3) return;
+    log(`Kariera window failed to load: ${errorDescription} (${errorCode})`, "error");
+    void persistAndBroadcast();
+  });
+  karieraWindow.on("closed", () => { karieraWindow = null; });
+  karieraWindow.once("ready-to-show", () => karieraWindow?.show());
+
+  log("Opening Kariera Patra jobs in an isolated Electron window");
+  log("Complete any Cloudflare verification manually before saving and processing the snapshot", "warning");
+  void persistAndBroadcast();
+  void karieraWindow.loadURL(KARIERA_PATRAS_URL).catch((error) => {
+    log(`Kariera window navigation failed: ${error.message}`, "error");
+    void persistAndBroadcast();
+  });
+  return { opened: true, reused: false };
+}
+
+async function saveKarieraSnapshot() {
+  if (!karieraWindow || karieraWindow.isDestroyed()) throw new Error("Open the Kariera window first");
+  if (state.scanRunning || controller.running) throw new Error("Wait for the active scan to finish before processing a snapshot");
+  const sourceUrl = karieraWindow.webContents.getURL();
+  if (!isAllowedKarieraSnapshotUrl(sourceUrl)) throw new Error("Navigate to the Kariera Patra jobs page before saving a snapshot");
+  if (karieraWindow.webContents.isLoadingMainFrame()) throw new Error("Wait for the Kariera page to finish loading");
+  if (/just a moment|verify (?:you are )?human|checking your browser|cloudflare/i.test(karieraWindow.webContents.getTitle())) {
+    throw new Error("Complete the Cloudflare verification manually before saving the snapshot");
+  }
+
+  const projectRoot = resolveProjectRoot({
+    isPackaged: app.isPackaged,
+    appPath: app.getAppPath(),
+    execPath: process.execPath,
+    override: process.env.WORKINPATRA_PROJECT_ROOT || "",
+  });
+  const snapshotDirectory = karieraSnapshotDirectory(projectRoot);
+  await mkdir(snapshotDirectory, { recursive: true });
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const filePath = path.join(snapshotDirectory, `kariera-patra-${timestamp}.html`);
+  await karieraWindow.webContents.savePage(filePath, "HTMLOnly");
+  log(`Saved Kariera HTML snapshot: ${filePath}`);
+  const githubToken = await credentials.get();
+  if (githubToken) {
+    try {
+      await refreshBaselineFromGitHub(createClient(githubToken));
+    } catch (error) {
+      log(`Could not refresh GitHub baseline; upload will still recheck duplicates: ${error.message}`, "warning");
+    }
+  } else {
+    log("GitHub is not authenticated; using the packaged duplicate baseline until upload revalidation", "warning");
+  }
+  log("Processing the saved Kariera snapshot locally with no network request");
+  state.scanRunning = true;
+  state.lastScanAt = new Date().toISOString();
+  await persistAndBroadcast();
+
+  let settled;
+  try {
+    settled = await controller.run(["kariera"], { kariera: { fixturePath: filePath } });
+  } finally {
+    state.scanRunning = false;
+  }
+  const parsed = settled?.[0]?.status === "fulfilled" ? settled[0].value : null;
+  if (!parsed || parsed.status !== "success") {
+    const detail = parsed?.detail || settled?.[0]?.reason?.message || "Unknown local parsing error";
+    log(`Kariera snapshot processing failed: ${detail}`, "error");
+    await persistAndBroadcast();
+    throw new Error(`Snapshot saved at ${filePath}, but local processing failed: ${detail}`);
+  }
+  state.sources.kariera = { status: "success", detail: `Processed local snapshot: ${path.basename(filePath)}`, count: parsed.jobs.length };
+  log(`Processed ${parsed.jobs.length} Kariera listings from the local snapshot`);
+  await persistAndBroadcast();
+  return { saved: true, processed: true, count: parsed.jobs.length, filePath, sourceUrl };
+}
+
 function registerIpc() {
   const handle = (channel, fn) => {
     if (!CHANNELS.has(channel)) throw new Error(`Unapproved IPC channel: ${channel}`);
-    ipcMain.handle(channel, async (_event, payload) => fn(payload));
+    ipcMain.handle(channel, async (_event, payload) => {
+      try {
+        return await fn(payload);
+      } catch (error) {
+        const message = redact(error?.message || error);
+        log(`${channel} failed: ${message}`, "error");
+        await persistAndBroadcast().catch(() => {});
+        throw new Error(message);
+      }
+    });
   };
 
   handle("state:get", () => persistAndBroadcast());
@@ -201,9 +359,26 @@ function registerIpc() {
   });
   handle("github:authenticate", async (payload) => {
     const { token, persist = true } = assertObject(payload);
-    if (typeof token !== "string" || token.length < 20) throw new Error("Enter a valid fine-grained GitHub token");
-    const access = await createClient(token).verifyAccess();
-    await credentials.set(token, { persist: Boolean(persist) });
+    const normalizedToken = typeof token === "string" ? token.trim() : "";
+    if (normalizedToken.length < 20) throw new Error("Enter a valid fine-grained GitHub token");
+    const client = createClient(normalizedToken);
+    let access;
+    try {
+      access = await client.verifyAccess();
+    } catch (error) {
+      throw new Error(`GitHub authentication failed: ${error.message}`);
+    }
+    if (access.permissions?.push === false) throw new Error("GitHub token does not have repository Contents read/write access");
+    try {
+      await refreshBaselineFromGitHub(client);
+    } catch (error) {
+      throw new Error(`GitHub token was accepted, but required repository files could not be read: ${error.message}. Check Contents read/write permission.`);
+    }
+    try {
+      await credentials.set(normalizedToken, { persist: Boolean(persist) });
+    } catch (error) {
+      throw new Error(`GitHub access was verified, but credential storage failed: ${error.message}`);
+    }
     log(`Authenticated to ${access.fullName}`);
     return persistAndBroadcast();
   });
@@ -220,19 +395,17 @@ function registerIpc() {
     log(`Revalidating ${approved.length} approved listing(s) against GitHub`);
     await persistAndBroadcast();
     try {
-      const result = await uploadApprovedJobs(createClient(token), approved);
+      const client = createClient(token);
+      const result = await uploadApprovedJobs(client, approved);
       if (result.commitSha) {
         state.lastSuccessfulCommit = { sha: result.commitSha, url: result.commitUrl, at: new Date().toISOString(), count: result.uploaded };
-        const uploadedUrls = new Set(approved.map((job) => canonicalizeJobUrl(job.url)));
-        for (const job of state.results) {
-          if (uploadedUrls.has(canonicalizeJobUrl(job.url))) {
-            job.approved = false;
-            job.validationStatus = "queued";
-          }
-        }
       }
       log(result.duplicateOnly ? "No upload needed; all approved listings already exist" : `Verified GitHub commit ${result.commitSha}`);
-      await loadBaseline();
+      try {
+        await refreshBaselineFromGitHub(client);
+      } catch (refreshError) {
+        log(`Upload succeeded, but the review baseline could not be refreshed: ${refreshError.message}`, "warning");
+      }
       await persistAndBroadcast();
       return result;
     } catch (error) {
@@ -249,6 +422,8 @@ function registerIpc() {
     await shell.openExternal(result.canonicalUrl || canonicalizeJobUrl(result.url));
     return { opened: true };
   });
+  handle("kariera:open", () => openKarieraWindow());
+  handle("kariera:snapshot", () => saveKarieraSnapshot());
   handle("diagnostics:export", async () => {
     const result = await dialog.showSaveDialog(window, { defaultPath: "workinpatra-diagnostics.json", filters: [{ name: "JSON", extensions: ["json"] }] });
     if (result.canceled || !result.filePath) return { saved: false };

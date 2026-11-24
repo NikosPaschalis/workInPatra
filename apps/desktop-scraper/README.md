@@ -2,6 +2,10 @@
 
 The desktop scraper is a manual review companion for the WorkInPatra publishing pipeline. It runs Kariera, JobFind, and XE independently on a local Windows PC, validates the results, preserves approved drafts in Electron's user-data directory, and uploads only to `data/manual-pending.json`. It never writes `data/jobs.json`, dispatches production workflows, or sends social notifications.
 
+The **Open Kariera window** button opens the Patra results page in a separate, sandboxed Electron window for interactive testing. The window keeps Electron's normal browser identity, permits navigation only to HTTPS pages on `kariera.gr`, and denies permissions and pop-ups outside that site. Opening the window alone does not extract the DOM, alter the user agent, download the page, or feed its contents into the scraper; capture starts only after the user explicitly selects **Save & process Kariera snapshot**.
+
+After the Patra results page has finished loading, **Save & process Kariera snapshot** performs an explicit Chromium `HTMLOnly` save into the project's `data/kariera-html-snapshots` folder. It then passes that file to the existing fixture-backed Kariera worker, which parses, categorizes, validates, and adds the jobs to the normal review queue without another network request. Snapshot saving is restricted to the exact public Patra results URL and never captures account pages or uploads the HTML. If Cloudflare presents a verification step, the user must complete it manually in the visible window before saving; the app does not solve or retry challenges.
+
 ## Install and package
 
 Requirements: Windows x64 and Node.js. Forge 8 normally requires Node 22.13+, but the included launcher uses Electron 45's embedded Node 24 when the host is older.
@@ -40,6 +44,10 @@ Create a fine-grained personal access token restricted to `NikosPaschalis/workIn
 Persistent credentials use Electron `safeStorage` and Windows DPAPI; session-only authentication is available when persistence is unchecked. Tokens are never returned to the renderer or written to logs.
 
 Before upload the app reads current `data/jobs.json`, `data/kariera-pending.json`, and `data/manual-pending.json`; revalidates approval, fields, source domains, locations, and duplicates; writes only `data/manual-pending.json` with its current SHA; and fetches the returned commit for verification. A 409/422 conflict causes one bounded refetch/revalidation retry. Local approvals remain intact after failure.
+
+GitHub authentication also refreshes those three files from `main` and immediately reclassifies the review queue as published, queued, suspected duplicate, or new. Snapshot processing repeats that refresh when a credential is available. Upload performs a second live duplicate check, so stale review data cannot create duplicate queue entries. JobFind and XE are available but unchecked by default; Kariera is the only default source.
+
+For first-time setup, a missing `data/manual-pending.json` is treated as an empty queue. The first approved desktop upload creates that file on `main`; subsequent uploads update it by SHA.
 
 The repository and branch are fixed to `NikosPaschalis/workInPatra` and `main`; IPC exposes no arbitrary GitHub write operation.
 

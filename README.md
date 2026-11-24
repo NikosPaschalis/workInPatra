@@ -1,9 +1,5 @@
 # WorkInPάτρα
 
-## Desktop scraping companion
-
-The optional Electron companion under `apps/desktop-scraper/` runs manual local scans for Kariera, JobFind, and XE, supports explicit review, and uploads verified listings only to the shared `data/manual-pending.json` queue. See [apps/desktop-scraper/README.md](apps/desktop-scraper/README.md) for setup, security, packaging, GitHub permissions, production integration, and troubleshooting.
-
 > A job aggregator for the city of Patra, Greece — pulling listings from multiple Greek job boards into one clean, fast interface.
 
 🔗 **Live:** [www.workinpatras.gr/](https://www.workinpatras.gr/)
@@ -14,7 +10,7 @@ The optional Electron companion under `apps/desktop-scraper/` runs manual local 
 
 ## What it does
 
-WorkInPάτρα scrapes job listings from three major Greek job boards and presents them in a single responsive UI, filtered to the Patra area. No ads, no registration, no tracking. New listings are automatically announced on Telegram and Facebook.
+WorkInPάτρα collects job listings from three major Greek job boards and presents them in a single responsive UI filtered to the Patra area. Listings arrive through two controlled paths: scheduled GitHub Actions scrapes and an optional Windows desktop companion for local collection, human review, and queued publication. No ads, no registration, no visitor tracking.
 
 **Sources:**
 - [JobFind.gr](https://www.jobfind.gr)
@@ -26,6 +22,7 @@ WorkInPάτρα scrapes job listings from three major Greek job boards and prese
 ## Features
 
 - **Aggregated listings** from 3 sources in one place
+- **Two ingestion paths** — scheduled cloud scraping plus reviewed local desktop submissions
 - **Source-aware categorization** — 10 common categories mapped from each site's original category, with title/tag fallback
 - **Date filtering** — last 7 or 30 days (30-day default)
 - **"Νέο" badge** — highlights listings posted today
@@ -37,6 +34,11 @@ WorkInPάτρα scrapes job listings from three major Greek job boards and prese
 - **Responsive design** — works on desktop and mobile (iOS/Android)
 - **Auto-refresh** — scraper runs twice daily via GitHub Actions
 - **Resilient source updates** — if one scraper fails, its last published jobs are preserved
+- **Electron review companion** — run sources independently, inspect results, approve/reject listings, and retain drafts locally
+- **Interactive Kariera capture** — open the Patra results in a restricted Electron window, complete any Cloudflare verification manually, save the rendered HTML, and process it locally with the existing Kariera parser
+- **Live duplicate protection** — compare review items with published and queued GitHub data before upload, then revalidate immediately before writing
+- **Queued desktop publishing** — verified jobs are written only to `data/manual-pending.json`; the scheduled workflow merges them into the public dataset and sends notifications
+- **Secure GitHub authentication** — fine-grained token support with optional Windows DPAPI-backed storage
 - **Social notifications** — new listings auto-post to Telegram and Facebook
 - **SEO optimized** — meta tags, Open Graph, JSON-LD structured data
 - **Zero tracking** — no cookies, no analytics, no user data collection
@@ -45,33 +47,31 @@ WorkInPάτρα scrapes job listings from three major Greek job boards and prese
 
 ## Architecture
 
-```
-┌──────────────────────────┐
-│   GitHub Actions (cron)  │  — runs every 12 hours
-│   • snapshot prev jobs   │
-│   • scrape 3 sites       │
-│   • write data/jobs.json │
-│   • diff vs snapshot     │
-│   • commit + push        │
-│   • notify social feeds  │
-└────────────┬─────────────┘
-             │
-             ├──────────────┬─────────────────────────────┐
-             ▼              ▼                             ▼
-┌──────────────────────────┐  ┌──────────────────────────┐  ┌──────────────────────────┐
-│   GitHub repo (main)     │  │   Telegram channel       │  │   Facebook page          │
-│   data/jobs.json updates │  │   @workinpatras          │  │   WorkInPάτρα            │
-└────────────┬─────────────┘  └──────────────────────────┘  └──────────────────────────┘
-             │
-             ▼
-┌──────────────────────────┐
-│   Netlify (static host)  │  — auto-deploys on every push
-│   • serves index.html    │
-│   • serves jobs.json     │
-└──────────────────────────┘
+```text
+Scheduled path                         Reviewed desktop path
+┌─────────────────────────┐            ┌──────────────────────────────┐
+│ GitHub Actions (2× day) │            │ Electron desktop companion  │
+│ scrape JobFind/Kariera/ │            │ • local source workers       │
+│ XE independently        │            │ • visible Kariera window     │
+└────────────┬────────────┘            │ • HTML snapshot + review     │
+             │                         └──────────────┬───────────────┘
+             │                                        │ approved only
+             │                         ┌──────────────▼───────────────┐
+             │                         │ data/manual-pending.json     │
+             │                         └──────────────┬───────────────┘
+             └──────────────────────────────┬─────────┘
+                                            ▼
+                               ┌──────────────────────────┐
+                               │ data/jobs.json on main   │
+                               │ dedupe + history ledgers │
+                               └────────────┬─────────────┘
+                                            │
+                     ┌──────────────────────┼──────────────────────┐
+                     ▼                      ▼                      ▼
+               Netlify site          Telegram channel       Facebook page
 ```
 
-No always-on server. No database. No ongoing costs.
+The production site has no always-on application server and no database. GitHub remains the publishing boundary for both ingestion paths.
 
 ---
 
@@ -80,6 +80,9 @@ No always-on server. No database. No ongoing costs.
 | Layer | Technology |
 |---|---|
 | Scraping | [Playwright](https://playwright.dev/) (Node.js) — handles JS-rendered sites |
+| Desktop companion | [Electron](https://www.electronjs.org/) + Electron Forge (Windows x64) |
+| Desktop publishing | GitHub Contents API + fine-grained personal access token |
+| Local credential protection | Electron `safeStorage` / Windows DPAPI |
 | Scheduler | GitHub Actions (cron) |
 | Notifications | Telegram Bot API + Facebook Graph API |
 | Hosting | Netlify (static) |
@@ -100,19 +103,32 @@ workinpatra/
 ├── app.js                  # Frontend logic
 ├── client-utils.js         # Search, date-window, and sorting helpers
 ├── package.json            # Root deps (for GitHub Actions)
+├── forge.config.js         # Electron packaging and Windows makers
 ├── netlify.toml            # Netlify config
+├── apps/
+│   └── desktop-scraper/    # Electron main/preload/renderer/worker code
 ├── .github/workflows/
 │   ├── scrape.yml          # GitHub Actions workflow (every 12h)
+│   ├── test.yml            # Automated regression suite
+│   ├── kariera-live-smoke.yml # Controlled live Kariera check
 │   ├── snapshot.yml        # Monthly dataset snapshots
 │   └── test-telegram.yml   # Manual Telegram smoke test
 ├── data/
 │   ├── jobs.json           # Scraped data (auto-updated)
+│   ├── manual-pending.json # Reviewed desktop submissions awaiting workflow merge
+│   ├── kariera-pending.json # Backward-compatible curated Kariera queue
+│   ├── observations.jsonl  # Listing observation history
+│   ├── scrape-runs.jsonl   # Per-run source outcomes
+│   ├── kariera-html-snapshots/ # Local-only rendered snapshots (gitignored)
 │   └── snapshots/          # Monthly historical snapshots
 ├── scripts/
 │   ├── scrape.js           # Standalone scraper for GH Actions
 │   ├── merge-source-results.js # Per-source failure fallback
+│   ├── apply-manual-pending.js # Validate/merge/clear desktop queue
+│   ├── manual-queue.js     # Manual queue validation and deduplication
 │   ├── snapshot.js         # Monthly snapshot generator
-│   └── notify-telegram.js  # Diffs jobs and posts to Telegram/Facebook
+│   ├── notify-telegram.js  # Diffs jobs and posts to Telegram/Facebook
+│   └── notify-direct-jobs.js # Direct-employer notification pass
 ├── test/                   # Node.js regression tests
 └── server/
     ├── index.js            # Express server (local dev only)
@@ -227,7 +243,9 @@ Unknown source categories automatically fall back to normalized title/tag matchi
 
 ## Running Locally
 
-**Prerequisites:** Node.js 18+
+**Prerequisites:** Node.js 18+ and Windows x64 for the packaged desktop companion.
+
+### Website and scheduled scraper
 
 ```bash
 # 1. Install dependencies
@@ -244,6 +262,47 @@ npm run dev
 # → http://localhost:3000
 ```
 
+### Electron desktop companion
+
+```powershell
+npm ci
+npm run desktop:install-browser
+npm run desktop:start
+```
+
+Create an unpacked app or Windows installer/ZIP artifacts with:
+
+```powershell
+npm run desktop:package
+npm run desktop:make
+```
+
+Build output is written under `out/`. The unpacked executable is
+`out/WorkInPatra Desktop Scraper-win32-x64/WorkInPatraScraper.exe`.
+
+The normal Kariera workflow is intentionally user-driven:
+
+1. Open the restricted **Kariera window** from the desktop app.
+2. Complete any visible Cloudflare verification manually and wait for the Patra results page to finish loading.
+3. Return to the main window and select **Save & process Kariera snapshot**.
+4. The rendered HTML is saved under `data/kariera-html-snapshots/` and parsed locally without a second network request.
+5. Inspect the normalized listings, then explicitly approve or reject them.
+6. Authenticate with a fine-grained GitHub token and push approved jobs to `data/manual-pending.json`.
+7. The next `Scrape Jobs` workflow validates and merges the queue into `data/jobs.json`, then runs the normal notification batch.
+
+The token should be restricted to `NikosPaschalis/workInPatra` with only
+**Contents: Read and write**. Persistent storage is optional and uses Electron
+`safeStorage` with Windows DPAPI. The desktop app never writes directly to
+`data/jobs.json`, starts a production workflow, or sends social notifications.
+
+Kariera is selected by default; JobFind and XE remain available for manual use
+but start unchecked. Drafts, approvals, failed uploads, and activity history are
+stored in Electron's local application-data directory so a restart does not
+discard review work.
+
+See [the desktop companion guide](apps/desktop-scraper/README.md) for the full
+security model, queue behavior, tests, packaging details, and troubleshooting.
+
 ---
 
 ## Deployment
@@ -251,7 +310,7 @@ npm run dev
 The repo is wired up to deploy automatically:
 
 - **Push to `main`** → Netlify redeploys the static site
-- **Every 12 hours** → GitHub Actions runs the scrapers, preserves the previous listings of any temporarily failed source, commits `data/jobs.json`, triggers a Netlify redeploy, and then posts new-job summaries to Telegram and Facebook
+- **Every 12 hours** → GitHub Actions runs the source scrapers, preserves the previous listings of any temporarily failed source, validates and applies the curated/manual queues, commits the resulting dataset and queue state, triggers a Netlify redeploy, and then posts consolidated summaries to Telegram and Facebook
 
 To manually trigger a scrape: GitHub → Actions tab → "Scrape Jobs" → "Run workflow".
 
@@ -262,7 +321,8 @@ To manually trigger a scrape: GitHub → Actions tab → "Scrape Jobs" → "Run 
 ## Privacy & Legal
 
 - **No cookies, no analytics, no tracking.** The site collects nothing about visitors.
-- **No data hosting** — we only link to the original job postings.
+- **No copied job descriptions** — the public dataset stores normalized listing metadata and links visitors to the original posting.
+- **Local desktop snapshots stay local** — rendered Kariera HTML is stored in a gitignored project folder and is never uploaded by the app.
 - See [Privacy Policy](./privacy.html) and [Terms of Use](./terms.html).
 
 Scraping publicly available data can involve legal and platform-policy considerations. The project runs on a limited twice-daily schedule and always attributes and links back to the original source.
@@ -272,12 +332,14 @@ Scraping publicly available data can involve legal and platform-policy considera
 ## Known Limitations
 
 - **Kariera.gr** premium company listings link to the company page rather than individual job ads (platform limitation)
+- **Kariera interactive capture** can require a manual Cloudflare verification. The desktop app detects challenge pages but does not solve, bypass, or automatically retry them.
 - **JobFind.gr** hides company names for anonymous listings by design
 - **Indeed.gr** was previously a source but has been removed — Cloudflare anti-bot challenges the scraper from datacenter IPs (GitHub Actions), returning 0 jobs in production
 - Scraper selectors may break if source sites update their HTML — monitor GitHub Actions for failures
 - When one source fails or unexpectedly returns no jobs, its previous listings are retained until a successful run replaces them; workflow logs identify the stale source
 - Unrecognised or invalid source dates are stored as `null` instead of being guessed
 - Category detection is ~80% accurate (keyword heuristic, not ML)
+- The packaged desktop companion is currently built and verified only for Windows x64; release artifacts are not code-signed.
 
 ---
 

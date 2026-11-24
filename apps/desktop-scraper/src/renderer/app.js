@@ -120,7 +120,10 @@ function renderMetrics() {
 }
 
 function renderGithub() {
-  $("#github-status").textContent = state.github.authenticated ? "Authenticated" : "Not authenticated";
+  const refreshed = state.lastBaselineRefresh?.at;
+  $("#github-status").textContent = state.github.authenticated
+    ? refreshed ? `Authenticated · baseline ${new Date(refreshed).toLocaleString()}` : "Authenticated"
+    : "Not authenticated";
   $("#github-ready").textContent = `${state.dashboard.approved} approved`;
   $("#auth-form").hidden = state.github.authenticated;
   $("#disconnect-button").disabled = !state.github.authenticated;
@@ -196,6 +199,12 @@ $("#run-button").addEventListener("click", () => action(() => {
   return api.startScan(sources);
 }));
 $("#cancel-button").addEventListener("click", () => action(() => api.cancelScan()));
+$("#open-kariera-button").addEventListener("click", () => action(() => api.openKariera()));
+$("#save-kariera-button").addEventListener("click", () => action(async () => {
+  const result = await api.saveKarieraSnapshot();
+  toast(`Saved and processed ${result.count} Kariera listings: ${result.filePath}`);
+  return result;
+}));
 $("#export-button").addEventListener("click", () => action(() => api.exportResults()));
 $("#search").addEventListener("input", renderTable);
 $("#source-filter").addEventListener("change", renderTable);

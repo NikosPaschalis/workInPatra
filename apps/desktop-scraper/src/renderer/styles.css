@@ -44,6 +44,7 @@ input[type="checkbox"] { accent-color: var(--accent); }
 .status-dot.cancelled, .status-dot.skipped { background: var(--warning); }
 @keyframes pulse { 50% { opacity: .45; } }
 .action-row { display: flex; align-items: center; gap: 8px; margin-top: 14px; }
+.inline-note { margin-top: 10px; color: var(--warning); font-size: 11px; }
 .button { border: 1px solid #414952; background: #24292f; border-radius: 6px; padding: 8px 12px; cursor: pointer; font-weight: 650; }
 .button:hover:not(:disabled) { border-color: #69737d; background: #2c3239; }
 .button:disabled { opacity: .38; cursor: not-allowed; }

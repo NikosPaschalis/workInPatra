@@ -4,7 +4,7 @@ export const SOURCE_STATES = Object.freeze(["idle", "running", "success", "block
 export function createInitialState() {
   return {
     version: 1,
-    selectedSources: [...SOURCES],
+    selectedSources: ["kariera"],
     sources: Object.fromEntries(SOURCES.map((source) => [source, { status: "idle", count: 0, detail: "" }])),
     results: [],
     activity: [],
@@ -12,6 +12,7 @@ export function createInitialState() {
     lastScanAt: null,
     lastSuccessfulCommit: null,
     lastUploadError: null,
+    lastBaselineRefresh: null,
   };
 }
 

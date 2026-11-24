@@ -22,16 +22,21 @@ export class GitHubClient {
   }
 
   async request(pathname, options = {}) {
-    const response = await this.fetch(`${API}${pathname}`, {
-      ...options,
-      headers: {
-        Accept: "application/vnd.github+json",
-        Authorization: `Bearer ${this.token}`,
-        "X-GitHub-Api-Version": "2022-11-28",
-        "User-Agent": "WorkInPatra-Desktop-Scraper",
-        ...options.headers,
-      },
-    });
+    let response;
+    try {
+      response = await this.fetch(`${API}${pathname}`, {
+        ...options,
+        headers: {
+          Accept: "application/vnd.github+json",
+          Authorization: `Bearer ${String(this.token || "").trim()}`,
+          "X-GitHub-Api-Version": "2022-11-28",
+          "User-Agent": "WorkInPatra-Desktop-Scraper",
+          ...options.headers,
+        },
+      });
+    } catch (error) {
+      throw new GitHubError(`Could not reach GitHub: ${error.message}`, 0, {});
+    }
     const body = await response.json().catch(() => ({}));
     if (!response.ok) throw new GitHubError(body.message || `GitHub request failed (${response.status})`, response.status, body);
     return body;
@@ -49,15 +54,16 @@ export class GitHubClient {
   }
 
   async putJsonFile(filePath, value, sha, message) {
+    const requestBody = {
+      message,
+      content: Buffer.from(JSON.stringify(value, null, 2) + "\n", "utf8").toString("base64"),
+      branch: this.branch,
+    };
+    if (sha) requestBody.sha = sha;
     return this.request(`/repos/${this.owner}/${this.repo}/contents/${filePath}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        message,
-        content: Buffer.from(JSON.stringify(value, null, 2) + "\n", "utf8").toString("base64"),
-        sha,
-        branch: this.branch,
-      }),
+      body: JSON.stringify(requestBody),
     });
   }
 
@@ -74,16 +80,34 @@ function cleanForQueue(job) {
   return { ...clean, url: canonicalUrl || canonicalizeJobUrl(job.url) };
 }
 
+export async function readGitHubBaseline(client) {
+  const [publishedFile, karieraFile, manualFile] = await Promise.all([
+    client.getJsonFile("data/jobs.json"),
+    client.getJsonFile("data/kariera-pending.json"),
+    client.getJsonFile("data/manual-pending.json").catch((error) => {
+      if (error instanceof GitHubError && error.status === 404) {
+        return { value: { jobs: [] }, sha: null, missing: true };
+      }
+      throw error;
+    }),
+  ]);
+  return {
+    publishedFile,
+    karieraFile,
+    manualFile,
+    published: publishedFile.value.jobs || [],
+    karieraPending: karieraFile.value.jobs || [],
+    manualPending: manualFile.value.jobs || [],
+    manualPendingMissing: Boolean(manualFile.missing),
+  };
+}
+
 export async function uploadApprovedJobs(client, approvedJobs, { maxAttempts = 2 } = {}) {
   if (!approvedJobs.length) throw new Error("No approved listings are ready for upload");
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    const [publishedFile, karieraFile, manualFile] = await Promise.all([
-      client.getJsonFile("data/jobs.json"),
-      client.getJsonFile("data/kariera-pending.json"),
-      client.getJsonFile("data/manual-pending.json"),
-    ]);
-    const published = publishedFile.value.jobs || [];
-    const queued = [...(karieraFile.value.jobs || []), ...(manualFile.value.jobs || [])];
+    const remote = await readGitHubBaseline(client);
+    const { published, manualFile } = remote;
+    const queued = [...remote.karieraPending, ...remote.manualPending];
     const urls = new Set([...published, ...queued].map((job) => canonicalizeJobUrl(job.url)).filter(Boolean));
     const names = new Set([...published, ...queued].map(titleCompanyIdentity).filter(Boolean));
     const additions = [];
@@ -101,7 +125,7 @@ export async function uploadApprovedJobs(client, approvedJobs, { maxAttempts = 2
     try {
       const response = await client.putJsonFile(
         "data/manual-pending.json",
-        { jobs: [...(manualFile.value.jobs || []), ...additions] },
+        { jobs: [...remote.manualPending, ...additions] },
         manualFile.sha,
         `chore: queue ${additions.length} desktop-approved job${additions.length === 1 ? "" : "s"}`
       );
