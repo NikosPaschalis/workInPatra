@@ -1,4 +1,5 @@
 import { normalizeText } from "../../scripts/job-identity.js";
+import { fetchCompanyHtml } from "./company-html.js";
 import { fetchWorkableCompany } from "./workable.js";
 import { fetchLeverCompany } from "./lever.js";
 import { categorizeCorporateRole } from "../corporate-categories.js";
@@ -11,6 +12,10 @@ export const CORPORATE_COMPANIES = Object.freeze([
   { id: "motodynamics", name: "Motodynamics", provider: "workable", identifier: "motodynamics", careerUrl: "https://apply.workable.com/motodynamics/" },
   { id: "cosmos-sport", name: "Cosmos Sport", provider: "workable", identifier: "cosmos-sport-s-dot-a", careerUrl: "https://apply.workable.com/cosmos-sport-s-dot-a/" },
   { id: "plaisio", name: "Πλαίσιο", provider: "workable", identifier: "plaisio-careers", careerUrl: "https://apply.workable.com/plaisio-careers/" },
+  { id: "irida-renesas", name: "Renesas / Irida Labs", provider: "html", careerUrl: "https://iridalabs.com/careers/" },
+  { id: "althom", name: "ALTHOM", provider: "html", careerUrl: "https://www.althom.de/careers" },
+  { id: "noesis", name: "Noesis Technologies", provider: "html", careerUrl: "https://noesis-tech.com/company/careers/" },
+  { id: "advisable", name: "Advisable", provider: "html", careerUrl: "https://www.advisable.com/careers" },
 ]);
 const cities = new Set(["patras", "patra", "patrai", "πατρα", "πατρεσ", "rio", "ριο", "industrial area of patras", "patras industrial area", "βιπε πατρων", "κατω αχαια", "kato achaia", "kato achaia patras"]);
 export const corporateSourceKey = id => "corporate:" + id;
@@ -54,6 +59,7 @@ export function normalizePosting(post, company, now = new Date()) {
 export async function fetchCompany(company, { fetchImpl = globalThis.fetch, now = new Date() } = {}) {
   if (company.provider === "lever") return fetchLeverCompany(company, { fetchImpl, now });
   if (company.provider === "workable") return fetchWorkableCompany(company, { fetchImpl, now });
+  if (company.provider === "html") return fetchCompanyHtml(company, { fetchImpl, now });
   if (company.provider && company.provider !== "smartrecruiters") throw new Error("Unsupported corporate provider");
   const limit = 100, maxPages = 15, seen = new Set(), jobs = [];
   let expectedTotal;
