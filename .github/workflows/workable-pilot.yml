@@ -1,15 +1,11 @@
 name: Workable read-only pilot
 on:
-  pull_request:
-    branches: [main]
-    paths:
-      - 'server/scrapers/workable.js'
-      - '.github/workflows/workable-pilot.yml'
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
   pilot:
-    if: github.head_ref == 'feat/corporate-careers'
+    if: vars.WORKABLE_APPROVED_COMPANIES != ''
     runs-on: ubuntu-24.04
     timeout-minutes: 4
     steps:
@@ -21,3 +17,5 @@ jobs:
           node-version: '24'
       - run: node --test test/workable.test.js
       - run: node scripts/workable-smoke.js
+        env:
+          WORKABLE_APPROVED_COMPANIES: ${{ vars.WORKABLE_APPROVED_COMPANIES }}

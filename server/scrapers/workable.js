@@ -10,7 +10,7 @@ export function normalizeWorkablePosting(post,company,now=new Date()){
  if(url.protocol!=="https:"||url.hostname!=="apply.workable.com"||!["/j/"+expected,"/"+company.identifier+"/j/"+expected].includes(url.pathname.replace(/\/$/,"").toUpperCase().replace(/^\/J\//,"/j/").replace(/^\/([^/]+)\/J\//,(_,s)=>"/"+s.toLowerCase()+"/j/")))throw new Error("Invalid Workable official shortlink");
  const raw=typeof post.published_on==="string"?post.published_on:"";
  const parsed=Date.parse(raw);
- const date=Number.isFinite(parsed)&&parsed<=now.getTime()?new Date(parsed).toISOString():null;
+ const date=Number.isFinite(parsed)?new Date(parsed).toISOString():null;
  const sourceCategory=post.department||post.function||"";
  const role=categorizeCorporateRole(post.title,sourceCategory);
  return {source:"corporate",sourceKey:"corporate:"+company.id,companyId:company.id,company:company.name,externalId:expected,title:post.title.trim(),location:post.city+", Greece",url:url.href,date,dateRaw:raw,dateProvenance:date?"source_metadata":"unavailable",sourceCategory,...role,tags:[role.subcategoryLabel,post.employment_type].filter(Boolean),employmentType:post.employment_type||"",lastVerifiedAt:now.toISOString(),corporateStatus:"verified"};

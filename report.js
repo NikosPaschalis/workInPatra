@@ -1,4 +1,4 @@
-import { isCorporatePreview, loadCorporatePreview, corporatePreviewStats } from "./corporate-preview.js?v=review-v3";
+import { isCorporatePreview, loadCorporatePreview, corporatePreviewStats } from "./corporate-preview.js?v=review-v4";
 import { CATEGORY_DEFINITIONS } from './categories.js';
 
 const CATEGORY_LABELS = Object.fromEntries(CATEGORY_DEFINITIONS.map(({ id, label }) => [id, label]));

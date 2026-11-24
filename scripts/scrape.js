@@ -3,6 +3,7 @@ import { scrape as scrapeJobfind } from "../server/scrapers/jobfind.js";
 import { scrape as scrapeKariera } from "../server/scrapers/kariera.js";
 import { scrape as scrapeXe } from "../server/scrapers/xe.js";
 import { loadFirstSeen, stampFirstSeen } from "./first-seen.js";
+import { mergeCorporateListings, previousCorporateInventory } from "../server/corporate-inventory.js";
 import { corporateEnabled } from "../server/corporate-permissions.js";
 import { collectCorporate } from "../server/scrapers/corporate.js";
 import { categorizeJob } from "../server/categorize.js";
@@ -27,7 +28,7 @@ function withTimeout(promise, ms, name) {
   return Promise.race([promise, timeout]);
 }
 
-async function fetchAll(previousJobs) {
+async function fetchAll(previousJobs, previousCorporate) {
   console.log("🔄 Scraping all sources...");
   console.log("⏱  Per-scraper timeout: " + SCRAPER_TIMEOUT_MS / 1000 + "s\n");
 
@@ -74,35 +75,9 @@ async function fetchAll(previousJobs) {
     );
   }
 
-  const corporate = await collectCorporate(previousJobs, { enabled: corporateEnabled });
-  const categorized = [...jobs, ...corporate.jobs].map((job) => ({
-    ...job,
-    category: job.source === "corporate" ? job.category : categorizeJob(job),
-  }));
-
-  const namedSeen = new Set();
-  const anonSeen = new Set();
-  const corporateUrls = new Set();
-  const deduplicated = categorized.filter((job) => {
-    if (job.source === "corporate") {
-      const key = job.url;
-      const namedKey = job.title.toLowerCase().trim() + "|" + (job.company || "").toLowerCase().trim();
-      if (corporateUrls.has(key) || namedSeen.has(namedKey)) return false;
-      corporateUrls.add(key);
-      return true;
-    }
-    const title = job.title.toLowerCase().trim();
-    const company = job.company?.toLowerCase().trim() || "";
-    if (company) {
-      const key = title + "|" + company;
-      if (namedSeen.has(key)) return false;
-      namedSeen.add(key);
-    } else {
-      if (anonSeen.has(title)) return false;
-      anonSeen.add(title);
-    }
-    return true;
-  });
+  const corporate = await collectCorporate(previousCorporate, { enabled: corporateEnabled });
+  const boards = jobs.map(job=>({...job,category:categorizeJob(job)}));
+  const deduplicated = mergeCorporateListings(boards,corporate.jobs);
 
   const sourceStats = Object.fromEntries(scrapers.map(({ name }, index) => {
     const result = results[index];
@@ -130,8 +105,8 @@ async function fetchAll(previousJobs) {
   }
   const corporateCoverage = Object.fromEntries(Object.entries(corporate.sourceStats).map(([key, stats]) => [key, { ...stats, retained_count: deduplicated.filter(j => j.sourceKey === key).length }]));
   // Track all verified corporate observations, even if an existing board has the same listing.
-  const historyJobs = [...deduplicated.filter(j => j.source !== "corporate"), ...corporate.jobs];
-  return { jobs: deduplicated, historyJobs, sourceStats, corporateCoverage };
+  const historyJobs = [...mergeCorporateListings(boards,[]), ...corporate.jobs];
+  return { jobs: deduplicated, historyJobs, corporateInventory:corporate.jobs, sourceStats, corporateCoverage };
 }
 
 function loadPreviousJobs(jobsPath) {
@@ -139,13 +114,14 @@ function loadPreviousJobs(jobsPath) {
     const data = JSON.parse(readFileSync(jobsPath, "utf8"));
     return {
       jobs: Array.isArray(data.jobs) ? data.jobs : [],
+      corporateInventory: previousCorporateInventory(data),
       lastFetched: data.lastFetched || null,
     };
   } catch (error) {
     if (error?.code !== "ENOENT") {
       console.warn("⚠️  Could not read existing jobs.json: " + error.message);
     }
-    return { jobs: [], lastFetched: null };
+    return { jobs: [], corporateInventory:[], lastFetched: null };
   }
 }
 
@@ -165,10 +141,10 @@ function loadPreviousJobs(jobsPath) {
       console.log("🧱 Initialized history baseline with " + baseline.baselineCount + " existing jobs");
     }
 
-    const result = await fetchAll(previous.jobs);
+    const result = await fetchAll(previous.jobs, previous.corporateInventory);
     const sourceStats = result.sourceStats;
     const now = new Date();
-    const firstSeen = await loadFirstSeen({ dataDir, previousJobs: previous.jobs, previousFetchedAt: previous.lastFetched, now });
+    const firstSeen = await loadFirstSeen({ dataDir, previousJobs: [...previous.jobs,...previous.corporateInventory], previousFetchedAt: previous.lastFetched, now });
     const options = { now, isFresh: job => sourceStats[job.sourceKey || job.source]?.status === "success" };
     const historyJobs = stampFirstSeen(result.historyJobs, firstSeen, options);
     const jobs = stampFirstSeen(result.jobs, firstSeen, options);
@@ -178,7 +154,8 @@ function loadPreviousJobs(jobsPath) {
     }
 
     const completedAt = new Date().toISOString();
-    const output = { jobs, lastFetched: completedAt, corporateCoverage: result.corporateCoverage };
+    const corporateInventory=stampFirstSeen(result.corporateInventory,firstSeen,options);
+    const output = { jobs, lastFetched: completedAt, corporateCoverage: result.corporateCoverage, corporateInventory };
 
     mkdirSync(dataDir, { recursive: true });
     writeFileSync(jobsPath, JSON.stringify(output), "utf8");

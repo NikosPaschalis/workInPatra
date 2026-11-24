@@ -27,7 +27,7 @@ export function normalizePosting(post, company, now = new Date()) {
   }
   if (!isLocalPosting(post.location)) return null;
   const dateRaw = typeof post.releasedDate === "string" ? post.releasedDate : "";
-  const date = Number.isFinite(Date.parse(dateRaw)) && Date.parse(dateRaw) <= now.getTime()
+  const date = Number.isFinite(Date.parse(dateRaw))
     ? new Date(dateRaw).toISOString() : null;
   const sourceCategory = post.function?.label || post.department?.label || "";
   const role = categorizeCorporateRole(post.name, sourceCategory);
