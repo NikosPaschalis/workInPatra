@@ -1,38 +1,48 @@
 # WorkInPάτρα
 
-> A job aggregator for the city of Patra, Greece — pulling listings from multiple Greek job boards into one clean, fast interface.
+> An independent, free, non-commercial job discovery and local labour-market information project for Patras, Greece. Its priorities are useful information for job seekers, reliable historical data, and transparent methodology.
 
 🔗 **Live:** [www.workinpatras.gr/](https://www.workinpatras.gr/)
-📣 **Telegram channel:** [t.me/workinpatras](https://t.me/workinpatras) — auto-posts every new listing
+📣 **Telegram channel:** [t.me/workinpatras](https://t.me/workinpatras) — posts eligible new-listing summaries
 📘 **Facebook page:** [WorkInPάτρα on Facebook](https://www.facebook.com/profile.php?id=61591577415179) — auto-posts new-listing summaries
 
 ---
 
 ## What it does
 
-WorkInPάτρα collects job listings from three major Greek job boards and presents them in a single responsive UI filtered to the Patra area. Listings arrive through two controlled paths: scheduled GitHub Actions scrapes and an optional Windows desktop companion for local collection, human review, and queued publication. No ads, no registration, no visitor tracking.
+WorkInPάτρα brings public job listings from Greek job boards, company career pages and directly provided employer vacancies into one responsive interface. It also publishes [monthly labour-market statistics](https://www.workinpatras.gr/report.html) for Patras and the surrounding area. There are no ads, visitor accounts, first-party visitor analytics or click-tracking scripts.
 
-**Sources:**
-- [JobFind.gr](https://www.jobfind.gr)
-- [Kariera.gr](https://www.kariera.gr)
-- [XE.gr](https://www.xe.gr/ergasia)
+### Sources
+
+| Source | Collection |
+|---|---|
+| [JobFind](https://www.jobfind.gr), [XE](https://www.xe.gr/ergasia) | Scheduled twice daily |
+| [Kariera](https://www.kariera.gr) | Scheduled scraper currently paused; reviewed queue and previous inventory retained |
+| Netcompany, Renesas | SmartRecruiters public Posting API, evening scheduled slot only |
+| TSMG | Lever public postings |
+| Motodynamics, Cosmos Sport (including its brands), Πλαίσιο | Workable public postings |
+| Renesas / Irida Labs, ALTHOM, Noesis Technologies | Company career pages |
+| Direct employer listings | Separately maintained `data/direct-jobs.json`; not scraped from other websites |
+
+Nine company adapters are enabled by default; their actual availability varies. Advisable is disabled following an HTTP 403. See [corporate source registry](docs/corporate-source-registry.json) and [collection notes](docs/corporate-careers.md) for validation, limitations and provider-policy considerations. This does not imply an official partnership or permission from each provider.
+
 
 ---
 
 ## Features
 
-- **Aggregated listings** from 3 sources in one place
-- **Two ingestion paths** — scheduled cloud scraping plus reviewed local desktop submissions
+- **Aggregated listings** from job boards, company career pages and direct employers
+- **Independent source adapters** — scheduled collection, reviewed queues and separately maintained direct employer listings
 - **Source-aware categorization** — 10 common categories mapped from each site's original category, with title/tag fallback
-- **Date filtering** — last 7 or 30 days (30-day default)
+- **Date filtering** — last 7 or 30 Athens calendar days (30-day default and maximum); unknown publication dates use a separately labelled first recorded observation where available
 - **"Νέο" badge** — highlights listings posted today
 - **Source filtering** — toggle individual sites on/off
-- **Search-first filtering** — prominent live search, explicit 7/30-day ranges, quick categories, and expandable source/category filters
+- **Search-first filtering** — prominent live search, explicit 7/30-day ranges, three stable quick categories, four frequent searches, and expandable source/category filters
 - **Multi-select categories + frequent-search chips** with active state and one-click filter reset
 - **Greek-friendly live search** — filter by title, company, or tags without requiring accents
-- **Deduplication** — same job appearing on multiple sites is shown once
+- **Deduplication** — cross-source title/company and URL matching; distinct corporate posting IDs and source inventory are preserved
 - **Responsive design** — works on desktop and mobile (iOS/Android)
-- **Auto-refresh** — scraper runs twice daily via GitHub Actions
+- **Auto-refresh** — scheduled runs at 06:00 and 18:00 UTC; Netcompany/Renesas only in the evening scheduled run
 - **Resilient source updates** — if one scraper fails, its last published jobs are preserved
 - **Electron review companion** — run sources independently, inspect results, approve/reject listings, and retain drafts locally
 - **Interactive Kariera capture** — open the Patra results in a restricted Electron window, complete any Cloudflare verification manually, save the rendered HTML, and process it locally with the existing Kariera parser
@@ -41,37 +51,33 @@ WorkInPάτρα collects job listings from three major Greek job boards and pres
 - **Secure GitHub authentication** — fine-grained token support with optional Windows DPAPI-backed storage
 - **Social notifications** — new listings auto-post to Telegram and Facebook
 - **SEO optimized** — meta tags, Open Graph, JSON-LD structured data
-- **Zero tracking** — no cookies, no analytics, no user data collection
+- **Labour-market history** — dated observations, collection health, monthly snapshots and company-level coverage; not visitor analytics
+- **Privacy-conscious frontend** — no first-party tracking cookies, visitor analytics, or applicant accounts; external services may process technical request data
 
 ---
 
 ## Architecture
 
 ```text
-Scheduled path                         Reviewed desktop path
-┌─────────────────────────┐            ┌──────────────────────────────┐
-│ GitHub Actions (2× day) │            │ Electron desktop companion  │
-│ scrape JobFind/Kariera/ │            │ • local source workers       │
-│ XE independently        │            │ • visible Kariera window     │
-└────────────┬────────────┘            │ • HTML snapshot + review     │
-             │                         └──────────────┬───────────────┘
-             │                                        │ approved only
-             │                         ┌──────────────▼───────────────┐
-             │                         │ data/manual-pending.json     │
-             │                         └──────────────┬───────────────┘
-             └──────────────────────────────┬─────────┘
-                                            ▼
-                               ┌──────────────────────────┐
-                               │ data/jobs.json on main   │
-                               │ dedupe + history ledgers │
-                               └────────────┬─────────────┘
-                                            │
-                     ┌──────────────────────┼──────────────────────┐
-                     ▼                      ▼                      ▼
-               Netlify site          Telegram channel       Facebook page
+Scheduled boards + company adapters    Reviewed queues / desktop
+             |                                  |
+             +-----------------+----------------+
+                               v
+               data/jobs.json (deduplicated)
+               corporateInventory (source records)
+               observations / scrape-run history
+                               |
+                    +----------+-----------+
+                    v                      v
+               Netlify website      Telegram / Facebook
+                    ^
+                    |
+              data/direct-jobs.json
+
+        Monthly snapshots -> report.html
 ```
 
-The production site has no always-on application server and no database. GitHub remains the publishing boundary for both ingestion paths.
+The production site has no always-on application server or visitor database. GitHub is the publishing boundary. The Electron companion does not run the corporate adapters; those run in the scheduled server-side pipeline.
 
 ---
 
@@ -79,7 +85,7 @@ The production site has no always-on application server and no database. GitHub 
 
 | Layer | Technology |
 |---|---|
-| Scraping | [Playwright](https://playwright.dev/) (Node.js) — handles JS-rendered sites |
+| Scraping | Node.js fetch / public posting APIs, [Playwright](https://playwright.dev/) for HTML and JS-rendered sites |
 | Desktop companion | [Electron](https://www.electronjs.org/) + Electron Forge (Windows x64) |
 | Desktop publishing | GitHub Contents API + fine-grained personal access token |
 | Local credential protection | Electron `safeStorage` / Windows DPAPI |
@@ -97,6 +103,7 @@ The production site has no always-on application server and no database. GitHub 
 ```
 workinpatra/
 ├── index.html              # Main page
+├── report.html             # Local labour-market statistics
 ├── privacy.html            # Privacy policy
 ├── terms.html              # Terms of use
 ├── style.css               # All styles (responsive)
@@ -114,7 +121,8 @@ workinpatra/
 │   ├── snapshot.yml        # Monthly dataset snapshots
 │   └── test-telegram.yml   # Manual Telegram smoke test
 ├── data/
-│   ├── jobs.json           # Scraped data (auto-updated)
+│   ├── jobs.json           # Public deduplicated listings + corporate inventory/coverage
+│   ├── direct-jobs.json    # Separately maintained employer listings
 │   ├── manual-pending.json # Reviewed desktop submissions awaiting workflow merge
 │   ├── kariera-pending.json # Backward-compatible curated Kariera queue
 │   ├── observations.jsonl  # Listing observation history
@@ -123,6 +131,8 @@ workinpatra/
 │   └── snapshots/          # Monthly historical snapshots
 ├── scripts/
 │   ├── scrape.js           # Standalone scraper for GH Actions
+│   ├── first-seen.js       # Earliest recorded listing observation
+│   ├── job-history.js      # Listing and run history
 │   ├── merge-source-results.js # Per-source failure fallback
 │   ├── apply-manual-pending.js # Validate/merge/clear desktop queue
 │   ├── manual-queue.js     # Manual queue validation and deduplication
@@ -134,18 +144,26 @@ workinpatra/
     ├── index.js            # Express server (local dev only)
     ├── cache.js            # In-memory cache
     ├── categorize.js       # Keyword-based job categorizer
+    ├── corporate-categories.js # Corporate subcategories mapped to common categories
+    ├── corporate-inventory.js  # Complete inventory and public deduplication
+    ├── corporate-permissions.js # Source activation and cadence
+    ├── corporate-statistics.js # Inventory and public statistics
     └── scrapers/
         ├── _shared.js      # Playwright helper + Greek date parser
         ├── jobfind.js
         ├── kariera.js
-        └── xe.js
+        ├── xe.js
+        ├── corporate.js    # Independent employer orchestration / SmartRecruiters
+        ├── lever.js
+        ├── workable.js
+        └── company-html.js
 ```
 
 ---
 
 ## Social Notifications
 
-Whenever the scrape finds new URLs that were not in the previous `data/jobs.json`, the workflow runs `scripts/notify-telegram.js`, which posts Greek-language summaries to the [Telegram channel](https://t.me/workinpatras) and the [Facebook page](https://www.facebook.com/profile.php?id=61591577415179). The data commit happens first, so a social API failure cannot prevent fresh jobs from being published.
+When the scrape identifies eligible new listings using the previous dataset and notification ledger, the workflow runs `scripts/notify-telegram.js`, which posts Greek-language summaries to the [Telegram channel](https://t.me/workinpatras) and the [Facebook page](https://www.facebook.com/profile.php?id=61591577415179). The data commit happens first, so a social API failure cannot prevent fresh jobs from being published.
 
 **Message format** (HTML, with link previews disabled):
 
@@ -203,6 +221,7 @@ Telegram and Facebook are independent: if one channel is not configured or tempo
       "company": "TechHub Patra",
       "date": "2026-04-19T00:00:00.000Z",
       "dateRaw": "πριν 2 μέρες",
+      "firstSeenAt": "2026-04-21T06:00:00.000Z",
       "tags": ["React", "Full-time"],
       "url": "https://www.kariera.gr/...",
       "source": "kariera",
@@ -214,7 +233,15 @@ Telegram and Facebook are independent: if one channel is not configured or tempo
 }
 ```
 
-`date` is an ISO timestamp when the source date can be parsed safely; otherwise it is `null`. Unknown dates are not labelled as “Νέο” and sort after dated listings.
+`date` is an ISO timestamp when the source date can be parsed safely; otherwise it is `null`. `firstSeenAt` is the earliest recorded observation (or conservative baseline for existing records), not proof of publication. If the publication date is absent, the UI uses that observation and labels it “Εντοπίστηκε”. Neither an old dated record nor a known first observation becomes new on a repeated scrape. Records with no usable date are excluded from the recent view. Only confirmed publication today receives “Νέο”.
+
+Corporate records additionally include `companyId`, `sourceKey`, `externalId`, `subcategory`, `lastVerifiedAt` and `corporateStatus`. The complete corporate inventory is stored separately within `jobs.json` so cross-source duplicates can still contribute to collection history. The public job grid uses the deduplicated `jobs` array.
+
+---
+
+## Labour-market statistics
+
+The [report page](https://www.workinpatras.gr/report.html) uses monthly snapshots of the collected active inventory. It is not a count of every vacancy published in the month, a census of the market, or a measure of employment. Older records can remain in the inventory and history even when excluded from the 30-day view. Source changes, fallback records, and deduplication affect comparability. Corporate company counts use the full corporate inventory before cross-source deduplication and must not be added to the public totals. Separate direct listings are not included in the aggregate snapshot. Historical observations record listing data, not visitor behaviour.
 
 ---
 
@@ -237,13 +264,13 @@ is missing, unknown, or too generic.
 | `marketing` | Marketing & Δημιουργικά |
 | `other` | Λοιπά & Υπηρεσίες |
 
-Unknown source categories automatically fall back to normalized title/tag matching.
+Unknown source categories automatically fall back to normalized title/tag matching. Corporate roles also use more specific subcategories mapped to these same ten public categories.
 
 ---
 
 ## Running Locally
 
-**Prerequisites:** Node.js 18+ and Windows x64 for the packaged desktop companion.
+**Prerequisites:** Node.js 24 (matches CI) and Windows x64 for the packaged desktop companion.
 
 ### Website and scheduled scraper
 
@@ -310,22 +337,24 @@ security model, queue behavior, tests, packaging details, and troubleshooting.
 The repo is wired up to deploy automatically:
 
 - **Push to `main`** → Netlify redeploys the static site
-- **Every 12 hours** → GitHub Actions runs the source scrapers, preserves the previous listings of any temporarily failed source, validates and applies the curated/manual queues, commits the resulting dataset and queue state, triggers a Netlify redeploy, and then posts consolidated summaries to Telegram and Facebook
+- **06:00 and 18:00 UTC** → GitHub Actions runs the source scrapers, preserves the previous listings of any temporarily failed source, validates and applies the curated/manual queues, commits the resulting dataset and queue state, triggers a Netlify redeploy, and then posts consolidated summaries to Telegram and Facebook
 
-To manually trigger a scrape: GitHub → Actions tab → "Scrape Jobs" → "Run workflow".
+To manually trigger a scrape: GitHub → Actions tab → "Scrape Jobs" → "Run workflow". This may send notifications. Netcompany/Renesas run only in the evening scheduled slot, or on manual runs. Kariera remains paused in the workflow until deliberately re-enabled. Corporate sources are enabled by default; `CORPORATE_CAREERS_ENABLED=false` stops them, `SMARTRECRUITERS_ENABLED=false` disables Netcompany/Renesas, and provider lists can narrow coverage. Do not treat these settings as provider authorization.
 
-**Cost:** $0 — GitHub Actions, Netlify, Telegram Bot API, and Facebook Graph API are used within their free allowances.
+The project currently uses free service allowances; provider limits and costs may change.
 
 ---
 
 ## Privacy & Legal
 
-- **No cookies, no analytics, no tracking.** The site collects nothing about visitors.
-- **No copied job descriptions** — the public dataset stores normalized listing metadata and links visitors to the original posting.
-- **Local desktop snapshots stay local** — rendered Kariera HTML is stored in a gitignored project folder and is never uploaded by the app.
-- See [Privacy Policy](./privacy.html) and [Terms of Use](./terms.html).
+- No first-party visitor analytics, click tracking, applicant accounts or tracking cookies. Netlify and Google Fonts may process technical request information.
+- Aggregated listings store basic metadata and links; direct employer submissions may contain supplied descriptions and professional contact details.
+- The public repository contains listing observations, inventory, run history and monthly snapshots. These are not website visitor logs; historical records do not automatically expire after 30 days.
+- Local desktop HTML snapshots stay in the gitignored local folder; the app uploads reviewed listing metadata, not raw HTML.
+- The project is independent and does not represent the listed employers or recruitment platforms. Public availability does not automatically establish unrestricted reuse rights; source terms and access restrictions matter.
+- Report incorrect listings or request removal via [GitHub Issues](https://github.com/NikosPaschalis/workInPatra/issues). Issues are public: do not post CVs, identification documents, private contact details or other personal information. An issue may request a private follow-up without disclosing sensitive information.
 
-Scraping publicly available data can involve legal and platform-policy considerations. The project runs on a limited twice-daily schedule and always attributes and links back to the original source.
+See [Privacy Policy](https://www.workinpatras.gr/privacy.html) and [Terms of Use](https://www.workinpatras.gr/terms.html).
 
 ---
 
@@ -336,9 +365,9 @@ Scraping publicly available data can involve legal and platform-policy considera
 - **JobFind.gr** hides company names for anonymous listings by design
 - **Indeed.gr** was previously a source but has been removed — Cloudflare anti-bot challenges the scraper from datacenter IPs (GitHub Actions), returning 0 jobs in production
 - Scraper selectors may break if source sites update their HTML — monitor GitHub Actions for failures
-- When one source fails or unexpectedly returns no jobs, its previous listings are retained until a successful run replaces them; workflow logs identify the stale source
+- When a source fails, prior records may be retained; a valid empty corporate result removes that employer's previous inventory. Check collection status and the original listing before applying.
 - Unrecognised or invalid source dates are stored as `null` instead of being guessed
-- Category detection is ~80% accurate (keyword heuristic, not ML)
+- Category detection is heuristic; no measured accuracy guarantee
 - The packaged desktop companion is currently built and verified only for Windows x64; release artifacts are not code-signed.
 
 ---
@@ -351,4 +380,4 @@ Found a bug, miscategorization, or want a feature? Open a [GitHub Issue](https:/
 
 ## License
 
-MIT — do whatever you want, just don't pretend you built it.
+Project code: [MIT](LICENSE). This license does not grant rights to third-party job listings, company names, logos or other third-party content. Their respective rights remain unaffected.
