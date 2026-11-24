@@ -1,4 +1,3 @@
-import { isCorporatePreview, loadCorporatePreview, corporatePreviewStats } from "./corporate-preview.js?v=review-v5";
 import { CATEGORY_DEFINITIONS } from './categories.js';
 
 const CATEGORY_LABELS = Object.fromEntries(CATEGORY_DEFINITIONS.map(({ id, label }) => [id, label]));
@@ -187,16 +186,6 @@ async function loadReport() {
     document.getElementById('kpi-source-count').textContent = String(sourceEntries.length);
     document.getElementById('kpi-source-note').textContent = sourceEntries.map(([id]) => SOURCE_LABELS[id] || id).join(' · ');
     renderCorporate(latest);
-    if (isCorporatePreview(location.hostname)) {
-      try {
-        const reviewed = await loadCorporatePreview(location.hostname);
-        document.getElementById("corporate-report-rows").replaceChildren();
-        document.getElementById("corporate-subcategories").replaceChildren();
-        const corporate = corporatePreviewStats(reviewed);
-        renderCorporate({ ...latest, corporate });
-        document.getElementById("corporate-report-note").textContent = "Προεπισκόπηση — " + reviewed.length + " πραγματικές καταχωρίσεις από εφάπαξ έλεγχο, " + corporate.ageWindow.visible30 + " στην προβολή 30 ημερών. Δεν περιλαμβάνονται στα πραγματικά μηνιαία σύνολα ή στο ιστορικό.";
-      } catch (error) { console.error("Review data unavailable", error); }
-    }
     renderTrend(snapshots); renderBreakdown(latest, document.getElementById('breakdown-type').value); renderCategoryTrends(snapshots); renderHistory(snapshots);
     document.getElementById('breakdown-type').addEventListener('change', event => renderBreakdown(latest, event.target.value));
     document.getElementById('data-freshness').textContent = 'Τελευταία λήψη στο πιο πρόσφατο snapshot: ' + formatDate(latest.lastFetched) + '. Τα στοιχεία ανανεώνονται όταν δημιουργείται νέο μηνιαίο snapshot.';
@@ -213,7 +202,7 @@ function renderCorporate(snapshot) {
   const panel = document.getElementById("corporate-report");
   panel.hidden = false;
   document.getElementById("corporate-report-note").textContent = "Κάλυψη στο snapshot " + formatMonth(snapshot.month) + ". Μη επανελεγμένες καταχωρίσεις: " + (data.unverified || 0) + ". Παλαιότερα snapshots δεν είχαν την ίδια κάλυψη.";
-  if (data.ageWindow) document.getElementById("corporate-report-note").textContent += " Προβολή 30 ημερών: " + data.ageWindow.visible30 + " από " + data.ageWindow.total + " καταχωρίσεις (δημοσιεύσεις: " + data.ageWindow.published30 + ", πρώτοι εντοπισμοί: " + data.ageWindow.firstSeen30 + ").";
+  if (data.ageWindow) document.getElementById("corporate-report-note").textContent += " Εταιρικό αρχείο: " + data.ageWindow.total + " καταχωρίσεις πριν την αφαίρεση διπλοεγγραφών μεταξύ πηγών. Εντός 30 ημερών: " + data.ageWindow.visible30 + ". Στη συγκεντρωτική προβολή: " + (data.publicAgeWindow?.visible30 ?? data.ageWindow.visible30) + ". Οι αριθμοί ανά εταιρεία δεν προστίθενται στα συνολικά μεγέθη του snapshot.";
   const rows = document.getElementById("corporate-report-rows");
   const labels = {success:"Επιτυχία",fallback:"Προηγούμενα δεδομένα",failed:"Αποτυχία",skipped:"Παράλειψη"};
   for (const s of Object.values(data.coverage)) {

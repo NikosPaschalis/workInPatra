@@ -189,7 +189,7 @@ async function main() {
   const ledger = existsSync(LEDGER_PATH)
     ? JSON.parse(readFileSync(LEDGER_PATH, 'utf8'))
     : { announced: [] };
-  const added = selectUnannouncedJobs(oldJobs, newJobs, ledger.announced || []).filter(job => !job.previewOnly && isJobWithinAgeWindow(job, 30));
+  const added = selectUnannouncedJobs(oldJobs, newJobs, ledger.announced || []).filter(job => !job.previewOnly && (job.source !== "corporate" || job.corporateStatus === "verified") && isJobWithinAgeWindow(job, 30));
 
   console.log(`Old: ${oldJobs.length} · New: ${newJobs.length} · Added: ${added.length}`);
 

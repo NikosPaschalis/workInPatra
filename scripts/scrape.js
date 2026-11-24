@@ -22,13 +22,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SCRAPER_TIMEOUT_MS = 90_000;
 
 function withTimeout(promise, ms, name) {
-  const timeout = new Promise((_, reject) =>
-    setTimeout(() => reject(new Error(name + " timed out after " + ms / 1000 + "s")), ms)
-  );
-  return Promise.race([promise, timeout]);
+  let timer;
+  const timeout = new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(name + " timed out after " + ms / 1000 + "s")), ms); });
+  return Promise.race([promise, timeout]).finally(()=>clearTimeout(timer));
 }
 
-async function fetchAll(previousJobs, previousCorporate) {
+export async function fetchAll(previousJobs, previousCorporate, { boardScrapers, corporateCollector = collectCorporate, enabled = corporateEnabled } = {}) {
   console.log("🔄 Scraping all sources...");
   console.log("⏱  Per-scraper timeout: " + SCRAPER_TIMEOUT_MS / 1000 + "s\n");
 
@@ -36,7 +35,7 @@ async function fetchAll(previousJobs, previousCorporate) {
   const runKariera = shouldRunKariera(eventName, process.env.KARIERA_CRON || "", process.env.KARIERA_PAUSE_UNTIL || "");
   const karieraDelay = runKariera ? karieraJitterMs(eventName) : 0;
 
-  const scrapers = [
+  const scrapers = boardScrapers || [
     { name: "jobfind", fn: scrapeJobfind },
     { name: "kariera", fn: async () => {
       if (!runKariera) return { skipped: true };
@@ -75,7 +74,7 @@ async function fetchAll(previousJobs, previousCorporate) {
     );
   }
 
-  const corporate = await collectCorporate(previousCorporate, { enabled: corporateEnabled });
+  const corporate = await corporateCollector(previousCorporate, { enabled });
   const boards = jobs.map(job=>({...job,category:categorizeJob(job)}));
   const deduplicated = mergeCorporateListings(boards,corporate.jobs);
 
@@ -103,7 +102,7 @@ async function fetchAll(previousJobs, previousCorporate) {
     if (stats.status === "skipped" && stats.retained_count === 0) continue;
     sourceStats[key] = { ...stats, retained_count: deduplicated.filter(j => j.sourceKey === key).length };
   }
-  const corporateCoverage = Object.fromEntries(Object.entries(corporate.sourceStats).map(([key, stats]) => [key, { ...stats, retained_count: deduplicated.filter(j => j.sourceKey === key).length }]));
+  const corporateCoverage = Object.fromEntries(Object.entries(corporate.sourceStats).map(([key, stats]) => [key, { ...stats, public_count: deduplicated.filter(j => j.sourceKey === key).length }]));
   // Track all verified corporate observations, even if an existing board has the same listing.
   const historyJobs = [...mergeCorporateListings(boards,[]), ...corporate.jobs];
   return { jobs: deduplicated, historyJobs, corporateInventory:corporate.jobs, sourceStats, corporateCoverage };
@@ -125,8 +124,7 @@ function loadPreviousJobs(jobsPath) {
   }
 }
 
-(async () => {
-  const dataDir = path.join(__dirname, "..", "data");
+export async function runScrape({ dataDir = path.join(__dirname, "..", "data"), ...options } = {}) {
   const jobsPath = path.join(dataDir, "jobs.json");
   const startedAt = new Date().toISOString();
 
@@ -141,20 +139,20 @@ function loadPreviousJobs(jobsPath) {
       console.log("🧱 Initialized history baseline with " + baseline.baselineCount + " existing jobs");
     }
 
-    const result = await fetchAll(previous.jobs, previous.corporateInventory);
+    const result = await fetchAll(previous.jobs, previous.corporateInventory, options);
     const sourceStats = result.sourceStats;
     const now = new Date();
     const firstSeen = await loadFirstSeen({ dataDir, previousJobs: [...previous.jobs,...previous.corporateInventory], previousFetchedAt: previous.lastFetched, now });
-    const options = { now, isFresh: job => sourceStats[job.sourceKey || job.source]?.status === "success" };
-    const historyJobs = stampFirstSeen(result.historyJobs, firstSeen, options);
-    const jobs = stampFirstSeen(result.jobs, firstSeen, options);
+    const stampOptions = { now, isFresh: job => sourceStats[job.sourceKey || job.source]?.status === "success" };
+    const historyJobs = stampFirstSeen(result.historyJobs, firstSeen, stampOptions);
+    const jobs = stampFirstSeen(result.jobs, firstSeen, stampOptions);
 
     if (jobs.length === 0) {
       throw new Error("No jobs returned from any scraper — aborting write to avoid overwriting good data");
     }
 
     const completedAt = new Date().toISOString();
-    const corporateInventory=stampFirstSeen(result.corporateInventory,firstSeen,options);
+    const corporateInventory=stampFirstSeen(result.corporateInventory,firstSeen,stampOptions);
     const output = { jobs, lastFetched: completedAt, corporateCoverage: result.corporateCoverage, corporateInventory };
 
     mkdirSync(dataDir, { recursive: true });
@@ -177,6 +175,10 @@ function loadPreviousJobs(jobsPath) {
       console.error("⚠️ Could not record failed scrape run:", historyError);
     }
     console.error("❌ Scrape failed:", error);
-    process.exitCode = 1;
+    throw error;
   }
-})();
+}
+
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  runScrape().catch(()=>{ process.exitCode=1; });
+}

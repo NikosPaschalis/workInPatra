@@ -61,3 +61,6 @@ Workable live pilot https://github.com/NikosPaschalis/workInPatra/actions/runs/4
 
 ## Employer-owned HTML pilot
 Four adapters share an inert DOM parser, explicit local-location rules, stable role IDs, robots.txt checking, transparent user agent, bounded requests and no copied descriptions. No scripts or applicant forms execute. Production requires HTML_APPROVED_COMPANIES per employer; a read-only diagnostic checks actual responses once. On blocked or changed pages preserve that employer's prior inventory; do not bypass or mark false zero.
+
+## Production release
+Temporary preview datasets and browser code removed; corporate chips appear only when an eligible corporate record exists. Migrated the current existing listing timestamps from available observation history (fallback last recorded inventory time), preserving publication dates and rows. Snapshot corporate breakdown uses complete source inventory before public deduplication, explicitly separated from public totals. Release dry run copies data into temporary storage, keeps Kariera paused and all corporate production requests disabled, and has no write permission or notification steps. Provider flags remain off until authorized; merge deploys infrastructure, not the 28 one-off review records.

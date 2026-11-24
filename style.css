@@ -1023,4 +1023,5 @@ body {
 .badge-corporate { background: #f1f5f9; color: #475569; }
 .chip-corporate input:checked + span { background: #475569; border-color: #475569; color: #fff; }
 
-.corporate-preview-notice:not([hidden]){display:block;padding:.85rem 1rem;margin:1rem 0;border:1px solid #d97706;background:#fffbeb;color:#78350f;border-radius:8px;font-size:.9rem}.card-link[aria-disabled="true"]{opacity:.7;cursor:default;pointer-events:none}
+
+.chip-corporate[hidden] { display: none; }

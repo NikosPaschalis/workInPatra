@@ -6,6 +6,7 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'fs';
 import { fileURLToPath } from 'url';
 import path from 'path';
+import { corporateStatistics } from '../server/corporate-statistics.js';
 import { summarizeJobAge } from '../client-utils.js';
 import { CATEGORY_DEFINITIONS } from '../categories.js';
 
@@ -82,7 +83,8 @@ function validateSnapshot(snapshot) {
   }
 
   mkdirSync(SNAPSHOT_DIR, { recursive: true });
-  const { jobs, lastFetched, corporateCoverage } = JSON.parse(readFileSync(JOBS_FILE, 'utf8'));
+  const data = JSON.parse(readFileSync(JOBS_FILE, 'utf8'));
+  const { jobs, lastFetched } = data;
   if (!Array.isArray(jobs)) {
     console.error('❌ data/jobs.json does not contain a jobs array');
     process.exit(1);
@@ -109,8 +111,7 @@ function validateSnapshot(snapshot) {
     }
 
     const capturedAt = new Date();
-    const corporateJobs = jobs.filter(job => job.source === 'corporate');
-    const corporate = corporateCoverage ? { coverage: corporateCoverage, byCompany: countBy(corporateJobs, 'company'), bySubcategory: countBy(corporateJobs, 'subcategoryLabel'), unverified: corporateJobs.filter(j => j.corporateStatus !== 'verified').length, ageWindow: summarizeJobAge(corporateJobs, capturedAt) } : null;
+    const corporate = corporateStatistics(data, capturedAt);
     const snapshot = {
       month: label,
       capturedAt: capturedAt.toISOString(),

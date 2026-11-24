@@ -1,0 +1,23 @@
+name: Corporate release dry run
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  dry-run:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npx playwright install --with-deps --only-shell chromium
+      - run: node --test test/corporate-release.test.js
+      - run: node scripts/corporate-production-dry-run.js
+      - run: git diff --exit-code

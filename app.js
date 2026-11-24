@@ -1,4 +1,3 @@
-import { isCorporatePreview, loadCorporatePreview } from "./corporate-preview.js?v=review-v5";
 import {
   compareJobsByDateNewestFirst,
   athensCalendarAge,
@@ -354,7 +353,6 @@ function render() {
     const badge = card.querySelector(".card-source-badge");
     badge.textContent = SOURCE_LABELS[job.source] || job.source;
     badge.classList.add(`badge-${job.source}`);
-    if (job.previewOnly && !job.previewReal) badge.textContent = "Εταιρική σελίδα · DEMO";
     if (job.source === "corporate" && job.corporateStatus !== "verified") badge.textContent += " · Μη επανελεγμένη";
 
     const basis = jobAgeBasis(job, now);
@@ -399,12 +397,7 @@ function render() {
       });
     } else {
       link.href = job.url || "#";
-      if (job.previewOnly && !job.previewReal) {
-        link.removeAttribute("href");
-        link.removeAttribute("target");
-        link.setAttribute("aria-disabled", "true");
-        link.textContent = "Δοκιμαστική κάρτα — χωρίς αίτηση";
-      } else if (!job.url) link.style.display = "none";
+      if (!job.url) link.style.display = "none";
     }
 
     grid.appendChild(node);
@@ -419,9 +412,8 @@ async function loadJobs(forceRefresh = false) {
 
   try {
     // Static JSON file — cache-bust on manual refresh
-    const preview = isCorporatePreview(location.hostname);
-    const url = `/data/jobs.json${forceRefresh || preview ? "?t=" + Date.now() : ""}`;
-    const res = await fetch(url, preview ? { cache: "no-store" } : {});
+    const url = `/data/jobs.json${forceRefresh ? "?t=" + Date.now() : ""}`;
+    const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     let directJobs = [];
@@ -435,14 +427,7 @@ async function loadJobs(forceRefresh = false) {
       console.warn("Could not load direct employer listings:", directError);
     }
 
-    const notice = document.getElementById("corporate-preview-notice");
-    let reviewedJobs = [];
-    if (preview) {
-      notice.hidden = false;
-      try { reviewedJobs = await loadCorporatePreview(location.hostname); }
-      catch (error) { notice.textContent = "PR #18 — αποτυχία φόρτωσης πραγματικών εταιρικών δεδομένων. Δεν εμφανίζονται δοκιμαστικές αγγελίες."; console.error(error); }
-    }
-    state.jobs = [...(data.jobs || []).filter(j => !j.previewOnly && !(j.source === "corporate" && /^demo/i.test(j.company || ""))), ...directJobs, ...reviewedJobs].map(job => ({
+    state.jobs = [...(data.jobs || []), ...directJobs].filter(j => !j.previewOnly).map(job => ({
       ...job,
       // Compatibility with jobs published before retail was merged into sales.
       category: job.category === "retail" ? "sales" : job.category,
@@ -450,9 +435,10 @@ async function loadJobs(forceRefresh = false) {
         [job.title, job.company, ...(job.tags || [])].filter(Boolean).join(" ")
       ),
     }));
-    notice.hidden = !preview;
     if (statTotal) statTotal.textContent = state.jobs.filter(j => isJobWithinAgeWindow(j, 30)).length;
-    document.getElementById("stat-source-types").textContent = state.jobs.some(j => j.source === "corporate") ? "5" : "4";
+    const corporateAvailable = state.jobs.some(j => j.source === "corporate" && isJobWithinAgeWindow(j, 30));
+    document.getElementById("stat-source-types").textContent = corporateAvailable ? "5" : "4";
+    document.getElementById("src-corporate").closest("label").hidden = !corporateAvailable;
     if (data.lastFetched) {
       const d = new Date(data.lastFetched);
       const label = d.toLocaleString("el-GR", {
