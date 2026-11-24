@@ -1095,3 +1095,11 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .filters-bar button, .category-bar-wrap button { transition: none; }
 }
+
+/* Tighten vertical rhythm on desktop without shrinking the main touch targets. */
+@media (min-width: 821px) {
+  .filters-bar { padding-block: 10px; gap: 8px 12px; margin-bottom: 8px; }
+  .filter-search { gap: 4px; }
+  .category-bar-wrap, .stats-bar { margin-bottom: 8px; }
+}
+.advanced-filter-heading strong, .filters-toggle, .more-categories-btn { scroll-margin-top: 90px; }

@@ -200,7 +200,7 @@ function setAdvancedFiltersOpen(isOpen, opener = null) {
   filtersToggle.setAttribute("aria-expanded", String(isOpen));
   moreCategoriesBtn.setAttribute("aria-expanded", String(isOpen));
   filtersToggle.classList.toggle("active", isOpen);
-  if (!isOpen && filterOpener) { filterOpener.focus({preventScroll:true}); filterOpener = null; }
+  if (!isOpen && filterOpener) { filterOpener.focus(); filterOpener = null; }
 }
 
 // ── URL state (sharable + bookmarkable) ──────────────────────────────────────
@@ -554,13 +554,13 @@ categoryBar.querySelector("[data-cat='all']").addEventListener("click", () => to
 filtersToggle.addEventListener("click", () => {
   const opening = advancedFilters.classList.contains("hidden");
   setAdvancedFiltersOpen(opening, filtersToggle);
-  if (opening) document.getElementById("advanced-source-heading").focus({preventScroll:true});
+  if (opening) document.getElementById("advanced-source-heading").focus();
 });
 
 moreCategoriesBtn.addEventListener("click", () => {
   const opening = advancedFilters.classList.contains("hidden");
   setAdvancedFiltersOpen(opening, moreCategoriesBtn);
-  if (opening) document.getElementById("advanced-category-heading").focus({preventScroll:true});
+  if (opening) document.getElementById("advanced-category-heading").focus();
 });
 
 filtersDone.addEventListener("click", () => setAdvancedFiltersOpen(false));
