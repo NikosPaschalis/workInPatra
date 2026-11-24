@@ -448,8 +448,7 @@ async function loadJobs(forceRefresh = false) {
     if (statTotal) statTotal.textContent = state.jobs.length;
     const corporateCount = state.jobs.filter(j => j.source === "corporate" && j.corporateStatus === "verified").length;
     document.getElementById("corporate-count").textContent = String(corporateCount);
-    const discoveryText = document.getElementById("corporate-discovery").querySelector("p");
-    if (data.corporatePreview) discoveryText.textContent = corporateCount + " δοκιμαστικές εταιρικές θέσεις (DEMO).";
+    document.getElementById("corporate-count-label").textContent = data.corporatePreview ? "δοκιμαστικές εταιρικές θέσεις (DEMO)." : "επανελεγμένες θέσεις από εταιρικές σελίδες στην περιοχή της Πάτρας.";
     document.getElementById("corporate-discovery").hidden = !state.jobs.some(j => j.source === "corporate");
     if (data.lastFetched) {
       const d = new Date(data.lastFetched);
