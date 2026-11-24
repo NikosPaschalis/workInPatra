@@ -52,3 +52,6 @@ Live Lever pilot https://github.com/NikosPaschalis/workInPatra/actions/runs/4536
 
 ## Preview cache correction
 The homepage and report now read the same versioned static review-v2 payload only on the PR #18 hostname, with no-store and versioned JS entrypoints. Old demo rows are excluded even if the prior jobs.json is cached. No build-time rewriting of jobs.json, and no production display of review rows. Preview errors are surfaced instead of falling back to demo rows.
+
+## Expansion 2026-11-24
+Workable documented public account API: https://workable.readme.io/reference/jobs-1; metadata-only read-only pilot for Motodynamics, Cosmos Sport and Plaisio, not automatic syndication. Workable explicitly provides employer/partner XML sharing https://help.workable.com/hc/en-us/articles/4420464031767-Utilizing-the-XML-job-feed; production approval is per employer via WORKABLE_APPROVED_COMPANIES. The 21-record v3 review inventory includes older SmartRecruiters pilot records for age tests, recent verified factual links, and undated public listings; all remain preview-only. No automated requests to unapproved HTML sites. No main change.

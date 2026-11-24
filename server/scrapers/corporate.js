@@ -1,4 +1,5 @@
 import { normalizeText } from "../../scripts/job-identity.js";
+import { fetchWorkableCompany } from "./workable.js";
 import { fetchLeverCompany } from "./lever.js";
 import { categorizeCorporateRole } from "../corporate-categories.js";
 
@@ -7,6 +8,9 @@ export const CORPORATE_COMPANIES = Object.freeze([
   { id: "netcompany", name: "Netcompany", identifier: "netcompany1", careerUrl: "https://netcompany.com/careers/greece/vacancies/" },
   { id: "renesas", name: "Renesas", identifier: "RenesasElectronics", careerUrl: "https://jobs.renesas.com/" },
   { id: "tsmg", name: "TSMG", provider: "lever", identifier: "tsmg", verifiedGreekPatras: true, careerUrl: "https://jobs.lever.co/tsmg/?location=Patras" },
+  { id: "motodynamics", name: "Motodynamics", provider: "workable", identifier: "motodynamics", careerUrl: "https://apply.workable.com/motodynamics/" },
+  { id: "cosmos-sport", name: "Cosmos Sport", provider: "workable", identifier: "cosmos-sport-s-dot-a", careerUrl: "https://apply.workable.com/cosmos-sport-s-dot-a/" },
+  { id: "plaisio", name: "Πλαίσιο", provider: "workable", identifier: "plaisio-careers", careerUrl: "https://apply.workable.com/plaisio-careers/" },
 ]);
 const cities = new Set(["patras", "patra", "patrai", "πατρα", "πατρεσ", "rio", "ριο", "industrial area of patras", "patras industrial area", "βιπε πατρων", "κατω αχαια", "kato achaia", "kato achaia patras"]);
 export const corporateSourceKey = id => "corporate:" + id;
@@ -49,6 +53,8 @@ export function normalizePosting(post, company, now = new Date()) {
 
 export async function fetchCompany(company, { fetchImpl = globalThis.fetch, now = new Date() } = {}) {
   if (company.provider === "lever") return fetchLeverCompany(company, { fetchImpl, now });
+  if (company.provider === "workable") return fetchWorkableCompany(company, { fetchImpl, now });
+  if (company.provider && company.provider !== "smartrecruiters") throw new Error("Unsupported corporate provider");
   const limit = 100, maxPages = 15, seen = new Set(), jobs = [];
   let expectedTotal;
   for (let page = 0; page < maxPages; page++) {

@@ -23,7 +23,7 @@ test("public ATS posting is normalized with stable source key and real date",asy
 });
 test("valid zero removes old inventory but 403 retains only affected company",async()=>{
   const prior = [{source:"corporate",sourceKey:"corporate:netcompany",title:"Old 1"},{source:"corporate",sourceKey:"corporate:renesas",title:"Old 2"}];
-  const result=await collectCorporate(prior,{enabled:true,now,fetchImpl:async url=>url.pathname.includes("netcompany1")?response([]):{ok:false,status:403}});
+  const result=await collectCorporate(prior,{companies:[net,ren],enabled:true,now,fetchImpl:async url=>url.pathname.includes("netcompany1")?response([]):{ok:false,status:403}});
   assert.equal(result.sourceStats["corporate:netcompany"].status,"success");
   assert.equal(result.sourceStats["corporate:renesas"].status,"fallback");
   assert.deepEqual(result.jobs.map(j=>j.title),["Old 2"]);

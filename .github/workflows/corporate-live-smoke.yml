@@ -17,7 +17,7 @@ jobs:
         with:
           node-version: '24'
       - name: Corporate isolated unit tests
-        run: node --test test/corporate.test.js test/lever.test.js test/corporate-ui.test.js test/corporate-preview.test.js test/job-age.test.js test/job-history.test.js test/notifications.test.js
+        run: node --test test/corporate.test.js test/lever.test.js test/workable.test.js test/corporate-ui.test.js test/corporate-preview.test.js test/job-age.test.js test/job-history.test.js test/notifications.test.js
   live:
     if: github.event_name == 'workflow_dispatch' && vars.SMARTRECRUITERS_REUSE_AUTHORIZED == 'true'
     runs-on: ubuntu-24.04

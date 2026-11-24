@@ -3,6 +3,7 @@ import { scrape as scrapeJobfind } from "../server/scrapers/jobfind.js";
 import { scrape as scrapeKariera } from "../server/scrapers/kariera.js";
 import { scrape as scrapeXe } from "../server/scrapers/xe.js";
 import { loadFirstSeen, stampFirstSeen } from "./first-seen.js";
+import { corporateEnabled } from "../server/corporate-permissions.js";
 import { collectCorporate } from "../server/scrapers/corporate.js";
 import { categorizeJob } from "../server/categorize.js";
 import { readFileSync, writeFileSync, mkdirSync } from "fs";
@@ -73,7 +74,7 @@ async function fetchAll(previousJobs) {
     );
   }
 
-  const corporate = await collectCorporate(previousJobs, { enabled: company => process.env.CORPORATE_CAREERS_ENABLED === "true" && (company.provider === "lever" ? process.env.LEVER_REUSE_AUTHORIZED === "true" : process.env.SMARTRECRUITERS_REUSE_AUTHORIZED === "true") });
+  const corporate = await collectCorporate(previousJobs, { enabled: corporateEnabled });
   const categorized = [...jobs, ...corporate.jobs].map((job) => ({
     ...job,
     category: job.source === "corporate" ? job.category : categorizeJob(job),

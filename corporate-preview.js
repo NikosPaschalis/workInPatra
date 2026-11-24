@@ -1,12 +1,12 @@
 import { summarizeJobAge } from "./client-utils.js";
-export const REVIEW_VERSION = "review-v2";
+export const REVIEW_VERSION = "review-v3";
 export function isCorporatePreview(hostname) { return hostname === "deploy-preview-18--workinpatras.netlify.app"; }
 export async function loadCorporatePreview(hostname, fetchImpl = globalThis.fetch) {
   if (!isCorporatePreview(hostname)) return [];
-  const response = await fetchImpl("/data/corporate-review-v2.json", { cache: "no-store" });
+  const response = await fetchImpl("/data/corporate-review-v3.json", { cache: "no-store" });
   if (!response.ok) throw new Error("Review data HTTP " + response.status);
   const data = await response.json();
-  if (data.version !== REVIEW_VERSION || !Array.isArray(data.jobs) || data.jobs.length !== 7 ||
+  if (data.version !== REVIEW_VERSION || !Array.isArray(data.jobs) || data.jobs.length === 0 ||
       data.jobs.some(j => j.source !== "corporate" || j.previewReal !== true || j.previewOnly !== true ||
         !j.title || !j.company || /^demo/i.test(j.company) || !j.url || new URL(j.url).protocol !== "https:")) throw new Error("Invalid reviewed listing data");
   return data.jobs;
