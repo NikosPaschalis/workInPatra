@@ -7,23 +7,11 @@ if (process.env.CONTEXT !== "deploy-preview" || process.env.REVIEW_ID !== "18") 
   console.log("Corporate demo skipped outside PR #18 deploy preview.");
 } else {
   const now = new Date();
-  const roles = [
-    ["Demo Consulting", "Junior Business Analyst"],
-    ["Demo Digital", "Software Engineer"],
-    ["Demo Digital", "Cloud DevOps Engineer"],
-    ["Demo Microelectronics", "Analog Design Engineer"],
-    ["Demo Consulting", "Audit Associate"],
-    ["Demo Digital", "Cybersecurity Analyst"]
-  ];
-  const jobs = roles.map(([company,title],i) => {
-    const role = categorizeCorporateRole(title);
-    const date = i === 3 ? new Date(now.getTime() - 45*86400000).toISOString() : i === 5 ? null : new Date(now.getTime() - (i+1)*86400000).toISOString();
-    const firstSeenAt = new Date(now.getTime() - (i+1)*86400000).toISOString();
-    return {
-      source:"corporate", sourceKey:"corporate:demo-"+company.toLowerCase().replaceAll(" ","-"),
-      title,company,location:"Πάτρα",date,dateRaw:"",firstSeenAt,...role,
-      tags:[role.subcategoryLabel],corporateStatus:"verified",previewOnly:true
-    };
+  const candidates=JSON.parse(readFileSync("docs/corporate-review-2026-11-24.json","utf8"));
+  const jobs=candidates.map(row=>{
+    const role=categorizeCorporateRole(row.title);
+    return {...row,source:"corporate",sourceKey:"corporate:review-"+row.companyId,...role,tags:[role.subcategoryLabel],
+      corporateStatus:"verified",previewOnly:true,previewReal:true};
   });
   const published = JSON.parse(readFileSync("data/jobs.json","utf8"));
   published.jobs = [...published.jobs.filter(j=>!j.previewOnly), ...jobs];
@@ -37,5 +25,5 @@ if (process.env.CONTEXT !== "deploy-preview" || process.env.REVIEW_ID !== "18") 
     coverage[job.sourceKey]={company:job.company,status:"success",retained_count:byCompany[job.company]};
   }
   writeFileSync("data/corporate-preview-report.json",JSON.stringify({previewOnly:true,total:jobs.length,corporate:{byCompany,bySubcategory,coverage,unverified:0,ageWindow:summarizeJobAge(jobs,now)}}));
-  console.log("PR #18 deploy preview: "+jobs.length+" fictional listings; no live requests.");
+  console.log("PR #18 deploy preview: "+jobs.length+" reviewed public links; no live requests or production changes.");
 }

@@ -1,0 +1,25 @@
+name: Lever read-only pilot
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'server/scrapers/lever.js'
+      - 'scripts/lever-smoke.js'
+      - '.github/workflows/lever-live-validation.yml'
+permissions:
+  contents: read
+jobs:
+  pilot:
+    if: github.head_ref == 'feat/corporate-careers'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node --test test/lever.test.js
+      - name: Read published Patras records (no publishing)
+        run: node scripts/lever-smoke.js

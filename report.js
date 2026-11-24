@@ -196,7 +196,7 @@ async function loadReport() {
             document.getElementById("corporate-report-rows").replaceChildren();
             document.getElementById("corporate-subcategories").replaceChildren();
             renderCorporate({ ...latest, corporate: demo.corporate });
-            document.getElementById("corporate-report-note").textContent = "DEMO — " + demo.total + " υποθετικές καταχωρίσεις, " + demo.corporate.ageWindow.visible30 + " στην προβολή 30 ημερών. Δεν περιλαμβάνονται στα πραγματικά μηνιαία σύνολα ή στο ιστορικό.";
+            document.getElementById("corporate-report-note").textContent =  "Προεπισκόπηση — " + demo.total + " καταχωρίσεις από εφάπαξ έλεγχο, " + demo.corporate.ageWindow.visible30 + " στην προβολή 30 ημερών. Δεν περιλαμβάνονται στα πραγματικά μηνιαία σύνολα ή στο ιστορικό.";
           }
         }
       } catch (error) { console.warn("Preview demo unavailable", error); }

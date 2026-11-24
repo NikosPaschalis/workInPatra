@@ -1,10 +1,12 @@
 import { normalizeText } from "../../scripts/job-identity.js";
+import { fetchLeverCompany } from "./lever.js";
 import { categorizeCorporateRole } from "../corporate-categories.js";
 
 // Public Posting API only. New providers must pass the same contract and access review.
 export const CORPORATE_COMPANIES = Object.freeze([
   { id: "netcompany", name: "Netcompany", identifier: "netcompany1", careerUrl: "https://netcompany.com/careers/greece/vacancies/" },
   { id: "renesas", name: "Renesas", identifier: "RenesasElectronics", careerUrl: "https://jobs.renesas.com/" },
+  { id: "tsmg", name: "TSMG", provider: "lever", identifier: "tsmg", verifiedGreekPatras: true, careerUrl: "https://jobs.lever.co/tsmg/?location=Patras" },
 ]);
 const cities = new Set(["patras", "patra", "patrai", "πατρα", "πατρεσ", "rio", "ριο", "industrial area of patras", "patras industrial area", "βιπε πατρων", "κατω αχαια", "kato achaia", "kato achaia patras"]);
 export const corporateSourceKey = id => "corporate:" + id;
@@ -46,6 +48,7 @@ export function normalizePosting(post, company, now = new Date()) {
 }
 
 export async function fetchCompany(company, { fetchImpl = globalThis.fetch, now = new Date() } = {}) {
+  if (company.provider === "lever") return fetchLeverCompany(company, { fetchImpl, now });
   const limit = 100, maxPages = 15, seen = new Set(), jobs = [];
   let expectedTotal;
   for (let page = 0; page < maxPages; page++) {
@@ -90,7 +93,7 @@ export async function collectCorporate(previousJobs, { enabled = false, companie
   for (const company of companies) {
     const key = corporateSourceKey(company.id);
     const old = previous.filter(j => j.sourceKey === key);
-    if (!enabled) {
+    if (!(typeof enabled === "function" ? enabled(company) : enabled)) {
       jobs.push(...old.map(j => ({ ...j, corporateStatus: "unverified" })));
       sourceStats[key] = { status: "skipped", company: company.name, scraped_count: 0, retained_count: old.length };
       continue;

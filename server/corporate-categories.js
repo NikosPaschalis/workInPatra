@@ -13,6 +13,7 @@ export const CORPORATE_ROLE_RULES = [
   ["consulting", "Consulting & Project Management", "admin", /consultant|consulting|business analyst|project manager|project management|delivery lead/],
   ["finance", "Finance & Audit", "admin", /finance|accountant|accounting|audit|tax|λογιστ/],
   ["hr", "Human Resources", "admin", /human resources|talent acquisition|\bhr\b|payroll/],
+  ["field-data", "Συλλογή δεδομένων πεδίου", "logistics", /data collector|field data collection|field surveyor|surveyor/],
   ["operations", "Operations & Supply Chain", "logistics", /operations|supply chain|manufacturing|production|logistics|warehouse/],
   ["marketing", "Marketing & Communication", "marketing", /marketing|communication|creative/],
   ["sales", "Sales & Business Development", "sales", /sales|business development|account manager/],

@@ -73,7 +73,7 @@ async function fetchAll(previousJobs) {
     );
   }
 
-  const corporate = await collectCorporate(previousJobs, { enabled: process.env.CORPORATE_CAREERS_ENABLED === "true" && process.env.SMARTRECRUITERS_REUSE_AUTHORIZED === "true" });
+  const corporate = await collectCorporate(previousJobs, { enabled: company => process.env.CORPORATE_CAREERS_ENABLED === "true" && (company.provider === "lever" ? process.env.LEVER_REUSE_AUTHORIZED === "true" : process.env.SMARTRECRUITERS_REUSE_AUTHORIZED === "true") });
   const categorized = [...jobs, ...corporate.jobs].map((job) => ({
     ...job,
     category: job.source === "corporate" ? job.category : categorizeJob(job),

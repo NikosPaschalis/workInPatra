@@ -353,7 +353,7 @@ function render() {
     const badge = card.querySelector(".card-source-badge");
     badge.textContent = SOURCE_LABELS[job.source] || job.source;
     badge.classList.add(`badge-${job.source}`);
-    if (job.previewOnly) badge.textContent = "Εταιρική σελίδα · DEMO";
+    if (job.previewOnly && !job.previewReal) badge.textContent = "Εταιρική σελίδα · DEMO";
     if (job.source === "corporate" && job.corporateStatus !== "verified") badge.textContent += " · Μη επανελεγμένη";
 
     const basis = jobAgeBasis(job, now);
@@ -398,7 +398,7 @@ function render() {
       });
     } else {
       link.href = job.url || "#";
-      if (job.previewOnly) {
+      if (job.previewOnly && !job.previewReal) {
         link.removeAttribute("href");
         link.removeAttribute("target");
         link.setAttribute("aria-disabled", "true");
