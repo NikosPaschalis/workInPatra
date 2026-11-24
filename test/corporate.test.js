@@ -6,6 +6,7 @@ const [net, ren] = CORPORATE_COMPANIES;
 const now = new Date("2026-11-24T12:00:00Z");
 const posting = (id, city = "Patras") => ({id, name:"Application Support Agent", location:{city,country:"gr"}, releasedDate:"2026-11-18T12:00:00Z"});
 const response = (content, totalFound = content.length) => ({ok:true,json:async()=>({content,totalFound})});
+const withDetails = (posts, identifier = "netcompany1") => async url => url.pathname.endsWith("/postings") ? response(posts) : ({ok:true,json:async()=>({...posts.find(p=>url.pathname.endsWith("/"+p.id)),active:true,postingUrl:"https://jobs.smartrecruiters.com/"+identifier+"/"+url.pathname.split("/").at(-1)+"-actual-title-"})});
 test("local geography excludes Athens, generic remote and Rio outside Greece",()=>{
   assert.equal(isLocalPosting({city:"Patras",country:"gr"}),true);
   assert.equal(isLocalPosting({city:"Rio",country:"br"}),false);
@@ -13,7 +14,7 @@ test("local geography excludes Athens, generic remote and Rio outside Greece",()
   assert.equal(isLocalPosting({city:"Remote",country:"gr"}),false);
 });
 test("public ATS posting is normalized with stable source key and real date",async()=>{
-  const jobs = await fetchCompany(net,{now,fetchImpl:async()=>response([posting("123"),posting("456","Athens")])});
+  const jobs = await fetchCompany(net,{now,fetchImpl:withDetails([posting("123"),posting("456","Athens")])});
   assert.equal(jobs.length,1);
   assert.equal(jobs[0].sourceKey,"corporate:netcompany");
   assert.equal(jobs[0].category,"tech");
@@ -46,7 +47,7 @@ import { recordScrapeHistory } from "../scripts/job-history.js";
 test("history does not treat failed company fallback as observed and uses stable posting id",async()=>{
   const dir = mkdtempSync(path.join(tmpdir(),"corporate-history-"));
   try {
-    const [job] = await fetchCompany(net,{now,fetchImpl:async()=>response([posting("123")])});
+    const [job] = await fetchCompany(net,{now,fetchImpl:withDetails([posting("123")])});
     const other = {...job,sourceKey:"corporate:renesas",companyId:"renesas",externalId:"456"};
     recordScrapeHistory({dataDir:dir,jobs:[job,other],startedAt:now.toISOString(),completedAt:now.toISOString(),sourceStats:{"corporate:netcompany":{status:"success"},"corporate:renesas":{status:"fallback"}}});
     const records = readFileSync(path.join(dir,"observations.jsonl"),"utf8").trim().split("\n").map(JSON.parse);
@@ -54,4 +55,10 @@ test("history does not treat failed company fallback as observed and uses stable
     assert.equal(records[0].job_key,"corporate:netcompany:posting:123");
     assert.equal(records[0].source_group,"corporate");
   } finally { rmSync(dir,{recursive:true,force:true}); }
+});
+
+test("uses canonical URL from detail response and rejects invalid detail URLs",async()=>{
+  const [job] = await fetchCompany(net,{now,fetchImpl:withDetails([posting("123")])});
+  assert.equal(job.url,"https://jobs.smartrecruiters.com/netcompany1/123-actual-title-");
+  await assert.rejects(fetchCompany(net,{now,fetchImpl:withDetails([posting("123")],"wrong-company")}),/Invalid official posting URL/);
 });

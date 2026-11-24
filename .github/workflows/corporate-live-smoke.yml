@@ -1,0 +1,27 @@
+name: Corporate public API smoke
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'server/scrapers/corporate.js'
+      - 'scripts/corporate-smoke.js'
+      - '.github/workflows/corporate-live-smoke.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  live:
+    if: github.event_name == 'workflow_dispatch' || github.head_ref == 'feat/corporate-careers'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Corporate isolated unit tests
+        run: node --test test/corporate.test.js
+      - name: Public API read-only validation
+        run: node scripts/corporate-smoke.js

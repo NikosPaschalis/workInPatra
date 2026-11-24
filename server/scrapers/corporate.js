@@ -25,15 +25,18 @@ export function normalizePosting(post, company, now = new Date()) {
     ? new Date(dateRaw).toISOString() : null;
   const sourceCategory = post.function?.label || post.department?.label || "";
   const role = categorizeCorporateRole(post.name, sourceCategory);
-  // SmartRecruiters canonical job URL includes the posting ID and a title slug.
+  // Use the official posting URL from the detail endpoint, never synthesize a slug.
   if (post.company?.identifier && String(post.company.identifier).toLowerCase() !== company.identifier.toLowerCase()) throw new Error("Company identifier mismatch");
-  const slug = normalizeText(post.name).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "job";
+  const url = new URL(post.postingUrl);
+  if (url.protocol !== "https:" || url.hostname !== "jobs.smartrecruiters.com" ||
+      url.pathname.split("/")[1]?.toLowerCase() !== company.identifier.toLowerCase() ||
+      !url.pathname.split("/")[2]?.startsWith(String(post.id) + "-")) throw new Error("Invalid official posting URL");
   return {
     source: "corporate", sourceKey: corporateSourceKey(company.id), companyId: company.id,
     company: company.name, title: post.name.trim(), externalId: String(post.id),
     location: post.location.city + ", Greece", date, dateRaw,
     dateProvenance: date ? "source_metadata" : "unavailable",
-    url: "https://jobs.smartrecruiters.com/" + company.identifier + "/" + post.id + "-" + slug,
+    url: url.href,
     sourceCategory, ...role,
     tags: [role.subcategoryLabel, post.experienceLevel?.label, post.typeOfEmployment?.label].filter(Boolean),
     employmentType: post.typeOfEmployment?.label || "",
@@ -47,7 +50,7 @@ export async function fetchCompany(company, { fetchImpl = globalThis.fetch, now 
   let expectedTotal;
   for (let page = 0; page < maxPages; page++) {
     const url = new URL("https://api.smartrecruiters.com/v1/companies/" + company.identifier + "/postings");
-    url.search = new URLSearchParams({ country: "GR", limit: String(limit), offset: String(page * limit) }).toString();
+    url.search = new URLSearchParams({ country: "GR", destination: "PUBLIC", limit: String(limit), offset: String(page * limit) }).toString();
     const res = await fetchImpl(url, { headers: { Accept: "application/json" }, signal: AbortSignal.timeout(8000) });
     if (!res.ok) throw new Error("HTTP " + res.status);
     const body = await res.json();
@@ -61,10 +64,18 @@ export async function fetchCompany(company, { fetchImpl = globalThis.fetch, now 
       throw new Error("Incomplete pagination");
     }
     for (const post of body.content) {
-      const job = normalizePosting(post, company, now);
+      if (!post || !/^[A-Za-z0-9-]+$/.test(String(post.id || "")) || typeof post.name !== "string" || !post.name.trim() || typeof post.location?.city !== "string" || typeof post.location?.country !== "string") throw new Error("Invalid posting schema");
       if (seen.has(String(post.id))) throw new Error("Duplicate ID during pagination");
       seen.add(String(post.id));
-      if (job) jobs.push(job);
+      if (!isLocalPosting(post.location)) continue;
+      const detailUrl = new URL("https://api.smartrecruiters.com/v1/companies/" + company.identifier + "/postings/" + post.id);
+      const detailRes = await fetchImpl(detailUrl, { headers: { Accept: "application/json" }, signal: AbortSignal.timeout(8000) });
+      if (!detailRes.ok) throw new Error("Posting detail HTTP " + detailRes.status);
+      const detail = await detailRes.json();
+      if (String(detail.id) !== String(post.id) || detail.active === false) throw new Error("Posting detail mismatch or inactive");
+      const job = normalizePosting({ ...post, ...detail }, company, now);
+      if (!job) throw new Error("Posting location changed during collection");
+      jobs.push(job);
     }
     if (seen.size === expectedTotal) return jobs;
     if (seen.size > expectedTotal || body.content.length !== limit) throw new Error("Incomplete pagination");
