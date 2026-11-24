@@ -6,11 +6,13 @@ export function previousCorporateInventory(data){
  return jobs.filter(j=>j.source==="corporate"&&!j.previewOnly);
 }
 export function mergeCorporateListings(boardJobs, corporateJobs, now=new Date()){
- const result=[],named=new Map(),anonymous=new Set(),corporateKeys=new Set(),boardUrls=new Map();
+ const result=[],named=new Map(),corporateKeys=new Set(),boardUrls=new Map();
  for(const j of boardJobs){
-  const key=titleCompanyIdentity(j), url=canonicalizeJobUrl(j.url), t=normalizeText(j.title);
-  if((key&&named.has(key))||(!key&&anonymous.has(t)))continue;
-  if(key)named.set(key,result.length);else anonymous.add(t);
+  const key=titleCompanyIdentity(j), url=canonicalizeJobUrl(j.url);
+  if(url&&boardUrls.has(url))continue;
+  // Same title alone is never identity. Named cross-board duplicates remain a public heuristic.
+  if(key&&named.has(key)&&result[named.get(key)].source!==j.source)continue;
+  if(key&&!named.has(key))named.set(key,result.length);
   if(url)boardUrls.set(url,result.length);
   result.push(j);
  }

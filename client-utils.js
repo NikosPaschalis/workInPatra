@@ -65,3 +65,12 @@ export function summarizeJobAge(jobs, now = new Date()) {
   }
   return counts;
 }
+
+// Only an unchanged, non-estimated source date can support a "new publication" claim.
+// Legacy unannotated jobs retain old UI behavior until next collection.
+export function isNewPublication(job,days=1,now=new Date()){
+ if(job.dateChanged===true||["relative_estimate","relative_label","legacy_unknown","unavailable"].includes(job.dateProvenance))return false;
+ if(jobAgeBasis(job,now)?.kind!=="published"||!isJobWithinAgeWindow(job,days,now))return false;
+ if(job.firstSeenAt&&athensCalendarAge(job.firstSeenAt,now)>=days)return false;
+ return true;
+}

@@ -4,6 +4,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { loadFirstSeen, stampFirstSeen } from "./first-seen.js";
+import { makeJobKey, recoverManualEvidence } from "./job-history.js";
 
 const normalize = (s) => String(s || "").trim().toLocaleLowerCase("el").replace(/\s+/g, " ");
 const identity = (job) => normalize(job.title) + "|" + normalize(job.company);
@@ -16,7 +17,7 @@ export function applyCuratedKariera(current, queued) {
   if (!Array.isArray(current) || !Array.isArray(queued)) throw new Error("Expected job arrays");
   const urls = new Set(current.map(j => urlIdentity(j.url)).filter(Boolean));
   const titles = new Set(current.filter(j => j.title && j.company).map(identity));
-  const accepted = [], rejected = [];
+  const accepted = [], rejected = [], reviewed = [];
   for (const job of queued) {
     const url = urlIdentity(job?.url);
     if (job?.source !== "kariera" || !url || new URL(url).hostname !== "www.kariera.gr" ||
@@ -25,6 +26,7 @@ export function applyCuratedKariera(current, queued) {
       rejected.push({ job, reason: "invalid_or_unverified" });
       continue;
     }
+    reviewed.push({...job,source:"kariera"});
     const key = identity(job);
     if (urls.has(url) || (job.company && titles.has(key))) {
       rejected.push({ job, reason: "duplicate" });
@@ -34,7 +36,7 @@ export function applyCuratedKariera(current, queued) {
     if (job.company) titles.add(key);
     accepted.push({ ...job, source: "kariera" });
   }
-  return { jobs: [...current, ...accepted], accepted, rejected };
+  return { jobs: [...current, ...accepted], accepted, rejected, reviewed };
 }
 
 const isDirect = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
@@ -52,7 +54,10 @@ if (isDirect) {
     // the original queue remains recoverable via Git; repeated runs are URL-deduplicated.
     const now = new Date();
     const firstSeen = await loadFirstSeen({ dataDir: path.dirname(jobsPath), previousJobs: existing.jobs, previousFetchedAt: existing.lastFetched, now });
-    const stamped = stampFirstSeen(result.jobs, firstSeen, { now, isFresh: job => result.accepted.includes(job) });
+    const acceptedKeys = new Set(result.accepted.map(makeJobKey));
+    const reviewed=stampFirstSeen(result.reviewed.map(job=>({...job,observationKind:"manual"})),firstSeen,{now,isFresh:()=>true});
+    recoverManualEvidence({dataDir:path.dirname(jobsPath),jobs:reviewed,completedAt:now.toISOString()});
+    const stamped = stampFirstSeen(result.jobs.map(job=>acceptedKeys.has(makeJobKey(job))?{...job,observationKind:"manual"}:job), firstSeen, { now, isFresh: job => acceptedKeys.has(makeJobKey(job)) });
     writeFileSync(jobsPath, JSON.stringify({ ...existing, jobs: stamped }), "utf8");
     writeFileSync(queuePath, JSON.stringify({ jobs: [] }, null, 2) + "\n", "utf8");
     console.log("Kariera curated: accepted=" + result.accepted.length + ", duplicates=" + result.rejected.length);

@@ -1,0 +1,25 @@
+name: Data quality evidence
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  quality:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Run offline integrity audit on committed data
+        run: node scripts/data-quality.js data
+      - name: Exercise date, source and snapshot pipeline in temporary directories
+        run: node --test test/data-quality-v2.test.js test/job-age.test.js test/job-history.test.js test/analyze-job-history.test.js test/corporate-inventory.test.js test/corporate-release.test.js test/snapshots.test.js
+      - name: Verify no tracked data changed
+        run: git diff --exit-code -- data

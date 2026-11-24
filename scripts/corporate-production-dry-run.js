@@ -16,7 +16,7 @@ try{
  assert.ok(after.jobs.length>0);assert.ok(after.jobs.every(j=>!j.previewOnly));
  assert.ok(after.jobs.every(j=>j.date||Object.hasOwn(j,"firstSeenAt")));
  assert.ok(after.jobs.some(j=>j.source==="kariera"));
- assert.equal(after.corporateInventory.length,0);
- assert.equal(corporateStatistics(after).ageWindow.total,0);
+ assert.equal(after.corporateInventory.length,(before.corporateInventory||[]).length);
+ assert.equal(corporateStatistics(after).ageWindow.total,(before.corporateInventory||[]).length);
  console.log("DRY RUN OK",JSON.stringify({before:before.jobs.length,after:after.jobs.length,sourceCounts:Object.fromEntries([...new Set(after.jobs.map(j=>j.source))].map(s=>[s,after.jobs.filter(j=>j.source===s).length])),corporate:"disabled"}));
 }finally{rmSync(dir,{recursive:true,force:true});}

@@ -27,3 +27,5 @@ The command reads `data/observations.jsonl` and `data/scrape-runs.jsonl`. You ca
 - `source_quality`: count of successful scrapes and other source-run statuses. These are coverage indicators, **not** a calibrated confidence score.
 
 The original job key is preserved, so different sources are not automatically merged. No backfilling of first-seen dates, publication dates, expiry dates, or job closures is performed. This phase deliberately does not overwrite the current report page or publish its output.
+
+Schema v2 adds manually verified positive observations. They never establish source-wide absence. A scrape explicitly marked listing_page_unverified also does not establish absence; legacy runs retain their historical interpretation with unverified completeness. No historical fields are backfilled in the append-only files.
