@@ -1,6 +1,7 @@
 import {
   compareJobsByDateNewestFirst,
-  getCalendarCutoff,
+  isJobWithinAgeWindow,
+  jobAgeBasis,
   normalizeSearchText,
 } from "./client-utils.js";
 import { CATEGORY_DEFINITIONS } from "./categories.js";
@@ -93,12 +94,12 @@ function createCategoryButton(cat, count, { compact = false } = {}) {
 function buildCategoryBar() {
   const counts = {};
   // Count only jobs that pass the current date + source filters
-  const cutoff = getCalendarCutoff(state.days);
+  const now = new Date();
 
   state.jobs
     .filter(j =>
       state.sources.has(j.source) &&
-      !(j.date && new Date(j.date) < cutoff)
+      isJobWithinAgeWindow(j, state.days, now)
     )
     .forEach(j => {
       const cat = j.category || "other";
@@ -308,12 +309,12 @@ function openDirectJob(job) {
 // ── Render ────────────────────────────────────────────────────────────────────
 function render() {
   syncFilterSummary();
-  const cutoff = getCalendarCutoff(state.days);
+  const now = new Date();
   const normalizedQuery = normalizeSearchText(state.search);
 
   let filtered = state.jobs.filter(j => {
     if (!state.sources.has(j.source)) return false;
-    if (j.date && new Date(j.date) < cutoff) return false;
+    if (!isJobWithinAgeWindow(j, state.days, now)) return false;
     if (state.categories.size > 0 && !state.categories.has(j.category || "other")) return false;
     if (normalizedQuery && !j._searchText.includes(normalizedQuery)) {
       return false;
@@ -331,8 +332,7 @@ function render() {
   const count = filtered.length;
 
   // Trust stat — count jobs from the last 7 days within the filtered set
-  const weekStart = getCalendarCutoff(7);
-  const newCount = filtered.filter(j => j.date && new Date(j.date) >= weekStart).length;
+  const newCount = filtered.filter(j => jobAgeBasis(j, now)?.kind === "published" && isJobWithinAgeWindow(j, 7, now)).length;
 
   countLabel.innerHTML = state.loading
     ? "Φόρτωση…"
@@ -361,11 +361,14 @@ function render() {
     if (job.previewOnly) badge.textContent = "Εταιρική σελίδα · DEMO";
     if (job.source === "corporate" && job.corporateStatus !== "verified") badge.textContent += " · Μη επανελεγμένη";
 
-    const dateLabel = formatDate(job.date);
-    card.querySelector(".card-date").textContent = dateLabel;
+    const basis = jobAgeBasis(job, now);
+    const dateLabel = formatDate(basis?.date);
+    const dateEl = card.querySelector(".card-date");
+    dateEl.textContent = basis?.kind === "first_seen" ? "Εντοπίστηκε: " + dateLabel : dateLabel;
+    if (basis?.kind === "first_seen") dateEl.title = "Άγνωστη ημερομηνία δημοσίευσης — εμφανίζεται ο πρώτος καταγεγραμμένος εντοπισμός.";
 
     // "Νέο" badge — visible only for today's listings
-    if (dateLabel === "Σήμερα") {
+    if (basis?.kind === "published" && dateLabel === "Σήμερα") {
       card.querySelector(".card-new-badge").classList.remove("hidden");
     }
     card.querySelector(".card-title").textContent   = job.title;
@@ -444,7 +447,7 @@ async function loadJobs(forceRefresh = false) {
       ),
     }));
     document.getElementById("corporate-preview-notice").hidden = !data.corporatePreview;
-    if (statTotal) statTotal.textContent = state.jobs.length;
+    if (statTotal) statTotal.textContent = state.jobs.filter(j => isJobWithinAgeWindow(j, 30)).length;
     document.getElementById("stat-source-types").textContent = state.jobs.some(j => j.source === "corporate") ? "5" : "4";
     if (data.lastFetched) {
       const d = new Date(data.lastFetched);

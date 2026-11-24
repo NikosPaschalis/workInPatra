@@ -13,6 +13,7 @@ import { readFileSync, writeFileSync, existsSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { CATEGORY_EMOJI, CATEGORY_LABELS } from '../categories.js';
+import { isJobWithinAgeWindow, compareJobsByDateNewestFirst } from '../client-utils.js';
 import { notificationIdentity } from './job-identity.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -188,7 +189,7 @@ async function main() {
   const ledger = existsSync(LEDGER_PATH)
     ? JSON.parse(readFileSync(LEDGER_PATH, 'utf8'))
     : { announced: [] };
-  const added = selectUnannouncedJobs(oldJobs, newJobs, ledger.announced || []);
+  const added = selectUnannouncedJobs(oldJobs, newJobs, ledger.announced || []).filter(job => !job.previewOnly && isJobWithinAgeWindow(job, 30));
 
   console.log(`Old: ${oldJobs.length} · New: ${newJobs.length} · Added: ${added.length}`);
 
@@ -198,7 +199,7 @@ async function main() {
   }
 
   // Newest first
-  added.sort((a, b) => new Date(b.date) - new Date(a.date));
+  added.sort(compareJobsByDateNewestFirst);
 
   // Send to both channels in parallel so both get a chance to complete.
   const results = await Promise.allSettled([

@@ -6,6 +6,7 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'fs';
 import { fileURLToPath } from 'url';
 import path from 'path';
+import { summarizeJobAge } from '../client-utils.js';
 import { CATEGORY_DEFINITIONS } from '../categories.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -107,15 +108,17 @@ function validateSnapshot(snapshot) {
       }
     }
 
+    const capturedAt = new Date();
     const corporateJobs = jobs.filter(job => job.source === 'corporate');
-    const corporate = corporateCoverage ? { coverage: corporateCoverage, byCompany: countBy(corporateJobs, 'company'), bySubcategory: countBy(corporateJobs, 'subcategoryLabel'), unverified: corporateJobs.filter(j => j.corporateStatus !== 'verified').length } : null;
+    const corporate = corporateCoverage ? { coverage: corporateCoverage, byCompany: countBy(corporateJobs, 'company'), bySubcategory: countBy(corporateJobs, 'subcategoryLabel'), unverified: corporateJobs.filter(j => j.corporateStatus !== 'verified').length, ageWindow: summarizeJobAge(corporateJobs, capturedAt) } : null;
     const snapshot = {
       month: label,
-      capturedAt: new Date().toISOString(),
+      capturedAt: capturedAt.toISOString(),
       lastFetched: lastFetched || null,
       snapshotType: 'active_inventory',
       measurementNote: 'Active listings present in jobs.json at capture time; not a count of all jobs newly posted during the calendar month.',
       total: jobs.length,
+      ageWindow: summarizeJobAge(jobs, capturedAt),
       byCategory,
       bySource,
       ...(corporate ? { corporate } : {}),

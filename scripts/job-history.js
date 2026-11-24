@@ -6,7 +6,7 @@ function appendJsonl(filePath, record) {
   appendFileSync(filePath, JSON.stringify(record) + "\n", "utf8");
 }
 
-function makeJobKey(job) {
+export function makeJobKey(job) {
   const source = String(job?.sourceKey || job?.source || "unknown").trim().toLowerCase();
   if (job?.source === "corporate" && job.externalId) return source + ":posting:" + job.externalId;
   if (job?.url) {
@@ -38,6 +38,7 @@ function toObservation(job, observedAt, runId) {
     source_category: job.sourceCategory || "",
     category: job.category || "other",
     source_published_at: job.date || null,
+    first_seen_at: job.firstSeenAt || null,
     source_date_raw: job.dateRaw || "",
     tags: Array.isArray(job.tags) ? job.tags : [],
   };

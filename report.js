@@ -172,6 +172,8 @@ async function loadReport() {
     const latest = snapshots[snapshots.length - 1], previous = snapshots[snapshots.length - 2];
     document.getElementById('kpi-total').textContent = numberFormat.format(latest.total);
     document.getElementById('kpi-month').textContent = 'Snapshot: ' + formatMonth(latest.month);
+    const age = latest.ageWindow;
+    document.getElementById('kpi-recent').textContent = age ? 'Προβολή 30 ημερών: ' + numberFormat.format(age.visible30) + ' (δημοσιεύσεις: ' + age.published30 + ', πρώτοι εντοπισμοί: ' + age.firstSeen30 + ')' : 'Προβολή 30 ημερών: — (μη διαθέσιμη ιστορική μέτρηση)';
     const change = previous ? percentChange(latest.total, previous.total) : null;
     const changeEl = document.getElementById('kpi-change'), note = document.getElementById('kpi-change-note');
     if (change === null) { changeEl.textContent = '—'; note.textContent = 'Χρειάζονται τουλάχιστον δύο snapshots για σύγκριση.'; }
@@ -194,7 +196,7 @@ async function loadReport() {
             document.getElementById("corporate-report-rows").replaceChildren();
             document.getElementById("corporate-subcategories").replaceChildren();
             renderCorporate({ ...latest, corporate: demo.corporate });
-            document.getElementById("corporate-report-note").textContent = "DEMO — 6 υποθετικές θέσεις. Δεν περιλαμβάνονται στα πραγματικά μηνιαία σύνολα ή στο ιστορικό.";
+            document.getElementById("corporate-report-note").textContent = "DEMO — " + demo.total + " υποθετικές καταχωρίσεις, " + demo.corporate.ageWindow.visible30 + " στην προβολή 30 ημερών. Δεν περιλαμβάνονται στα πραγματικά μηνιαία σύνολα ή στο ιστορικό.";
           }
         }
       } catch (error) { console.warn("Preview demo unavailable", error); }
@@ -215,6 +217,7 @@ function renderCorporate(snapshot) {
   const panel = document.getElementById("corporate-report");
   panel.hidden = false;
   document.getElementById("corporate-report-note").textContent = "Κάλυψη στο snapshot " + formatMonth(snapshot.month) + ". Μη επανελεγμένες καταχωρίσεις: " + (data.unverified || 0) + ". Παλαιότερα snapshots δεν είχαν την ίδια κάλυψη.";
+  if (data.ageWindow) document.getElementById("corporate-report-note").textContent += " Προβολή 30 ημερών: " + data.ageWindow.visible30 + " από " + data.ageWindow.total + " καταχωρίσεις (δημοσιεύσεις: " + data.ageWindow.published30 + ", πρώτοι εντοπισμοί: " + data.ageWindow.firstSeen30 + ").";
   const rows = document.getElementById("corporate-report-rows");
   const labels = {success:"Επιτυχία",fallback:"Προηγούμενα δεδομένα",failed:"Αποτυχία",skipped:"Παράλειψη"};
   for (const s of Object.values(data.coverage)) {

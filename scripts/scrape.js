@@ -2,6 +2,7 @@
 import { scrape as scrapeJobfind } from "../server/scrapers/jobfind.js";
 import { scrape as scrapeKariera } from "../server/scrapers/kariera.js";
 import { scrape as scrapeXe } from "../server/scrapers/xe.js";
+import { loadFirstSeen, stampFirstSeen } from "./first-seen.js";
 import { collectCorporate } from "../server/scrapers/corporate.js";
 import { categorizeJob } from "../server/categorize.js";
 import { readFileSync, writeFileSync, mkdirSync } from "fs";
@@ -164,8 +165,12 @@ function loadPreviousJobs(jobsPath) {
     }
 
     const result = await fetchAll(previous.jobs);
-    const jobs = result.jobs;
     const sourceStats = result.sourceStats;
+    const now = new Date();
+    const firstSeen = await loadFirstSeen({ dataDir, previousJobs: previous.jobs, previousFetchedAt: previous.lastFetched, now });
+    const options = { now, isFresh: job => sourceStats[job.sourceKey || job.source]?.status === "success" };
+    const historyJobs = stampFirstSeen(result.historyJobs, firstSeen, options);
+    const jobs = stampFirstSeen(result.jobs, firstSeen, options);
 
     if (jobs.length === 0) {
       throw new Error("No jobs returned from any scraper — aborting write to avoid overwriting good data");
@@ -179,7 +184,7 @@ function loadPreviousJobs(jobsPath) {
 
     const historyResult = recordScrapeHistory({
       dataDir,
-      jobs: result.historyJobs,
+      jobs: historyJobs,
       startedAt,
       completedAt,
       sourceStats,

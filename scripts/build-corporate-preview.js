@@ -1,5 +1,6 @@
 // Only the PR #18 deploy artifact receives demo data. No API, git writes or production build changes.
 import { readFileSync, writeFileSync } from "node:fs";
+import { summarizeJobAge } from "../client-utils.js";
 import { categorizeCorporateRole } from "../server/corporate-categories.js";
 
 if (process.env.CONTEXT !== "deploy-preview" || process.env.REVIEW_ID !== "18") {
@@ -16,10 +17,11 @@ if (process.env.CONTEXT !== "deploy-preview" || process.env.REVIEW_ID !== "18") 
   ];
   const jobs = roles.map(([company,title],i) => {
     const role = categorizeCorporateRole(title);
-    const date = new Date(now.getTime() - (i+1)*86400000).toISOString();
+    const date = i === 3 ? new Date(now.getTime() - 45*86400000).toISOString() : i === 5 ? null : new Date(now.getTime() - (i+1)*86400000).toISOString();
+    const firstSeenAt = new Date(now.getTime() - (i+1)*86400000).toISOString();
     return {
       source:"corporate", sourceKey:"corporate:demo-"+company.toLowerCase().replaceAll(" ","-"),
-      title,company,location:"Πάτρα",date,dateRaw:"",...role,
+      title,company,location:"Πάτρα",date,dateRaw:"",firstSeenAt,...role,
       tags:[role.subcategoryLabel],corporateStatus:"verified",previewOnly:true
     };
   });
@@ -34,6 +36,6 @@ if (process.env.CONTEXT !== "deploy-preview" || process.env.REVIEW_ID !== "18") 
     bySubcategory[job.subcategoryLabel]=(bySubcategory[job.subcategoryLabel]||0)+1;
     coverage[job.sourceKey]={company:job.company,status:"success",retained_count:byCompany[job.company]};
   }
-  writeFileSync("data/corporate-preview-report.json",JSON.stringify({previewOnly:true,total:jobs.length,corporate:{byCompany,bySubcategory,coverage,unverified:0}}));
+  writeFileSync("data/corporate-preview-report.json",JSON.stringify({previewOnly:true,total:jobs.length,corporate:{byCompany,bySubcategory,coverage,unverified:0,ageWindow:summarizeJobAge(jobs,now)}}));
   console.log("PR #18 deploy preview: "+jobs.length+" fictional listings; no live requests.");
 }

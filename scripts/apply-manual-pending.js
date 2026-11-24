@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { loadFirstSeen, stampFirstSeen } from "./first-seen.js";
 import { mergeManualQueue } from "./manual-queue.js";
 
 export function applyManualPending(current, queued, options) {
@@ -17,7 +18,10 @@ if (isDirect) {
     const result = applyManualPending(existing.jobs, queue.jobs);
     const invalid = result.rejected.filter((entry) => entry.reason !== "duplicate");
     if (invalid.length) throw new Error(`Manual queue contains ${invalid.length} invalid or expired listing(s); refusing to clear queue`);
-    writeFileSync(jobsPath, JSON.stringify({ ...existing, jobs: result.jobs }), "utf8");
+    const now = new Date();
+    const firstSeen = await loadFirstSeen({ dataDir: path.dirname(jobsPath), previousJobs: existing.jobs, previousFetchedAt: existing.lastFetched, now });
+    const stamped = stampFirstSeen(result.jobs, firstSeen, { now, isFresh: job => result.accepted.includes(job) });
+    writeFileSync(jobsPath, JSON.stringify({ ...existing, jobs: stamped }), "utf8");
     writeFileSync(queuePath, JSON.stringify({ jobs: [] }, null, 2) + "\n", "utf8");
     console.log(`Manual queue: accepted=${result.accepted.length}, duplicates=${result.rejected.length}`);
   } catch (error) {
