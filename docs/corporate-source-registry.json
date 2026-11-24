@@ -2,18 +2,20 @@
   {
     "company": "Netcompany",
     "provider": "smartrecruiters",
-    "status": "live_validated_approval_required",
+    "status": "production_enabled",
     "reviewedCount": 5,
     "evidence": "https://netcompany.com/careers/greece/vacancies/",
-    "reviewedOn": "2026-11-24"
+    "reviewedOn": "2026-11-24",
+    "activationNote": "Owner-directed use of public factual metadata only, evening scheduled slot. SAP API policy restricts systematic extraction; provider approval not established. No access bypass."
   },
   {
     "company": "Renesas",
     "provider": "smartrecruiters",
-    "status": "live_validated_approval_required",
+    "status": "production_enabled",
     "reviewedCount": 1,
     "evidence": "https://jobs.renesas.com/",
-    "reviewedOn": "2026-11-24"
+    "reviewedOn": "2026-11-24",
+    "activationNote": "Owner-directed use of public factual metadata only, evening scheduled slot. SAP API policy restricts systematic extraction; provider approval not established. No access bypass."
   },
   {
     "company": "TSMG",
