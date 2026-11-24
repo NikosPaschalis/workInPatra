@@ -33,15 +33,18 @@ export function auditData({data,observations,runs,snapshots=[],manifest=null,now
  }).length);
  report(errors,"future_publication",jobs.filter(j=>timestamp(j.date)&&Date.parse(j.date)>now.getTime()).length);
  report(errors,"future_historical_publication",observations.filter(o=>timestamp(o.source_published_at)&&Date.parse(o.source_published_at)>Date.parse(o.observed_at)).length);
+ report(errors,"source_observation_count_mismatch",runs.flatMap(r=>Object.entries(r.sources||{}).filter(([key,info])=>Number.isInteger(info.observed_count)&&info.observed_count!==(byRun.get(r.run_id)||[]).filter(o=>o.source===key).length)).length);
  report(errors,"invalid_temporal_fields",[...jobs,...corporate].filter(j=>["date","firstSeenAt","lastSeenAt","originalObservedDate"].some(k=>j[k]!=null&&(!timestamp(j[k])||Date.parse(j[k])>now.getTime()))||timestamp(j.firstSeenAt)&&timestamp(j.lastSeenAt)&&Date.parse(j.firstSeenAt)>Date.parse(j.lastSeenAt)).length);
  const histories=group(observations,o=>o.job_key);
  const earliest=new Map();
  for(const o of observations){const v=Date.parse(o.verified_at||o.observed_at);if(Number.isFinite(v))earliest.set(o.job_key,Math.min(v,earliest.get(o.job_key)??Infinity));}
  const mismatches=jobs.filter(j=>earliest.has(makeJobKey(j))&&(!timestamp(j.firstSeenAt)||Date.parse(j.firstSeenAt)>earliest.get(makeJobKey(j)))).length;
  report(warnings,"first_seen_after_history",mismatches);
+ report(warnings,"missing_observation_metadata",observations.filter(o=>o.schema_version===2&&(!Object.hasOwn(o,"location")||!Object.hasOwn(o,"employment_type")||!Object.hasOwn(o,"salary_raw")||!Object.hasOwn(o,"date_provenance"))).length);
  report(warnings,"date_drift",[...histories.values()].filter(g=>new Set(g.filter(o=>timestamp(o.source_published_at)).map(o=>o.source_published_at.slice(0,10))).size>1).length);
  report(warnings,"legacy_missing_location",observations.filter(o=>o.schema_version!==2&&!o.location).length);
- report(warnings,"manual_without_history",jobs.filter(j=>j.manuallyVerifiedAt&&!histories.has(makeJobKey(j))).length);
+ const manualKeys=new Set(observations.filter(o=>o.observation_kind==="manual"&&timestamp(o.verified_at)).map(o=>o.job_key+"|"+new Date(o.verified_at).toISOString()));
+ report(warnings,"manual_without_history",jobs.filter(j=>timestamp(j.manuallyVerifiedAt)&&!manualKeys.has(makeJobKey(j)+"|"+new Date(j.manuallyVerifiedAt).toISOString())).length);
  report(errors,"snapshot_totals",snapshots.filter(s=>sum(s.byCategory)!==s.total||sum(s.bySource)!==s.total).length);
  if(manifest)report(errors,"snapshot_manifest",snapshots.filter(s=>!manifest.snapshots?.some(m=>m.month===s.month&&m.total===s.total&&m.capturedAt===s.capturedAt)).length+Math.abs(snapshots.length-(manifest.snapshots?.length||0)));
  const latestScrapes=runs.filter(r=>r.run_type==="scrape").sort((a,b)=>Date.parse(a.completed_at)-Date.parse(b.completed_at));

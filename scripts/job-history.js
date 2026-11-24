@@ -168,3 +168,12 @@ export function recordManualHistory({dataDir,jobs,completedAt=new Date().toISOSt
  appendJsonl(path.join(dataDir,"scrape-runs.jsonl"),{run_id:runId,run_type:"manual",status:"success",started_at:completedAt,completed_at:completedAt,total_observed:unique.length,sources});
  return {runId,observedCount:unique.length};
 }
+
+// Recover previously published, explicitly timestamped manual approvals without
+// fabricating a past import run or rechecking their availability.
+export function recoverManualEvidence({dataDir,jobs,completedAt=new Date().toISOString()}){
+ const file=path.join(dataDir,"observations.jsonl");
+ const seen=new Set(existsSync(file)?readFileSync(file,"utf8").split(/\r?\n/).filter(Boolean).map(JSON.parse).filter(o=>o.observation_kind==="manual").map(o=>o.job_key+"|"+new Date(o.verified_at).toISOString()):[]);
+ const candidates=jobs.filter(j=>Number.isFinite(Date.parse(j.manuallyVerifiedAt||""))&&Date.parse(j.manuallyVerifiedAt)<=Date.parse(completedAt)&&!seen.has(makeJobKey(j)+"|"+new Date(j.manuallyVerifiedAt).toISOString()));
+ return recordManualHistory({dataDir,jobs:candidates,completedAt});
+}

@@ -17,6 +17,7 @@ import {
   recordScrapeHistory,
   recordFailedRun,
   makeJobKey,
+  recoverManualEvidence,
 } from "./job-history.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -143,6 +144,8 @@ export async function runScrape({ dataDir = path.join(__dirname, "..", "data"), 
       console.log("🧱 Initialized history baseline with " + baseline.baselineCount + " existing jobs");
     }
 
+    // Explicitly timestamped legacy manual approvals are evidence, not fresh scrapes.
+    recoverManualEvidence({dataDir,jobs:previous.jobs,completedAt:startedAt});
     const result = await fetchAll(previous.jobs, previous.corporateInventory, options);
     const sourceStats = result.sourceStats;
     const now = new Date();

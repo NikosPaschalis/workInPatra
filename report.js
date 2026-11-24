@@ -173,7 +173,7 @@ async function loadReport() {
     document.getElementById('kpi-total').textContent = numberFormat.format(latest.total);
     document.getElementById('kpi-month').textContent = 'Snapshot: ' + formatMonth(latest.month);
     const age = latest.ageWindow;
-    document.getElementById('kpi-recent').textContent = age ? 'Προβολή 30 ημερών: ' + numberFormat.format(age.visible30) + ' (δημοσιεύσεις: ' + age.published30 + ', πρώτοι εντοπισμοί: ' + age.firstSeen30 + ')' : 'Προβολή 30 ημερών: — (μη διαθέσιμη ιστορική μέτρηση)';
+    document.getElementById('kpi-recent').textContent = age ? 'Προβολή 30 ημερών: ' + numberFormat.format(age.visible30) + ' (ημ. πηγής, και εκτιμήσεις: ' + age.published30 + ', πρώτοι εντοπισμοί: ' + age.firstSeen30 + ')' : 'Προβολή 30 ημερών: — (μη διαθέσιμη ιστορική μέτρηση)';
     const change = previous ? percentChange(latest.total, previous.total) : null;
     const changeEl = document.getElementById('kpi-change'), note = document.getElementById('kpi-change-note');
     if (change === null) { changeEl.textContent = '—'; note.textContent = 'Χρειάζονται τουλάχιστον δύο snapshots για σύγκριση.'; }

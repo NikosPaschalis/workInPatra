@@ -382,7 +382,7 @@ function render() {
     if (basis?.kind === "first_seen") dateEl.title = "Άγνωστη ημερομηνία δημοσίευσης — εμφανίζεται ο πρώτος καταγεγραμμένος εντοπισμός.";
 
     // "Νέο" badge — visible only for today's listings
-    if (basis?.kind === "published" && dateLabel === "Σήμερα") {
+    if (isNewPublication(job,1,now)) {
       card.querySelector(".card-new-badge").classList.remove("hidden");
     }
     card.querySelector(".card-title").textContent   = job.title;

@@ -17,7 +17,7 @@ export function recordEarliest(map,key,value,now=new Date()){
   const old=iso(map.get(key),now);if(!old||stamp<old)map.set(key,stamp);
 }
 export function inferDateProvenance(job) {
-  if (!Number.isFinite(Date.parse(job.date || ""))) return "unavailable";
+  if (!Number.isFinite(Date.parse(job.date || ""))) return job.dateProvenance || (job.dateRaw ? "unparseable" : "unavailable");
   if (job.dateProvenance && job.dateProvenance!=="unavailable") return job.dateProvenance;
   const raw=String(job.dateRaw||"");
   if(/πριν|σήμερα|χθες|ago|today|yesterday/i.test(raw)) return "relative_estimate";
@@ -62,7 +62,7 @@ export async function loadFirstSeen({dataDir,previousJobs=[],previousFetchedAt,n
     const seen=job.firstSeenAt||job.manuallyVerifiedAt||previousFetchedAt;
     for(const k of identities(job)){
       recordEarliest(map,k,job.manuallyVerifiedAt,now);
-      remember(map,k,{seen,reported:job.originalObservedDate||job.date,reportedAt:job.originalObservedDateAt||previousFetchedAt||seen,verified:job.lastSeenAt||job.manuallyVerifiedAt||job.lastVerifiedAt,changed:job.dateChanged===true},now);
+      remember(map,k,{seen,reported:job.originalObservedDate||job.date,reportedAt:job.originalObservedDateAt||job.manuallyVerifiedAt||previousFetchedAt||seen,verified:job.lastSeenAt||job.manuallyVerifiedAt||job.lastVerifiedAt,changed:job.dateChanged===true},now);
     }
   }
   return map;
