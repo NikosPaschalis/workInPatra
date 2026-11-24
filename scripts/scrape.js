@@ -4,7 +4,7 @@ import { scrape as scrapeKariera } from "../server/scrapers/kariera.js";
 import { scrape as scrapeXe } from "../server/scrapers/xe.js";
 import { loadFirstSeen, stampFirstSeen } from "./first-seen.js";
 import { mergeCorporateListings, previousCorporateInventory } from "../server/corporate-inventory.js";
-import { corporateEnabled } from "../server/corporate-permissions.js";
+import { corporateEnabled, corporateDue } from "../server/corporate-permissions.js";
 import { collectCorporate } from "../server/scrapers/corporate.js";
 import { categorizeJob } from "../server/categorize.js";
 import { readFileSync, writeFileSync, mkdirSync } from "fs";
@@ -27,7 +27,7 @@ function withTimeout(promise, ms, name) {
   return Promise.race([promise, timeout]).finally(()=>clearTimeout(timer));
 }
 
-export async function fetchAll(previousJobs, previousCorporate, { boardScrapers, corporateCollector = collectCorporate, enabled = corporateEnabled } = {}) {
+export async function fetchAll(previousJobs, previousCorporate, { boardScrapers, corporateCollector = collectCorporate, enabled = corporateEnabled, due = corporateDue } = {}) {
   console.log("🔄 Scraping all sources...");
   console.log("⏱  Per-scraper timeout: " + SCRAPER_TIMEOUT_MS / 1000 + "s\n");
 
@@ -74,7 +74,7 @@ export async function fetchAll(previousJobs, previousCorporate, { boardScrapers,
     );
   }
 
-  const corporate = await corporateCollector(previousCorporate, { enabled });
+  const corporate = await corporateCollector(previousCorporate, { enabled, due });
   const boards = jobs.map(job=>({...job,category:categorizeJob(job)}));
   const deduplicated = mergeCorporateListings(boards,corporate.jobs);
 

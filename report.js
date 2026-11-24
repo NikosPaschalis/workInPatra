@@ -204,7 +204,7 @@ function renderCorporate(snapshot) {
   document.getElementById("corporate-report-note").textContent = "Κάλυψη στο snapshot " + formatMonth(snapshot.month) + ". Μη επανελεγμένες καταχωρίσεις: " + (data.unverified || 0) + ". Παλαιότερα snapshots δεν είχαν την ίδια κάλυψη.";
   if (data.ageWindow) document.getElementById("corporate-report-note").textContent += " Εταιρικό αρχείο: " + data.ageWindow.total + " καταχωρίσεις πριν την αφαίρεση διπλοεγγραφών μεταξύ πηγών. Εντός 30 ημερών: " + data.ageWindow.visible30 + ". Στη συγκεντρωτική προβολή: " + (data.publicAgeWindow?.visible30 ?? data.ageWindow.visible30) + ". Οι αριθμοί ανά εταιρεία δεν προστίθενται στα συνολικά μεγέθη του snapshot.";
   const rows = document.getElementById("corporate-report-rows");
-  const labels = {success:"Επιτυχία",fallback:"Προηγούμενα δεδομένα",failed:"Αποτυχία",skipped:"Παράλειψη"};
+  const labels = {success:"Επιτυχία",fallback:"Προηγούμενα δεδομένα",failed:"Αποτυχία",skipped:"Παράλειψη",scheduled_skip:"Επόμενος προγραμματισμένος έλεγχος"};
   for (const s of Object.values(data.coverage)) {
     const tr = document.createElement("tr");
     for (const value of [s.company, s.status === "success" || s.retained_count > 0 ? String(data.byCompany?.[s.company] || 0) : "—", labels[s.status] || s.status]) {

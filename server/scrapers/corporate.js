@@ -99,7 +99,7 @@ export async function fetchCompany(company, { fetchImpl = globalThis.fetch, now 
   throw new Error("Pagination limit exceeded");
 }
 
-export async function collectCorporate(previousJobs, { enabled = false, companies = CORPORATE_COMPANIES, fetchImpl = globalThis.fetch, now = new Date() } = {}) {
+export async function collectCorporate(previousJobs, { enabled = false, due = () => true, companies = CORPORATE_COMPANIES, fetchImpl = globalThis.fetch, now = new Date() } = {}) {
   const previous = previousJobs.filter(j => j.source === "corporate");
   const jobs = [], sourceStats = {};
   for (const company of companies) {
@@ -108,6 +108,11 @@ export async function collectCorporate(previousJobs, { enabled = false, companie
     if (!(typeof enabled === "function" ? enabled(company) : enabled)) {
       jobs.push(...old.map(j => ({ ...j, corporateStatus: "unverified" })));
       sourceStats[key] = { status: "skipped", company: company.name, scraped_count: 0, retained_count: old.length };
+      continue;
+    }
+    if (!due(company)) {
+      jobs.push(...old);
+      sourceStats[key] = { status: "scheduled_skip", company: company.name, scraped_count: 0, retained_count: old.length };
       continue;
     }
     try {
