@@ -3,6 +3,7 @@ import {
   athensCalendarAge,
   isJobWithinAgeWindow,
   jobAgeBasis,
+  isNewPublication,
   normalizeSearchText,
 } from "./client-utils.js";
 import { CATEGORY_DEFINITIONS } from "./categories.js";
@@ -344,7 +345,7 @@ function render() {
   const count = filtered.length;
 
   // Trust stat — count jobs from the last 7 days within the filtered set
-  const newCount = filtered.filter(j => jobAgeBasis(j, now)?.kind === "published" && isJobWithinAgeWindow(j, 7, now)).length;
+  const newCount = filtered.filter(j => isNewPublication(j, 7, now)).length;
 
   countLabel.innerHTML = state.loading
     ? "Φόρτωση…"
@@ -376,6 +377,8 @@ function render() {
     const dateLabel = formatDate(basis?.date);
     const dateEl = card.querySelector(".card-date");
     dateEl.textContent = basis?.kind === "first_seen" ? "Εντοπίστηκε: " + dateLabel : dateLabel;
+    if (basis?.kind === "published" && job.dateChanged) { dateEl.textContent = "Ημ. πηγής: " + dateLabel; dateEl.title = "Η ημερομηνία της πηγής έχει μεταβληθεί· δεν αποδεικνύει νέα δημοσίευση."; }
+    else if (basis?.kind === "published" && job.dateProvenance === "relative_estimate") { dateEl.textContent = "Περίπου: " + dateLabel; dateEl.title = "Εκτίμηση από σχετική ένδειξη της πηγής."; }
     if (basis?.kind === "first_seen") dateEl.title = "Άγνωστη ημερομηνία δημοσίευσης — εμφανίζεται ο πρώτος καταγεγραμμένος εντοπισμός.";
 
     // "Νέο" badge — visible only for today's listings

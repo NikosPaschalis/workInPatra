@@ -16,6 +16,7 @@ import {
   initializeHistory,
   recordScrapeHistory,
   recordFailedRun,
+  makeJobKey,
 } from "./job-history.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -76,6 +77,9 @@ export async function fetchAll(previousJobs, previousCorporate, { boardScrapers,
 
   const corporate = await corporateCollector(previousCorporate, { enabled, due });
   const boards = jobs.map(job=>({...job,category:categorizeJob(job)}));
+  // Use raw successful adapter output, not retained curated rows or public deduplication.
+  const freshBoards = results.flatMap((r,i)=>successfulSources.includes(scrapers[i].name)&&Array.isArray(r.value)?r.value.map(j=>({...j,category:categorizeJob(j)})):[]);
+  const freshKeys = new Set([...freshBoards,...corporate.jobs.filter(j=>corporate.sourceStats[j.sourceKey]?.status==="success")].map(makeJobKey));
   const deduplicated = mergeCorporateListings(boards,corporate.jobs);
 
   const sourceStats = Object.fromEntries(scrapers.map(({ name }, index) => {
@@ -92,6 +96,7 @@ export async function fetchAll(previousJobs, previousCorporate, { boardScrapers,
 
     return [name, {
       status,
+      collection_scope: "listing_page_unverified",
       scraped_count: freshCount,
       fallback_count: status === "fallback" ? fallbackCount : 0,
       retained_count: deduplicated.filter((job) => job.source === name).length,
@@ -99,13 +104,12 @@ export async function fetchAll(previousJobs, previousCorporate, { boardScrapers,
   }));
 
   for (const [key, stats] of Object.entries(corporate.sourceStats)) {
-    if (stats.status === "skipped" && stats.retained_count === 0) continue;
-    sourceStats[key] = { ...stats, retained_count: deduplicated.filter(j => j.sourceKey === key).length };
+    sourceStats[key] = { ...stats, collection_scope:"employer_adapter", retained_count: deduplicated.filter(j => j.sourceKey === key).length };
   }
   const corporateCoverage = Object.fromEntries(Object.entries(corporate.sourceStats).map(([key, stats]) => [key, { ...stats, public_count: deduplicated.filter(j => j.sourceKey === key).length }]));
   // Track all verified corporate observations, even if an existing board has the same listing.
-  const historyJobs = [...mergeCorporateListings(boards,[]), ...corporate.jobs];
-  return { jobs: deduplicated, historyJobs, corporateInventory:corporate.jobs, sourceStats, corporateCoverage };
+  const historyJobs = [...new Map([...freshBoards,...corporate.jobs.filter(j=>corporate.sourceStats[j.sourceKey]?.status==="success")].map(j=>[makeJobKey(j),j])).values()];
+  return { jobs: deduplicated, historyJobs, freshKeys, corporateInventory:corporate.jobs, sourceStats, corporateCoverage };
 }
 
 function loadPreviousJobs(jobsPath) {
@@ -143,7 +147,7 @@ export async function runScrape({ dataDir = path.join(__dirname, "..", "data"), 
     const sourceStats = result.sourceStats;
     const now = new Date();
     const firstSeen = await loadFirstSeen({ dataDir, previousJobs: [...previous.jobs,...previous.corporateInventory], previousFetchedAt: previous.lastFetched, now });
-    const stampOptions = { now, isFresh: job => sourceStats[job.sourceKey || job.source]?.status === "success" };
+    const stampOptions = { now, isFresh: job => result.freshKeys.has(makeJobKey(job)) };
     const historyJobs = stampFirstSeen(result.historyJobs, firstSeen, stampOptions);
     const jobs = stampFirstSeen(result.jobs, firstSeen, stampOptions);
 

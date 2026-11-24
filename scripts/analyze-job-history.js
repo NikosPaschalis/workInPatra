@@ -38,7 +38,7 @@ export function analyzeJobLifecycle(observations, runs) {
     if (run.run_type !== "scrape") continue;
     const at = parseTime(run.completed_at);
     for (const [source, info] of Object.entries(run.sources || {})) {
-      if (info?.status !== "success") continue;
+      if (info?.status !== "success" || info.collection_scope === "listing_page_unverified") continue;
       if (!bySource.has(source)) bySource.set(source, []);
       bySource.get(source).push({ run_id: run.run_id, at });
     }
@@ -58,8 +58,9 @@ export function analyzeJobLifecycle(observations, runs) {
     }
     const isBaseline = run.run_type === "baseline" && run.status === "baseline";
     const isFresh = run.run_type === "scrape" && run.sources?.[source]?.status === "success";
+    const isManual = run.run_type === "manual" && run.sources?.[source]?.status === "manual_verified" && parseTime(observation.verified_at)!==null && parseTime(observation.verified_at)<=at;
     const completed = parseTime(run.completed_at);
-    if ((!isBaseline && !isFresh) || completed === null || at !== completed) {
+    if ((!isBaseline && !isFresh && !isManual) || completed === null || at !== completed) {
       issues.untrusted_observations++;
       continue;
     }
@@ -76,7 +77,7 @@ export function analyzeJobLifecycle(observations, runs) {
       issues.invalid_observations++;
       continue;
     }
-    job.events.push({ at, run_id: run.run_id, baseline: isBaseline });
+    job.events.push({ at: isManual?parseTime(observation.verified_at):at, run_id: run.run_id, baseline: isBaseline, manual:isManual });
   }
 
   const jobs = [];
@@ -93,7 +94,7 @@ export function analyzeJobLifecycle(observations, runs) {
       : laterSuccesses.length === 1
         ? "not_seen_once"
         : "last_observed";
-    const firstFresh = job.events.find(e => !e.baseline);
+    const firstFresh = job.events.find(e => !e.baseline && !e.manual);
     jobs.push({
       job_key: job.job_key, source: job.source, title: job.title, company: job.company, url: job.url,
       first_seen: new Date(first.at).toISOString(),
@@ -118,6 +119,7 @@ export function analyzeJobLifecycle(observations, runs) {
   for (const run of runMap.values()) {
     for (const [source, info] of Object.entries(run.sources || {})) {
       if (!source_quality[source]) source_quality[source] = { successful_scrapes: 0, latest_success_at: null };
+      if (info?.status==="success" && info.collection_scope==="listing_page_unverified") { source_quality[source].successful_scrapes++; if(!source_quality[source].latest_success_at||run.completed_at>source_quality[source].latest_success_at)source_quality[source].latest_success_at=run.completed_at; }
       const key = info?.status;
       if (key && key !== "success") source_quality[source][key + "_runs"] = (source_quality[source][key + "_runs"] || 0) + 1;
     }

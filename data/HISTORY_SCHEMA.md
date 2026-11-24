@@ -20,3 +20,6 @@ The scraper stores append-only history in two JSON Lines files:
 - `scrape-runs.jsonl`: append-only run log.
 
 Each line is an independent JSON object. Do not reformat the files as a single JSON array.
+
+## Schema v2 (2026-11-24)
+New observations retain location, employment_type, experience_level, salary_raw, external_id, date_provenance, date_changed, original_observed_date and last_seen_at. Missing fields are null, never imputed. Source-reported dates are not necessarily original publication dates. firstSeenAt is the earliest recorded evidence; originalObservedDate is the first non-null reported date in observed order; lastSeenAt changes only on fresh collection or actual manual verification. Existing history remains unchanged. Manual imports use run_type manual and status manual_verified, with verified_at separate from ingestion observed_at; they are not source-wide coverage or evidence of absence. Raw successful source records are stored before public deduplication (one source-specific posting identity per run). Scheduled skips/fallbacks never generate new positive evidence. 

@@ -4,6 +4,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { loadFirstSeen, stampFirstSeen } from "./first-seen.js";
+import { makeJobKey, recordManualHistory } from "./job-history.js";
 
 const normalize = (s) => String(s || "").trim().toLocaleLowerCase("el").replace(/\s+/g, " ");
 const identity = (job) => normalize(job.title) + "|" + normalize(job.company);
@@ -52,7 +53,9 @@ if (isDirect) {
     // the original queue remains recoverable via Git; repeated runs are URL-deduplicated.
     const now = new Date();
     const firstSeen = await loadFirstSeen({ dataDir: path.dirname(jobsPath), previousJobs: existing.jobs, previousFetchedAt: existing.lastFetched, now });
-    const stamped = stampFirstSeen(result.jobs, firstSeen, { now, isFresh: job => result.accepted.includes(job) });
+    const acceptedKeys = new Set(result.accepted.map(makeJobKey));
+    const stamped = stampFirstSeen(result.jobs.map(job=>acceptedKeys.has(makeJobKey(job))?{...job,observationKind:"manual"}:job), firstSeen, { now, isFresh: job => acceptedKeys.has(makeJobKey(job)) });
+    recordManualHistory({dataDir:path.dirname(jobsPath),jobs:stamped.filter(job=>acceptedKeys.has(makeJobKey(job))),completedAt:now.toISOString()});
     writeFileSync(jobsPath, JSON.stringify({ ...existing, jobs: stamped }), "utf8");
     writeFileSync(queuePath, JSON.stringify({ jobs: [] }, null, 2) + "\n", "utf8");
     console.log("Kariera curated: accepted=" + result.accepted.length + ", duplicates=" + result.rejected.length);

@@ -9,9 +9,10 @@ import path from 'path';
 import { corporateStatistics } from '../server/corporate-statistics.js';
 import { summarizeJobAge } from '../client-utils.js';
 import { CATEGORY_DEFINITIONS } from '../categories.js';
+import { auditFiles, compareCoverage } from './data-quality.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DATA_DIR = path.join(__dirname, '..', 'data');
+const DATA_DIR = process.env.SNAPSHOT_DATA_DIR ? path.resolve(process.env.SNAPSHOT_DATA_DIR) : path.join(__dirname, '..', 'data');
 const SNAPSHOT_DIR = path.join(DATA_DIR, 'snapshots');
 const JOBS_FILE = path.join(DATA_DIR, 'jobs.json');
 const MANIFEST_FILE = path.join(SNAPSHOT_DIR, 'index.json');
@@ -112,6 +113,8 @@ function validateSnapshot(snapshot) {
 
     const capturedAt = new Date();
     const corporate = corporateStatistics(data, capturedAt);
+    const quality = auditFiles(DATA_DIR,capturedAt);
+    if(quality.errors.length)throw Error('Data quality errors: '+JSON.stringify(quality.errors));
     const snapshot = {
       month: label,
       capturedAt: capturedAt.toISOString(),
@@ -119,12 +122,15 @@ function validateSnapshot(snapshot) {
       snapshotType: 'active_inventory',
       measurementNote: 'Active listings present in jobs.json at capture time; not a count of all jobs newly posted during the calendar month.',
       total: jobs.length,
+      quality: { schemaVersion: quality.schemaVersion, checkedAt:quality.checkedAt, warnings:quality.warnings, bySource:quality.bySource },
       ageWindow: summarizeJobAge(jobs, capturedAt),
       byCategory,
       bySource,
       ...(corporate ? { corporate } : {}),
     };
 
+    const prevFile = readdirSync(SNAPSHOT_DIR).filter(name=>/^\d{4}-\d{2}\.json$/.test(name)&&name<`${label}.json`).sort().at(-1);
+    snapshot.comparableCoverage=compareCoverage(prevFile?JSON.parse(readFileSync(path.join(SNAPSHOT_DIR,prevFile),'utf8')):null,snapshot);
     validateSnapshot(snapshot);
     writeFileSync(outputFile, JSON.stringify(snapshot, null, 2) + '\n');
     console.log(`✅ Snapshot saved → data/snapshots/${label}.json`);

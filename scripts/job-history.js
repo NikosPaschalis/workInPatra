@@ -25,9 +25,12 @@ export function makeJobKey(job) {
   return source + ":fallback:" + title + "|" + company;
 }
 
-function toObservation(job, observedAt, runId) {
+export function toObservation(job, observedAt, runId, kind = "scrape") {
   return {
+    schema_version: 2,
+    observation_kind: kind,
     observed_at: observedAt,
+    verified_at: kind === "manual" ? job.manuallyVerifiedAt : kind === "baseline" ? null : observedAt,
     run_id: runId,
     job_key: makeJobKey(job),
     source: job.sourceKey || job.source || "unknown",
@@ -40,6 +43,15 @@ function toObservation(job, observedAt, runId) {
     source_published_at: job.date || null,
     first_seen_at: job.firstSeenAt || null,
     source_date_raw: job.dateRaw || "",
+    date_provenance: job.dateProvenance || null,
+    date_changed: job.dateChanged === true,
+    original_observed_date: job.originalObservedDate || null,
+    last_seen_at: job.lastSeenAt || null,
+    location: job.location || null,
+    employment_type: job.employmentType || null,
+    experience_level: job.experienceLevel || null,
+    salary_raw: job.salaryRaw || null,
+    external_id: job.externalId || null,
     tags: Array.isArray(job.tags) ? job.tags : [],
   };
 }
@@ -60,7 +72,7 @@ export function initializeHistory({ dataDir, previousJobs, lastFetched }) {
   const runId = "baseline-" + observedAt.replace(/[^0-9]/g, "").slice(0, 14);
 
   for (const job of previousJobs) {
-    appendJsonl(observationsPath, toObservation(job, observedAt, runId));
+    appendJsonl(observationsPath, toObservation(job, observedAt, runId, "baseline"));
   }
 
   const bySource = {};
@@ -100,7 +112,7 @@ export function recordScrapeHistory({
   const observationsPath = path.join(dataDir, "observations.jsonl");
   const runsPath = path.join(dataDir, "scrape-runs.jsonl");
 
-  const freshJobs = jobs.filter((job) => sourceStats[job.sourceKey || job.source]?.status === "success");
+  const freshJobs = [...new Map(jobs.filter(job => sourceStats[job.sourceKey || job.source]?.status === "success").map(job=>[makeJobKey(job),job])).values()];
   for (const job of freshJobs) {
     appendJsonl(observationsPath, toObservation(job, completedAt, runId));
   }
@@ -117,7 +129,7 @@ export function recordScrapeHistory({
     started_at: startedAt,
     completed_at: completedAt,
     total_observed: freshJobs.length,
-    sources: sourceStats,
+    sources: Object.fromEntries(Object.entries(sourceStats).map(([key,stats])=>[key,{...stats,observed_count:freshJobs.filter(j=>(j.sourceKey||j.source)===key).length}])),
   });
 
   return { runId, status, observedCount: freshJobs.length };
@@ -136,4 +148,23 @@ export function recordFailedRun({ dataDir, startedAt, error, runId = randomUUID(
     error: String(error?.message || error || "Unknown scraper error"),
   });
   return runId;
+}
+
+// Manual imports are positive evidence only, never a full-source scrape.
+export function recordManualHistory({dataDir,jobs,completedAt=new Date().toISOString(),runId=randomUUID()}){
+ if(!jobs.length)return {observedCount:0};
+ const unique=[...new Map(jobs.map(j=>[makeJobKey(j),j])).values()];
+ for(const j of unique){
+  if(!Number.isFinite(Date.parse(j.manuallyVerifiedAt||""))||Date.parse(j.manuallyVerifiedAt)>Date.parse(completedAt))throw Error("Invalid manual verification timestamp");
+ }
+ mkdirSync(dataDir,{recursive:true});
+ const sources={};
+ for(const j of unique){
+  const k=j.sourceKey||j.source;
+  sources[k]||={status:"manual_verified",observed_count:0};
+  sources[k].observed_count++;
+  appendJsonl(path.join(dataDir,"observations.jsonl"),toObservation(j,completedAt,runId,"manual"));
+ }
+ appendJsonl(path.join(dataDir,"scrape-runs.jsonl"),{run_id:runId,run_type:"manual",status:"success",started_at:completedAt,completed_at:completedAt,total_observed:unique.length,sources});
+ return {runId,observedCount:unique.length};
 }
