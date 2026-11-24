@@ -62,3 +62,7 @@ test("uses canonical URL from detail response and rejects invalid detail URLs",a
   assert.equal(job.url,"https://jobs.smartrecruiters.com/netcompany1/123-actual-title-");
   await assert.rejects(fetchCompany(net,{now,fetchImpl:withDetails([posting("123")],"wrong-company")}),/Invalid official posting URL/);
 });
+
+test("public list request uses documented lower-case country code and explicit destination",async()=>{
+  await fetchCompany(net,{fetchImpl:async url=>{assert.equal(url.searchParams.get("country"),"gr");assert.equal(url.searchParams.get("destination"),"PUBLIC");return response([])}});
+});
