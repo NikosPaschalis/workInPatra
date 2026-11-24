@@ -358,6 +358,7 @@ function render() {
     const badge = card.querySelector(".card-source-badge");
     badge.textContent = SOURCE_LABELS[job.source] || job.source;
     badge.classList.add(`badge-${job.source}`);
+    if (job.previewOnly) badge.textContent = "Εταιρική καριέρα · DEMO";
     if (job.source === "corporate" && job.corporateStatus !== "verified") badge.textContent += " · Μη επανελεγμένη";
 
     const dateLabel = formatDate(job.date);
@@ -400,7 +401,12 @@ function render() {
     } else {
       if (job.source === "corporate") link.textContent = "Στην εταιρική σελίδα";
       link.href = job.url || "#";
-      if (!job.url) link.style.display = "none";
+      if (job.previewOnly) {
+        link.removeAttribute("href");
+        link.removeAttribute("target");
+        link.setAttribute("aria-disabled", "true");
+        link.textContent = "Δοκιμαστική κάρτα — χωρίς αίτηση";
+      } else if (!job.url) link.style.display = "none";
     }
 
     grid.appendChild(node);
@@ -438,9 +444,12 @@ async function loadJobs(forceRefresh = false) {
         [job.title, job.company, ...(job.tags || [])].filter(Boolean).join(" ")
       ),
     }));
+    document.getElementById("corporate-preview-notice").hidden = !data.corporatePreview;
     if (statTotal) statTotal.textContent = state.jobs.length;
     const corporateCount = state.jobs.filter(j => j.source === "corporate" && j.corporateStatus === "verified").length;
     document.getElementById("corporate-count").textContent = String(corporateCount);
+    const discoveryText = document.getElementById("corporate-discovery").querySelector("p");
+    if (data.corporatePreview) discoveryText.textContent = corporateCount + " δοκιμαστικές εταιρικές θέσεις (DEMO).";
     document.getElementById("corporate-discovery").hidden = !state.jobs.some(j => j.source === "corporate");
     if (data.lastFetched) {
       const d = new Date(data.lastFetched);

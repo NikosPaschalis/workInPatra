@@ -24,3 +24,12 @@
   for = "/data/jobs.json"
   [headers.values]
     Cache-Control = "public, max-age=600, stale-while-revalidate=300"
+
+# Demonstration data is generated only in the PR #18 preview artifact.
+[context.deploy-preview]
+  command = "node scripts/build-corporate-preview.js"
+
+[[headers]]
+  for = "/data/corporate-preview-report.json"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
