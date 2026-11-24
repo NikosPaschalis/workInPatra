@@ -17,7 +17,8 @@ export const CORPORATE_ROLE_RULES = [
   ["operations", "Operations & Supply Chain", "logistics", /operations|supply chain|manufacturing|production|logistics|warehouse/],
   ["marketing", "Marketing & Communication", "marketing", /marketing|communication|creative/],
   ["sales", "Sales & Business Development", "sales", /sales|business development|account manager/],
-  ["engineering", "Engineering", "construction", /engineer|μηχανικ|technician|electrical|mechanical/],
+  ["technical-writing", "Τεχνική τεκμηρίωση", "admin", /technical author|technical writer|technical documentation(?! engineer)/],
+  ["engineering", "Engineering", "construction", /engineer|μηχανικ|technician|electrical|mechanical|industrial designer|technical illustration/],
 ];
 export function categorizeCorporateRole(title, sourceCategory = "") {
   const match = CORPORATE_ROLE_RULES.find(r => r[3].test(normalizeText(title))) ||

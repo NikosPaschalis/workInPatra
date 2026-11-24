@@ -50,10 +50,11 @@
   {
     "company": "Irida Labs",
     "provider": "html",
-    "status": "manual_verified_automation_pending",
+    "status": "live_validated_approval_required",
     "reviewedCount": 4,
     "evidence": "https://iridalabs.com/careers/",
-    "reviewedOn": "2026-11-24"
+    "reviewedOn": "2026-11-24",
+    "liveValidationRun": "https://github.com/NikosPaschalis/workInPatra/actions/runs/45370791696"
   },
   {
     "company": "EY",
@@ -106,26 +107,29 @@
   {
     "company": "ALTHOM",
     "provider": "html",
-    "status": "manual_verified_automation_pending",
+    "status": "live_validated_approval_required",
     "reviewedCount": 4,
     "evidence": "https://www.althom.de/careers",
-    "reviewedOn": "2026-11-24"
+    "reviewedOn": "2026-11-24",
+    "liveValidationRun": "https://github.com/NikosPaschalis/workInPatra/actions/runs/45370791696"
   },
   {
     "company": "Noesis Technologies",
     "provider": "html",
-    "status": "manual_verified_automation_pending",
+    "status": "live_validated_approval_required",
     "reviewedCount": 1,
     "evidence": "https://noesis-tech.com/company/careers/",
-    "reviewedOn": "2026-11-24"
+    "reviewedOn": "2026-11-24",
+    "liveValidationRun": "https://github.com/NikosPaschalis/workInPatra/actions/runs/45370791696"
   },
   {
     "company": "Advisable",
     "provider": "html",
-    "status": "manual_verified_automation_pending",
+    "status": "403_manual_review_required",
     "reviewedCount": 1,
     "evidence": "https://www.advisable.com/careers",
-    "reviewedOn": "2026-11-24"
+    "reviewedOn": "2026-11-24",
+    "liveValidationRun": "https://github.com/NikosPaschalis/workInPatra/actions/runs/45370791696"
   },
   {
     "company": "Patras Bags",

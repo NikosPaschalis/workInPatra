@@ -1,17 +1,16 @@
 name: Company HTML read-only pilot
 on:
-  pull_request:
-    branches: [main]
-    paths:
-      - 'server/scrapers/company-html.js'
-      - '.github/workflows/company-html-pilot.yml'
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
   pilot:
-    if: github.head_ref == 'feat/corporate-careers'
+    if: vars.CORPORATE_CAREERS_ENABLED == 'true' && vars.HTML_APPROVED_COMPANIES != ''
     runs-on: ubuntu-24.04
     timeout-minutes: 7
+    env:
+      CORPORATE_CAREERS_ENABLED: ${{ vars.CORPORATE_CAREERS_ENABLED }}
+      HTML_APPROVED_COMPANIES: ${{ vars.HTML_APPROVED_COMPANIES }}
     steps:
       - uses: actions/checkout@v4
         with:

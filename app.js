@@ -1,4 +1,4 @@
-import { isCorporatePreview, loadCorporatePreview } from "./corporate-preview.js?v=review-v4";
+import { isCorporatePreview, loadCorporatePreview } from "./corporate-preview.js?v=review-v5";
 import {
   compareJobsByDateNewestFirst,
   athensCalendarAge,
@@ -371,7 +371,7 @@ function render() {
     card.querySelector(".card-company").textContent = job.company || "—";
 
     const tagsEl = card.querySelector(".card-tags");
-    const cardTags = job.source === "direct"
+    const cardTags = job.source === "corporate" ? [...(job.tags || []), job.location, job.locationNote].filter(Boolean) : job.source === "direct"
       ? [CATEGORY_SEO[job.category] || job.sourceCategory || "Άλλη κατηγορία"]
       : (job.tags || []);
     cardTags.forEach(t => {

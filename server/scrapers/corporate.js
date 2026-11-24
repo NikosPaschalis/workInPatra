@@ -15,7 +15,7 @@ export const CORPORATE_COMPANIES = Object.freeze([
   { id: "irida-renesas", name: "Renesas / Irida Labs", provider: "html", careerUrl: "https://iridalabs.com/careers/" },
   { id: "althom", name: "ALTHOM", provider: "html", careerUrl: "https://www.althom.de/careers" },
   { id: "noesis", name: "Noesis Technologies", provider: "html", careerUrl: "https://noesis-tech.com/company/careers/" },
-  { id: "advisable", name: "Advisable", provider: "html", careerUrl: "https://www.advisable.com/careers" },
+  { id: "advisable", blocked: true, name: "Advisable", provider: "html", careerUrl: "https://www.advisable.com/careers" },
 ]);
 const cities = new Set(["patras", "patra", "patrai", "πατρα", "πατρεσ", "rio", "ριο", "industrial area of patras", "patras industrial area", "βιπε πατρων", "κατω αχαια", "kato achaia", "kato achaia patras"]);
 export const corporateSourceKey = id => "corporate:" + id;

@@ -1,5 +1,6 @@
 // A provider flag alone must not authorize every company on a third-party platform.
 export function corporateEnabled(company,env=process.env){
+ if(company.blocked) return false;
  if(env.CORPORATE_CAREERS_ENABLED!=="true")return false;
  if(company.provider==="lever")return env.LEVER_REUSE_AUTHORIZED==="true";
  if(company.provider==="html")return String(env.HTML_APPROVED_COMPANIES||"").split(",").map(s=>s.trim()).includes(company.id);

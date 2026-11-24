@@ -1,9 +1,9 @@
 import { summarizeJobAge } from "./client-utils.js";
-export const REVIEW_VERSION = "review-v4";
+export const REVIEW_VERSION = "review-v5";
 export function isCorporatePreview(hostname) { return hostname === "deploy-preview-18--workinpatras.netlify.app"; }
 export async function loadCorporatePreview(hostname, fetchImpl = globalThis.fetch) {
   if (!isCorporatePreview(hostname)) return [];
-  const response = await fetchImpl("/data/corporate-review-v4.json", { cache: "no-store" });
+  const response = await fetchImpl("/data/corporate-review-v5.json", { cache: "no-store" });
   if (!response.ok) throw new Error("Review data HTTP " + response.status);
   const data = await response.json();
   if (data.version !== REVIEW_VERSION || !Array.isArray(data.jobs) || data.jobs.length === 0 ||

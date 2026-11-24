@@ -2,11 +2,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {loadCorporatePreview,corporatePreviewStats} from "../corporate-preview.js";
-const data=JSON.parse(readFileSync(new URL("../data/corporate-review-v4.json",import.meta.url),"utf8"));
+const data=JSON.parse(readFileSync(new URL("../data/corporate-review-v5.json",import.meta.url),"utf8"));
 test("only PR 18 preview requests versioned reviewed listings, never production",async()=>{
   assert.deepEqual(await loadCorporatePreview("www.workinpatras.gr",()=>assert.fail("production request")),[]);
   const jobs=await loadCorporatePreview("deploy-preview-18--workinpatras.netlify.app",async(url,opts)=>{
-    assert.equal(url,"/data/corporate-review-v4.json");assert.equal(opts.cache,"no-store");return {ok:true,json:async()=>data};
+    assert.equal(url,"/data/corporate-review-v5.json");assert.equal(opts.cache,"no-store");return {ok:true,json:async()=>data};
   });
   assert.equal(jobs.length,28);
   assert.equal(new Set(jobs.map(j=>j.company)).size,14);
