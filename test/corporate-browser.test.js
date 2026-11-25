@@ -1,10 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
-import {resolve,extname} from "node:path";
+import {resolve,extname,sep} from "node:path";
 import {chromium} from "playwright";
 const types={".html":"text/html",".js":"application/javascript",".css":"text/css",".json":"application/json"};
-test("production grid renders only age-eligible records, not preview data; report retains inventory totals",async()=>{
+test("production grid renders only age-eligible records and excludes preview data",async()=>{
  const browser=await chromium.launch({headless:true});
  try{
  const page=await browser.newPage();
@@ -12,7 +12,6 @@ test("production grid renders only age-eligible records, not preview data; repor
  const errors=[];page.on("pageerror",e=>errors.push(e.message));
  const base={source:"corporate",company:"Fixture employer",category:"tech",location:"Patras",corporateStatus:"verified",tags:["Software"],url:"https://example.com/job"};
  const jobs=[{...base,title:"Recent fixture",date:"2026-11-23"},{...base,title:"Undated fixture",date:null,firstSeenAt:"2026-11-24"},{...base,title:"Old fixture",date:"2026-10-01"},{...base,title:"Preview must not render",date:"2026-11-23",previewOnly:true}];
- let snapshotCalls=0;
  await page.route("**/*",async route=>{
  const url=new URL(route.request().url());
  if(url.hostname!=="www.workinpatras.gr")return route.abort();
@@ -20,7 +19,7 @@ test("production grid renders only age-eligible records, not preview data; repor
  if(p==="/data/jobs.json")return route.fulfill({json:{jobs}});
  if(p==="/data/direct-jobs.json")return route.fulfill({json:{jobs:[]}});
  const f=resolve("."+p);
- if(!f.startsWith(process.cwd()+"/"))return route.abort();
+ if(!f.startsWith(process.cwd()+sep))return route.abort();
  try{return await route.fulfill({body:await readFile(f),contentType:types[extname(f)]||"application/octet-stream"});}catch{return route.fulfill({status:404,body:""});}
  });
  await page.goto("https://www.workinpatras.gr/?src=corporate&days=30");

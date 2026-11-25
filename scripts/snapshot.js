@@ -65,6 +65,10 @@ function buildManifest(SNAPSHOT_DIR, now) {
     measurementNote: 'Counts describe active listings present in jobs.json at capture time; they are not a count of all jobs newly posted during the calendar month.',
     snapshots,
   };
+  if (existsSync(MANIFEST_FILE)) {
+    const previous = JSON.parse(readFileSync(MANIFEST_FILE, 'utf8'));
+    if (JSON.stringify({ ...previous, generatedAt: manifest.generatedAt }) === JSON.stringify(manifest)) return snapshots;
+  }
   writeFileSync(MANIFEST_FILE, JSON.stringify(manifest, null, 2) + '\n');
   return snapshots;
 }
@@ -77,7 +81,7 @@ function validateSnapshot(snapshot) {
   }
 }
 
-export function generateSnapshot({dataDir=DEFAULT_DATA_DIR,now=new Date()}={}) {
+export function generateSnapshot({dataDir=DEFAULT_DATA_DIR,now=new Date(),requireCaptureWindow=false}={}) {
   const DATA_DIR=path.resolve(dataDir), SNAPSHOT_DIR=path.join(DATA_DIR,'snapshots'), JOBS_FILE=path.join(DATA_DIR,'jobs.json');
   if (!existsSync(JOBS_FILE)) throw Error('data/jobs.json not found — run scrapers first');
 
@@ -94,6 +98,8 @@ export function generateSnapshot({dataDir=DEFAULT_DATA_DIR,now=new Date()}={}) {
   if (existsSync(outputFile)) {
     console.log(`⏭ Snapshot for ${label} already exists — keeping the historical record`);
   } else {
+    const localDay = Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Athens', day: 'numeric' }).format(now));
+    if (requireCaptureWindow && localDay > 3) throw new Error('Monthly capture window has passed in Europe/Athens; historical inventory cannot be reconstructed');
     const byCategory = Object.fromEntries(CATEGORY_IDS.map(id => [id, 0]));
     const bySource = Object.fromEntries(SOURCE_IDS.map(id => [id, 0]));
     bySource.unknown = 0;
@@ -139,6 +145,6 @@ export function generateSnapshot({dataDir=DEFAULT_DATA_DIR,now=new Date()}={}) {
   return JSON.parse(readFileSync(outputFile,'utf8'));
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
- try{generateSnapshot({dataDir:process.env.SNAPSHOT_DATA_DIR||DEFAULT_DATA_DIR});}
+ try{generateSnapshot({dataDir:process.env.SNAPSHOT_DATA_DIR||DEFAULT_DATA_DIR,requireCaptureWindow:process.argv.includes('--monthly')});}
  catch(error){console.error('❌ Snapshot generation failed:',error);process.exitCode=1;}
 }

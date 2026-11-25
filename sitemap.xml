@@ -20,4 +20,9 @@
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
+  <!-- labour-reports:start -->
+  <url><loc>https://www.workinpatras.gr/reports/2026-10/3m/</loc><lastmod>2026-11-25</lastmod></url>
+  <url><loc>https://www.workinpatras.gr/reports/2026-09/3m/</loc><lastmod>2026-11-25</lastmod></url>
+  <url><loc>https://www.workinpatras.gr/reports/2026-08/3m/</loc><lastmod>2026-11-25</lastmod></url>
+  <!-- labour-reports:end -->
 </urlset>
