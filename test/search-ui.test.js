@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
-import {resolve,extname} from "node:path";
+import {resolve,extname,sep} from "node:path";
 import {chromium} from "playwright";
 const types={".html":"text/html",".js":"application/javascript",".css":"text/css",".json":"application/json"};
 const job=(title,category,date,source="jobfind")=>({title,category,date,source,company:"Fixture",url:"https://example.com/"+encodeURIComponent(title)});
@@ -15,7 +15,7 @@ async function setup(page){
   if(p==="/data/jobs.json")return route.fulfill({json:{jobs}});
   if(p==="/data/direct-jobs.json")return route.fulfill({json:{jobs:[]}});
   const f=resolve("."+p);
-  if(!f.startsWith(process.cwd()+"/"))return route.abort();
+  if(!f.startsWith(process.cwd()+sep))return route.abort();
   try{return await route.fulfill({body:await readFile(f),contentType:types[extname(f)]||"application/octet-stream"});}catch{return route.fulfill({status:404,body:""});}
  });
 }

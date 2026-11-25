@@ -1,225 +1,51 @@
-import { CATEGORY_DEFINITIONS } from './categories.js';
-
-const CATEGORY_LABELS = Object.fromEntries(CATEGORY_DEFINITIONS.map(({ id, label }) => [id, label]));
-const SOURCE_LABELS = { jobfind: 'JobFind', kariera: 'Kariera', xe: 'XE', corporate: 'Εταιρικές σελίδες', unknown: 'Άγνωστη πηγή' };
-const statusEl = document.getElementById('report-status');
-const contentEl = document.getElementById('report-content');
-const numberFormat = new Intl.NumberFormat('el-GR');
-const monthFormat = new Intl.DateTimeFormat('el-GR', { month: 'long', year: 'numeric', timeZone: 'UTC' });
-const dateFormat = new Intl.DateTimeFormat('el-GR', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
-
-function formatMonth(month) {
-  const [year, m] = month.split('-').map(Number);
-  return monthFormat.format(new Date(Date.UTC(year, m - 1, 1)));
-}
-function formatDate(value) {
-  if (!value) return '—';
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? '—' : dateFormat.format(date);
-}
-function percentChange(current, previous) {
-  if (!previous) return null;
-  return ((current - previous) / previous) * 100;
-}
-function escapeText(value) {
-  return String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
-}
-function renderTrend(snapshots) {
-  const host = document.getElementById('trend-chart');
-  const width = 620, height = 245, left = 42, right = 18, top = 18, bottom = 42;
-  const values = snapshots.map(item => item.total);
-  const max = Math.max(1, ...values);
-  const plotW = width - left - right, plotH = height - top - bottom;
-  const x = i => snapshots.length === 1 ? left + plotW / 2 : left + i * plotW / (snapshots.length - 1);
-  const y = value => top + plotH - (value / max) * plotH;
-  const grid = [0, .5, 1].map(fraction => {
-    const value = Math.round(max * fraction), yy = y(value);
-    return '<line x1="' + left + '" y1="' + yy + '" x2="' + (width-right) + '" y2="' + yy + '" stroke="#eeedf4"/><text x="' + (left-9) + '" y="' + (yy+4) + '" text-anchor="end" fill="#85859a" font-size="11">' + value + '</text>';
-  }).join('');
-  const points = snapshots.map((item, i) => x(i) + ',' + y(item.total)).join(' ');
-  const circles = snapshots.map((item, i) => '<circle cx="' + x(i) + '" cy="' + y(item.total) + '" r="4.5" fill="#4f46e5" stroke="white" stroke-width="2"><title>' + escapeText(formatMonth(item.month) + ': ' + item.total + ' αγγελίες') + '</title></circle>').join('');
-  const labels = snapshots.map((item, i) => '<text x="' + x(i) + '" y="' + (height-15) + '" text-anchor="middle" fill="#77778b" font-size="11">' + escapeText(item.month.slice(5)) + '/' + escapeText(item.month.slice(2,4)) + '</text>').join('');
-  const valueLabels = snapshots.map((item, i) => '<text x="' + x(i) + '" y="' + (y(item.total)-11) + '" text-anchor="middle" fill="#282747" font-size="12" font-weight="700">' + item.total + '</text>').join('');
-  host.innerHTML = '<svg class="trend-chart" viewBox="0 0 ' + width + ' ' + height + '" role="img" aria-label="Εξέλιξη συνόλου αγγελιών: ' + snapshots.map(s => escapeText(formatMonth(s.month) + ' ' + s.total)).join(', ') + '">' + grid + '<polyline points="' + points + '" fill="none" stroke="#4f46e5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' + circles + valueLabels + labels + '</svg>';
-}
-function renderBreakdown(snapshot, type) {
-  const host = document.getElementById('breakdown-chart');
-  document.getElementById('breakdown-title').textContent = type === 'category' ? 'Κατανομή ανά κατηγορία' : 'Κατανομή ανά πηγή';
-  document.getElementById('breakdown-subtitle').textContent = 'Snapshot ' + formatMonth(snapshot.month);
-  const raw = type === 'category' ? snapshot.byCategory : snapshot.bySource;
-  const labels = type === 'category' ? CATEGORY_LABELS : SOURCE_LABELS;
-  const rows = Object.entries(raw || {}).map(([id, value]) => ({ label: labels[id] || id, value: Number(value) || 0 }))
-    .filter(row => type === 'category' || row.value > 0).sort((a, b) => b.value - a.value || a.label.localeCompare(b.label, 'el'));
-  if (!rows.length) { host.innerHTML = '<div class="chart-empty">Δεν υπάρχουν αναλυτικά στοιχεία.</div>'; return; }
-  const max = Math.max(...rows.map(row => row.value), 1);
-  host.innerHTML = rows.map(row => '<div class="bar-row"><div class="bar-label">' + escapeText(row.label) + '</div><div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:' + (row.value/max*100) + '%"></div></div><div class="bar-value">' + numberFormat.format(row.value) + '</div></div>').join('');
+const archiveDuration = document.querySelector("#archive-duration");
+if (archiveDuration) {
+  const entries = [...document.querySelectorAll("#archive-list > li")];
+  document.querySelector("#archive-controls").hidden = false;
+  const filterArchive = () => {
+    for (const entry of entries) {
+      entry.hidden = Boolean(archiveDuration.value) && entry.dataset.duration !== archiveDuration.value;
+    }
+    document.querySelector("#archive-empty").hidden = entries.some(entry => !entry.hidden);
+  };
+  archiveDuration.addEventListener("change", filterArchive);
+  filterArchive();
 }
 
-function renderCategoryTrends(snapshots) {
-  const head = document.getElementById('category-trends-head');
-  const body = document.getElementById('category-trends-rows');
-  const recent = snapshots.slice(-4);
-  head.replaceChildren();
-  body.replaceChildren();
-  if (!recent.length) {
-    const row = document.createElement('tr');
-    const cell = document.createElement('td');
-    cell.colSpan = 3;
-    cell.textContent = 'Δεν υπάρχουν ιστορικά δεδομένα ανά κατηγορία.';
-    row.appendChild(cell);
-    body.appendChild(row);
-    return;
-  }
-
-  const headerRow = document.createElement('tr');
-  const categoryHeader = document.createElement('th');
-  categoryHeader.scope = 'col';
-  categoryHeader.textContent = 'Κατηγορία';
-  headerRow.appendChild(categoryHeader);
-  recent.forEach(snapshot => {
-    const cell = document.createElement('th');
-    cell.scope = 'col';
-    cell.className = 'num';
-    cell.textContent = formatMonth(snapshot.month);
-    headerRow.appendChild(cell);
-  });
-  const changeHeader = document.createElement('th');
-  changeHeader.scope = 'col';
-  changeHeader.textContent = 'Μεταβολή';
-  headerRow.appendChild(changeHeader);
-  const noteHeader = document.createElement('th');
-  noteHeader.scope = 'col';
-  noteHeader.textContent = 'Παρατήρηση';
-  headerRow.appendChild(noteHeader);
-  head.appendChild(headerRow);
-
-  const first = recent[0];
-  const latest = recent[recent.length - 1];
-  const categories = Object.keys(CATEGORY_LABELS).map(id => ({
-    id,
-    label: CATEGORY_LABELS[id],
-    first: Number(first.byCategory?.[id] ?? 0),
-    latest: Number(latest.byCategory?.[id] ?? 0),
-  })).sort((a, b) => b.latest - a.latest || a.label.localeCompare(b.label, 'el'));
-
-  categories.forEach(category => {
-    const row = document.createElement('tr');
-    const label = document.createElement('th');
-    label.scope = 'row';
-    label.className = 'category-name';
-    label.textContent = category.label;
-    row.appendChild(label);
-
-    recent.forEach(snapshot => {
-      const cell = document.createElement('td');
-      cell.className = 'num';
-      cell.textContent = numberFormat.format(Number(snapshot.byCategory?.[category.id] ?? 0));
-      row.appendChild(cell);
+const editionLink = document.querySelector("[data-edition-url]");
+if (editionLink) {
+  fetch("/reports/index.json")
+    .then(response => response.ok ? response.json() : null)
+    .then(archive => {
+      const url = editionLink.dataset.editionUrl;
+      const entry = archive?.entries.find(item => item.revisions.some(revision => revision.url === url));
+      const latest = entry?.revisions.at(-1);
+      if (latest && latest.url !== url) {
+        editionLink.textContent = "Διατίθεται διορθωμένη έκδοση στο αρχείο";
+        editionLink.parentElement.classList.add("notice");
+      }
+    })
+    .catch(() => {
+      // The permanent archive link still works when the index cannot be fetched.
     });
-
-    const delta = category.latest - category.first;
-    const change = document.createElement('td');
-    change.className = 'num';
-    if (delta > 0) {
-      change.classList.add('positive');
-      change.textContent = '↑ +' + numberFormat.format(delta);
-    } else if (delta < 0) {
-      change.classList.add('negative');
-      change.textContent = '↓ −' + numberFormat.format(Math.abs(delta));
-    } else {
-      change.textContent = '— 0';
-    }
-    row.appendChild(change);
-
-    const note = document.createElement('td');
-    note.className = 'trend-note';
-    if (category.latest === 0) {
-      note.textContent = 'Δεν καταγράφηκαν αγγελίες στο πιο πρόσφατο snapshot· αυτό δεν σημαίνει μηδενική ζήτηση.';
-    } else if (delta > 0) {
-      note.textContent = 'Περισσότερες ενεργές αγγελίες από το πρώτο snapshot της σύγκρισης.';
-    } else if (delta < 0) {
-      note.textContent = 'Λιγότερες ενεργές αγγελίες από το πρώτο snapshot της σύγκρισης.';
-    } else {
-      note.textContent = 'Ίδιος αριθμός ενεργών αγγελιών στα δύο άκρα της σύγκρισης.';
-    }
-    row.appendChild(note);
-    body.appendChild(row);
-  });
 }
 
-function renderHistory(snapshots) {
-  document.getElementById('history-rows').innerHTML = snapshots.map((snapshot, index) => {
-    const previous = snapshots[index - 1];
-    const change = previous ? percentChange(snapshot.total, previous.total) : null;
-    const text = change === null ? '—' : (change > 0 ? '+' : '') + change.toLocaleString('el-GR', { maximumFractionDigits: 1, minimumFractionDigits: 1 }) + '%';
-    const cls = change === null ? '' : change > 0 ? 'positive' : change < 0 ? 'negative' : '';
-    return '<tr class="' + (index === snapshots.length - 1 ? 'latest' : '') + '"><td>' + escapeText(formatMonth(snapshot.month)) + '</td><td class="num">' + numberFormat.format(snapshot.total) + '</td><td class="num ' + cls + '">' + text + '</td><td>' + escapeText(formatDate(snapshot.capturedAt)) + '</td></tr>';
-  }).join('');
-}
-async function loadReport() {
-  try {
-    const response = await fetch('/data/snapshots/index.json', { cache: 'no-store' });
-    if (!response.ok) throw new Error('Το αρχείο ιστορικών δεδομένων δεν είναι διαθέσιμο.');
-    const manifest = await response.json();
-    const entries = Array.isArray(manifest.snapshots) ? manifest.snapshots : [];
-    const snapshots = (await Promise.all(entries.map(async entry => {
-      const res = await fetch('/data/snapshots/' + encodeURIComponent(entry.file), { cache: 'no-store' });
-      if (!res.ok) return null;
-      const data = await res.json();
-      return data && data.month && Number.isFinite(Number(data.total)) ? data : null;
-    }))).filter(Boolean).sort((a, b) => a.month.localeCompare(b.month));
-    if (!snapshots.length) throw new Error('Δεν βρέθηκαν έγκυρα ιστορικά δεδομένα.');
-    const latest = snapshots[snapshots.length - 1], previous = snapshots[snapshots.length - 2];
-    document.getElementById('kpi-total').textContent = numberFormat.format(latest.total);
-    document.getElementById('kpi-month').textContent = 'Snapshot: ' + formatMonth(latest.month);
-    const age = latest.ageWindow;
-    document.getElementById('kpi-recent').textContent = age ? 'Προβολή 30 ημερών: ' + numberFormat.format(age.visible30) + ' (ημ. πηγής, και εκτιμήσεις: ' + age.published30 + ', πρώτοι εντοπισμοί: ' + age.firstSeen30 + ')' : 'Προβολή 30 ημερών: — (μη διαθέσιμη ιστορική μέτρηση)';
-    const change = previous ? percentChange(latest.total, previous.total) : null;
-    const changeEl = document.getElementById('kpi-change'), note = document.getElementById('kpi-change-note');
-    if (change === null) { changeEl.textContent = '—'; note.textContent = 'Χρειάζονται τουλάχιστον δύο snapshots για σύγκριση.'; }
-    else {
-      changeEl.textContent = (change > 0 ? '+' : '') + change.toLocaleString('el-GR', { maximumFractionDigits: 1, minimumFractionDigits: 1 }) + '%';
-      changeEl.classList.toggle('positive', change > 0); changeEl.classList.toggle('negative', change < 0);
-      note.textContent = numberFormat.format(latest.total - previous.total) + ' αγγελίες σε σχέση με ' + formatMonth(previous.month);
-    }
-    const sourceEntries = Object.entries(latest.bySource || {}).filter(([id, count]) => id !== 'unknown' && count > 0);
-    document.getElementById('kpi-source-count').textContent = String(sourceEntries.length);
-    document.getElementById('kpi-source-note').textContent = sourceEntries.map(([id]) => SOURCE_LABELS[id] || id).join(' · ');
-    const comparison=latest.comparableCoverage;
-    const cmpEl=document.getElementById('comparable-coverage');
-    const sourceName=id=>SOURCE_LABELS[id]||latest.corporate?.coverage?.[id]?.company||id.replace(/^corporate:/,'');
-    cmpEl.textContent=comparison?.available ? numberFormat.format(comparison.previousCount)+' → '+numberFormat.format(comparison.currentCount)+' καταχωρίσεις στις '+comparison.sources.length+' κοινές πηγές ('+(comparison.delta>0?'+':'')+numberFormat.format(comparison.delta)+'). Πηγές: '+comparison.sources.map(sourceName).join(', ')+'. Μετρώνται καταχωρίσεις ανά πηγή, όχι μοναδικές θέσεις ή συνολική ζήτηση.' : 'Δεν υπάρχει ακόμη συγκρίσιμη βάση με τεκμηριωμένη κάλυψη.';
-    const coverageEl=document.getElementById('quality-coverage');
-    coverageEl.textContent=latest.quality ? 'Προειδοποιήσεις ποιότητας: '+latest.quality.warnings.length+'. Πηγές εκτός σύγκρισης: '+(comparison?.excluded?.length??'—')+'. Η κάλυψη των σελίδων αποτελεσμάτων δεν είναι επιβεβαιωμένα πλήρης.' : 'Παλαιότερο snapshot χωρίς καταγραφή ποιότητας.';
-    renderCorporate(latest);
-    renderTrend(snapshots); renderBreakdown(latest, document.getElementById('breakdown-type').value); renderCategoryTrends(snapshots); renderHistory(snapshots);
-    document.getElementById('breakdown-type').addEventListener('change', event => renderBreakdown(latest, event.target.value));
-    document.getElementById('data-freshness').textContent = 'Τελευταία λήψη στο πιο πρόσφατο snapshot: ' + formatDate(latest.lastFetched) + '. Τα στοιχεία ανανεώνονται όταν δημιουργείται νέο μηνιαίο snapshot.';
-    contentEl.hidden = false; statusEl.hidden = true;
-  } catch (error) {
-    statusEl.textContent = error instanceof Error ? error.message : 'Δεν ήταν δυνατή η φόρτωση της αναφοράς.';
-  }
-}
-loadReport();
-
-function renderCorporate(snapshot) {
-  const data = snapshot.corporate;
-  if (!data || !Object.values(data.coverage || {}).some(s => s.status !== "skipped" || s.retained_count > 0)) return;
-  const panel = document.getElementById("corporate-report");
-  panel.hidden = false;
-  document.getElementById("corporate-report-note").textContent = "Κάλυψη στο snapshot " + formatMonth(snapshot.month) + ". Μη επανελεγμένες καταχωρίσεις: " + (data.unverified || 0) + ". Παλαιότερα snapshots δεν είχαν την ίδια κάλυψη.";
-  if (data.ageWindow) document.getElementById("corporate-report-note").textContent += " Εταιρικό αρχείο: " + data.ageWindow.total + " καταχωρίσεις πριν την αφαίρεση διπλοεγγραφών μεταξύ πηγών. Εντός 30 ημερών: " + data.ageWindow.visible30 + ". Στη συγκεντρωτική προβολή: " + (data.publicAgeWindow?.visible30 ?? data.ageWindow.visible30) + ". Οι αριθμοί ανά εταιρεία δεν προστίθενται στα συνολικά μεγέθη του snapshot.";
-  const rows = document.getElementById("corporate-report-rows");
-  const labels = {success:"Επιτυχία",fallback:"Προηγούμενα δεδομένα",failed:"Αποτυχία",skipped:"Παράλειψη",scheduled_skip:"Επόμενος προγραμματισμένος έλεγχος"};
-  for (const s of Object.values(data.coverage)) {
-    const tr = document.createElement("tr");
-    for (const value of [s.company, s.status === "success" || s.retained_count > 0 ? String(data.byCompany?.[s.company] || 0) : "—", labels[s.status] || s.status]) {
-      const td = document.createElement("td"); td.textContent = value; tr.appendChild(td);
-    }
-    rows.appendChild(tr);
-  }
-  const sub = document.getElementById("corporate-subcategories");
-  for (const [name, count] of Object.entries(data.bySubcategory || {}).sort((a, b) => b[1] - a[1])) {
-    const p = document.createElement("p"); p.textContent = name + ": " + count; sub.appendChild(p);
-  }
+const sectorFilter = document.querySelector("#sector-filter");
+if (sectorFilter) {
+  const rows = [...document.querySelectorAll("#sector-table [data-sector]")];
+  const charts = [...document.querySelectorAll("[data-sector-chart]")];
+  const changeMode = document.querySelector("#change-mode");
+  const units = [...document.querySelectorAll("#sector-table [data-unit]")];
+  document.querySelector("#sector-controls").hidden = false;
+  const filterSectors = () => {
+    for (const row of rows) row.hidden = Boolean(sectorFilter.value) && row.dataset.sector !== sectorFilter.value;
+    for (const chart of charts) chart.hidden = chart.dataset.sectorChart !== sectorFilter.value;
+  };
+  const filterUnits = () => {
+    for (const cell of units) cell.hidden = changeMode.value !== "both" && cell.dataset.unit !== changeMode.value;
+  };
+  sectorFilter.addEventListener("change", filterSectors);
+  changeMode.addEventListener("change", filterUnits);
+  filterSectors();
+  filterUnits();
 }

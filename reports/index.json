@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "windows": [
+    {
+      "duration": 3,
+      "start": "2026-08",
+      "end": "2026-10",
+      "available": 3,
+      "missing": [],
+      "latest": {
+        "revision": 1,
+        "url": "/reports/2026-10/3m/",
+        "publishedAt": "2026-11-25",
+        "templateVersion": 1,
+        "methodologyVersion": 1,
+        "inputSha256": "91b49d5adea2118320967deb6417438ce749292eae2c7b4b61d3ece87640e91d",
+        "htmlSha256": "c5d0e836ff6f0eeb4f52c85ca67c16f2cdbbd3c7008c6f105d4bc9b7553bfad0",
+        "dataSha256": "1b6a576a372862572a929f39a177ba8dd100838b7d6a4f66a3e26766930395dd",
+        "inventory": 81,
+        "summary": "Η διαφορά μεταξύ πρώτης και τελευταίας καταγραφής ήταν +8 αγγελίες."
+      }
+    },
+    {
+      "duration": 6,
+      "start": "2026-05",
+      "end": "2026-10",
+      "available": 5,
+      "missing": [
+        "2026-05"
+      ],
+      "latest": null
+    },
+    {
+      "duration": 12,
+      "start": "2025-11",
+      "end": "2026-10",
+      "available": 5,
+      "missing": [
+        "2025-11",
+        "2025-12",
+        "2026-01",
+        "2026-02",
+        "2026-03",
+        "2026-04",
+        "2026-05"
+      ],
+      "latest": null
+    }
+  ],
+  "entries": [
+    {
+      "start": "2026-08",
+      "end": "2026-10",
+      "duration": 3,
+      "revisions": [
+        {
+          "revision": 1,
+          "url": "/reports/2026-10/3m/",
+          "publishedAt": "2026-11-25",
+          "templateVersion": 1,
+          "methodologyVersion": 1,
+          "inputSha256": "91b49d5adea2118320967deb6417438ce749292eae2c7b4b61d3ece87640e91d",
+          "htmlSha256": "c5d0e836ff6f0eeb4f52c85ca67c16f2cdbbd3c7008c6f105d4bc9b7553bfad0",
+          "dataSha256": "1b6a576a372862572a929f39a177ba8dd100838b7d6a4f66a3e26766930395dd",
+          "inventory": 81,
+          "summary": "Η διαφορά μεταξύ πρώτης και τελευταίας καταγραφής ήταν +8 αγγελίες."
+        }
+      ]
+    },
+    {
+      "start": "2026-07",
+      "end": "2026-09",
+      "duration": 3,
+      "revisions": [
+        {
+          "revision": 1,
+          "url": "/reports/2026-09/3m/",
+          "publishedAt": "2026-11-25",
+          "templateVersion": 1,
+          "methodologyVersion": 1,
+          "inputSha256": "9dfbc1f82f9fbfb4153a8f369a38116be21de141c6c101b817cd6effcacf425d",
+          "htmlSha256": "0e42e1e050275d0671529b652c67047f30c764feee8a64b401909347754dcbe9",
+          "dataSha256": "39397a5a7ecfa820b2ad35568000ce450c981bcd5161334816683f591e205d4d",
+          "inventory": 96,
+          "summary": "Η διαφορά μεταξύ πρώτης και τελευταίας καταγραφής ήταν +17 αγγελίες."
+        }
+      ]
+    },
+    {
+      "start": "2026-06",
+      "end": "2026-08",
+      "duration": 3,
+      "revisions": [
+        {
+          "revision": 1,
+          "url": "/reports/2026-08/3m/",
+          "publishedAt": "2026-11-25",
+          "templateVersion": 1,
+          "methodologyVersion": 1,
+          "inputSha256": "23aced5e30c08ea94549244f19bfe2611b4c5449505329b8b4004f3b1163a9bc",
+          "htmlSha256": "40e671e682fe19e7072697af5f76b0ea2b85a98cad98ee3c2a1eb40aa95a66e2",
+          "dataSha256": "33dc1621d7cd61d6126167588402c63f7110aea0f60ec2a8db5645ec58330357",
+          "inventory": 73,
+          "summary": "Η διαφορά μεταξύ πρώτης και τελευταίας καταγραφής ήταν -42 αγγελίες."
+        }
+      ]
+    }
+  ]
+}

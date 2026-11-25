@@ -1,0 +1,285 @@
+{
+  "schemaVersion": 1,
+  "methodologyVersion": 1,
+  "window": {
+    "start": "2026-08",
+    "end": "2026-10",
+    "duration": 3
+  },
+  "inventory": {
+    "first": 73,
+    "latest": 81,
+    "delta": 8,
+    "percent": 10.95890410958904,
+    "average": 83.33333333333333,
+    "low": {
+      "month": "2026-08",
+      "capturedAt": "2026-09-01T14:05:12.149Z",
+      "lastFetched": "2026-09-01T10:57:29.586Z",
+      "total": 73,
+      "hasQuality": false,
+      "freshSources": null,
+      "otherSources": null,
+      "missingDateSources": null
+    },
+    "high": {
+      "month": "2026-09",
+      "capturedAt": "2026-10-01T16:15:04.544Z",
+      "lastFetched": "2026-10-01T12:16:37.809Z",
+      "total": 96,
+      "hasQuality": false,
+      "freshSources": null,
+      "otherSources": null,
+      "missingDateSources": null
+    }
+  },
+  "captures": [
+    {
+      "month": "2026-08",
+      "capturedAt": "2026-09-01T14:05:12.149Z",
+      "lastFetched": "2026-09-01T10:57:29.586Z",
+      "total": 73,
+      "hasQuality": false,
+      "freshSources": null,
+      "otherSources": null,
+      "missingDateSources": null
+    },
+    {
+      "month": "2026-09",
+      "capturedAt": "2026-10-01T16:15:04.544Z",
+      "lastFetched": "2026-10-01T12:16:37.809Z",
+      "total": 96,
+      "hasQuality": false,
+      "freshSources": null,
+      "otherSources": null,
+      "missingDateSources": null
+    },
+    {
+      "month": "2026-10",
+      "capturedAt": "2026-11-01T15:55:23.198Z",
+      "lastFetched": "2026-11-01T12:32:10.248Z",
+      "total": 81,
+      "hasQuality": false,
+      "freshSources": null,
+      "otherSources": null,
+      "missingDateSources": null
+    }
+  ],
+  "sectors": [
+    {
+      "id": "sales",
+      "label": "Πωλήσεις & Λιανική",
+      "values": [
+        26,
+        32,
+        30
+      ],
+      "latest": 30,
+      "latestShare": 37.03703703703704,
+      "delta": 4,
+      "percent": 15.384615384615385,
+      "shareChange": 1.4205986808726578
+    },
+    {
+      "id": "hospitality",
+      "label": "Εστίαση & Τουρισμός",
+      "values": [
+        10,
+        9,
+        3
+      ],
+      "latest": 3,
+      "latestShare": 3.7037037037037033,
+      "delta": -7,
+      "percent": null,
+      "shareChange": -9.994926433282597
+    },
+    {
+      "id": "admin",
+      "label": "Γραφείο, Διοίκηση & Οικονομικά",
+      "values": [
+        7,
+        7,
+        9
+      ],
+      "latest": 9,
+      "latestShare": 11.11111111111111,
+      "delta": 2,
+      "percent": 28.57142857142857,
+      "shareChange": 1.5220700152207005
+    },
+    {
+      "id": "construction",
+      "label": "Τεχνικά Επαγγέλματα & Κατασκευές",
+      "values": [
+        7,
+        13,
+        15
+      ],
+      "latest": 15,
+      "latestShare": 18.51851851851852,
+      "delta": 8,
+      "percent": 114.28571428571428,
+      "shareChange": 8.929477422628109
+    },
+    {
+      "id": "tech",
+      "label": "Πληροφορική & Digital",
+      "values": [
+        0,
+        0,
+        0
+      ],
+      "latest": 0,
+      "latestShare": 0,
+      "delta": 0,
+      "percent": null,
+      "shareChange": 0
+    },
+    {
+      "id": "logistics",
+      "label": "Logistics, Παραγωγή & Οδήγηση",
+      "values": [
+        13,
+        17,
+        16
+      ],
+      "latest": 16,
+      "latestShare": 19.753086419753085,
+      "delta": 3,
+      "percent": 23.076923076923077,
+      "shareChange": 1.9448672416708952
+    },
+    {
+      "id": "health",
+      "label": "Υγεία & Φροντίδα",
+      "values": [
+        3,
+        3,
+        3
+      ],
+      "latest": 3,
+      "latestShare": 3.7037037037037033,
+      "delta": 0,
+      "percent": null,
+      "shareChange": -0.4058853373921867
+    },
+    {
+      "id": "education",
+      "label": "Εκπαίδευση",
+      "values": [
+        1,
+        2,
+        1
+      ],
+      "latest": 1,
+      "latestShare": 1.2345679012345678,
+      "delta": 0,
+      "percent": null,
+      "shareChange": -0.13529511246406223
+    },
+    {
+      "id": "marketing",
+      "label": "Marketing & Δημιουργικά",
+      "values": [
+        3,
+        2,
+        1
+      ],
+      "latest": 1,
+      "latestShare": 1.2345679012345678,
+      "delta": -2,
+      "percent": null,
+      "shareChange": -2.875021139861322
+    },
+    {
+      "id": "other",
+      "label": "Λοιπά & Υπηρεσίες",
+      "values": [
+        3,
+        11,
+        3
+      ],
+      "latest": 3,
+      "latestShare": 3.7037037037037033,
+      "delta": 0,
+      "percent": null,
+      "shareChange": -0.4058853373921867
+    },
+    {
+      "id": "unknown",
+      "label": "Άγνωστη κατηγορία",
+      "values": [
+        0,
+        0,
+        0
+      ],
+      "latest": 0,
+      "latestShare": 0,
+      "delta": 0,
+      "percent": null,
+      "shareChange": 0
+    }
+  ],
+  "coverage": {
+    "series": [],
+    "excluded": [
+      "jobfind",
+      "kariera",
+      "xe"
+    ]
+  },
+  "corporate": null,
+  "latestBySource": {
+    "jobfind": 35,
+    "kariera": 36,
+    "unknown": 0,
+    "xe": 10
+  },
+  "lifecycle": {
+    "available": false,
+    "reason": "no_validated_period_cohort"
+  },
+  "insights": [
+    {
+      "type": "inventory",
+      "first": 73,
+      "latest": 81,
+      "delta": 8,
+      "percent": 10.95890410958904
+    },
+    {
+      "type": "sector",
+      "label": "Τεχνικά Επαγγέλματα & Κατασκευές",
+      "delta": 8
+    },
+    {
+      "type": "limitedCoverage",
+      "legacy": 3
+    }
+  ],
+  "edition": {
+    "revision": 1,
+    "url": "/reports/2026-10/3m/",
+    "publishedAt": "2026-11-25",
+    "templateVersion": 1,
+    "methodologyVersion": 1
+  },
+  "provenance": [
+    {
+      "month": "2026-08",
+      "file": "data/snapshots/2026-08.json",
+      "sha256": "68b11cd153e923a84437b59ffad5626cbb5870144bffd5af24a0824abe11da96"
+    },
+    {
+      "month": "2026-09",
+      "file": "data/snapshots/2026-09.json",
+      "sha256": "9e40bdccb139c9c86b2fd7e2489a129845ac8c73581f89d131dbc9ffecf76e92"
+    },
+    {
+      "month": "2026-10",
+      "file": "data/snapshots/2026-10.json",
+      "sha256": "64be1caccb0c5a74216cb3e20e5830b4eeb261a8f972e08856f0fdcb2d0402d0"
+    }
+  ]
+}

@@ -10,17 +10,26 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: workinpatras-data-${{ github.ref }}
+  queue: max
+  cancel-in-progress: false
+
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   snapshot:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -35,13 +44,23 @@ jobs:
         run: node scripts/data-quality.js data
 
       - name: Generate monthly snapshot
-        run: node scripts/snapshot.js
+        run: node scripts/snapshot.js --monthly
 
-      - name: Commit & push snapshot
+      - name: Validate snapshot and reporting inputs
+        run: node scripts/data-quality.js data
+
+      - name: Generate monthly labour reports
+        run: node scripts/labour-reports.js --publication-date "$(TZ=Europe/Athens date +%F)"
+
+      - name: Commit & push snapshot and reports
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/snapshots/
-          git diff --staged --quiet \
-            && echo "⏭  No new snapshot — skipping commit" \
-            || (git commit -m "chore: add monthly snapshot $(date +%Y-%m)" && git push)
+          git add -- data/snapshots/ reports/ report.html sitemap.xml
+          if git diff --staged --quiet; then
+            echo "No new snapshot or report edits"
+          else
+            git commit -m "chore: publish monthly snapshot and labour reports"
+            # A newer main invalidates this capture. A rerun must audit a fresh checkout.
+            git push origin HEAD:refs/heads/main
+          fi
