@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "checkedAt": "2026-11-25T02:09:36.841Z",
-  "inventory": 117,
+  "checkedAt": "2026-11-25T16:40:26.467Z",
+  "inventory": 116,
   "corporateInventory": 22,
-  "observations": 1250,
-  "distinctSourceListings": 203,
-  "runs": 27,
+  "observations": 1311,
+  "distinctSourceListings": 204,
+  "runs": 28,
   "snapshots": 5,
   "errors": [],
   "warnings": [
     {
       "code": "date_drift",
-      "count": 46
+      "count": 49
     },
     {
       "code": "legacy_missing_location",
@@ -51,7 +51,7 @@
     },
     "corporate:althom": {
       "status": "success",
-      "last_success_at": "2026-11-25T02:09:36.523Z",
+      "last_success_at": "2026-11-25T16:40:26.127Z",
       "scope": "employer_adapter",
       "method": "corporate:althom:posting-adapter:v1",
       "inventory_count": 4,
@@ -67,7 +67,7 @@
     },
     "corporate:cosmos-sport": {
       "status": "success",
-      "last_success_at": "2026-11-25T02:09:36.523Z",
+      "last_success_at": "2026-11-25T16:40:26.127Z",
       "scope": "employer_adapter",
       "method": "corporate:cosmos-sport:posting-adapter:v1",
       "inventory_count": 3,
@@ -83,7 +83,7 @@
     },
     "corporate:irida-renesas": {
       "status": "success",
-      "last_success_at": "2026-11-25T02:09:36.523Z",
+      "last_success_at": "2026-11-25T16:40:26.127Z",
       "scope": "employer_adapter",
       "method": "corporate:irida-renesas:posting-adapter:v1",
       "inventory_count": 4,
@@ -99,7 +99,7 @@
     },
     "corporate:motodynamics": {
       "status": "success",
-      "last_success_at": "2026-11-25T02:09:36.523Z",
+      "last_success_at": "2026-11-25T16:40:26.127Z",
       "scope": "employer_adapter",
       "method": "corporate:motodynamics:posting-adapter:v1",
       "inventory_count": 1,
@@ -114,7 +114,7 @@
       }
     },
     "corporate:netcompany": {
-      "status": "success",
+      "status": "scheduled_skip",
       "last_success_at": "2026-11-25T02:09:36.523Z",
       "scope": "employer_adapter",
       "method": "corporate:netcompany:posting-adapter:v1",
@@ -131,7 +131,7 @@
     },
     "corporate:noesis": {
       "status": "success",
-      "last_success_at": "2026-11-25T02:09:36.523Z",
+      "last_success_at": "2026-11-25T16:40:26.127Z",
       "scope": "employer_adapter",
       "method": "corporate:noesis:posting-adapter:v1",
       "inventory_count": 1,
@@ -147,7 +147,7 @@
     },
     "corporate:plaisio": {
       "status": "success",
-      "last_success_at": "2026-11-25T02:09:36.523Z",
+      "last_success_at": "2026-11-25T16:40:26.127Z",
       "scope": "employer_adapter",
       "method": "corporate:plaisio:posting-adapter:v1",
       "inventory_count": 1,
@@ -162,7 +162,7 @@
       }
     },
     "corporate:renesas": {
-      "status": "success",
+      "status": "scheduled_skip",
       "last_success_at": "2026-11-25T02:09:36.523Z",
       "scope": "employer_adapter",
       "method": "corporate:renesas:posting-adapter:v1",
@@ -179,7 +179,7 @@
     },
     "corporate:tsmg": {
       "status": "success",
-      "last_success_at": "2026-11-25T02:09:36.523Z",
+      "last_success_at": "2026-11-25T16:40:26.127Z",
       "scope": "employer_adapter",
       "method": "corporate:tsmg:posting-adapter:v1",
       "inventory_count": 2,
@@ -195,7 +195,7 @@
     },
     "jobfind": {
       "status": "success",
-      "last_success_at": "2026-11-25T02:09:36.523Z",
+      "last_success_at": "2026-11-25T16:40:26.127Z",
       "scope": "listing_page_unverified",
       "method": "jobfind:listing-page:v1",
       "inventory_count": 35,
@@ -227,17 +227,17 @@
     },
     "xe": {
       "status": "success",
-      "last_success_at": "2026-11-25T02:09:36.523Z",
+      "last_success_at": "2026-11-25T16:40:26.127Z",
       "scope": "listing_page_unverified",
       "method": "xe:listing-page:v1",
-      "inventory_count": 11,
-      "observed_count": 11,
+      "inventory_count": 10,
+      "observed_count": 10,
       "comparable": true,
       "missing": {
         "company": 4,
         "location": 0,
-        "employmentType": 11,
-        "salaryRaw": 8,
+        "employmentType": 10,
+        "salaryRaw": 7,
         "date": 0
       }
     }
