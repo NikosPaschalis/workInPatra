@@ -63,14 +63,14 @@ function readArchive(file, outputDir) {
   return manifest.entries;
 }
 
-function sitemapFor(original, entries) {
+function sitemapFor(original, entries, archiveDate) {
   const managed = /  <!-- labour-reports:start -->[\s\S]*?  <!-- labour-reports:end -->\r?\n/;
   if (!/<\/urlset>\s*$/.test(original)) throw new Error("Invalid sitemap");
   const block = ["  <!-- labour-reports:start -->", ...entries.map(entry => {
     const latest = entry.revisions.at(-1);
     return `  <url><loc>${ORIGIN}${latest.url}</loc><lastmod>${latest.correction?.date ?? latest.publishedAt}</lastmod></url>`;
   }), "  <!-- labour-reports:end -->", ""].join("\n");
-  return original.replace(managed, "").replace(/<\/urlset>\s*$/, block + "</urlset>\n");
+  return original.replace(managed, "").replace(/<url>\s*<loc>https:\/\/www\.workinpatras\.gr\/report\.html<\/loc>[\s\S]*?<\/url>/, match => archiveDate ? ` <url>\n    <loc>${ORIGIN}/report.html</loc>\n    <lastmod>${archiveDate}</lastmod>\n  </url>`.trimStart() : match).replace(/<\/urlset>\s*$/, block + "</urlset>\n");
 }
 
 function writeChanged(file, value) {
@@ -150,9 +150,14 @@ export function generateReports({ dataDir = path.join(root, "data"), outputDir =
       latest: period.missing.length ? null : byUrl.get(editionUrl(latestMonth, duration, 1))?.revisions.at(-1) ?? null };
   });
   const sitemap = readText(existsSync(sitemapFile) ? sitemapFile : path.join(root, "sitemap.xml"));
+  const archivePath = path.join(outputDir, "report.html");
+  const archiveHtml = renderArchive(windows, entries);
+  const archiveChanged = !existsSync(archivePath) || readText(archivePath) !== archiveHtml;
+  const archiveDate = archiveChanged ? (correction?.date ?? publicationDate) : undefined;
+  if (archiveDate !== undefined && !dateIsValid(archiveDate)) throw new Error("Invalid archive modification date");
   planned.push(
-    [path.join(outputDir, "report.html"), renderArchive(windows, entries)],
-    [sitemapFile, sitemapFor(sitemap, entries)],
+    [archivePath, archiveHtml],
+    [sitemapFile, sitemapFor(sitemap, entries, archiveDate)],
     [archiveFile, json({ schemaVersion: manifestVersion, windows, entries })],
   );
   const changed = planned.filter(([file, value]) => writeChanged(file, value)).map(([file]) => path.relative(outputDir, file));

@@ -37,3 +37,22 @@ test('archive links to indexed static articles with their own analytical content
     assert.ok(reportHtml.includes('href="' + revision.url + '"'));
   }
 });
+
+test('report discovery links, sitemap URLs and crawl directives agree', () => {
+  const robots = read('../robots.txt');
+  assert.match(robots, /Sitemap: https:\/\/www\.workinpatras\.gr\/sitemap\.xml/);
+  assert.match(robots, /Allow: \//);
+  assert.ok(indexHtml.includes('href="/report.html">Δείτε τις αναφορές και τα στατιστικά εργασίας'));
+  const urls = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1]);
+  assert.equal(new Set(urls).size, urls.length);
+  assert.match(sitemap, /<loc>https:\/\/www\.workinpatras\.gr\/report\.html<\/loc>\s*<lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/);
+  const { entries } = JSON.parse(read('../reports/index.json'));
+  for (const entry of entries) {
+    const revision = entry.revisions.at(-1);
+    const article = read('..' + revision.url + 'index.html');
+    assert.ok(article.includes('rel="canonical" href="https://www.workinpatras.gr' + revision.url + '"'));
+    assert.ok(article.includes('name="robots" content="index, follow"'));
+    assert.ok(article.includes('href="/report.html"'));
+    assert.ok(urls.includes('https://www.workinpatras.gr' + revision.url));
+  }
+});
