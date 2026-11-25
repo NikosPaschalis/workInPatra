@@ -11,7 +11,8 @@ permissions:
   contents: write
 
 concurrency:
-  group: monthly-snapshot-${{ github.ref }}
+  group: workinpatras-data-${{ github.ref }}
+  queue: max
   cancel-in-progress: false
 
 env:
@@ -60,5 +61,6 @@ jobs:
             echo "No new snapshot or report edits"
           else
             git commit -m "chore: publish monthly snapshot and labour reports"
-            git push || (git pull --rebase origin main && git push)
+            # A newer main invalidates this capture. A rerun must audit a fresh checkout.
+            git push origin HEAD:refs/heads/main
           fi

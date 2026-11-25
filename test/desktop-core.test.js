@@ -30,17 +30,19 @@ test("embedded Kariera browser is restricted to HTTPS Kariera hosts", () => {
 });
 
 test("Kariera snapshots resolve inside the project in source and packaged layouts", () => {
+  const projectRoot = path.resolve(root, "..");
+  const packageDir = path.join(projectRoot, "out", "app");
   assert.equal(
-    resolveProjectRoot({ isPackaged: false, appPath: "C:\\repo", execPath: "C:\\ignored\\electron.exe" }),
-    path.resolve("C:\\repo")
+    resolveProjectRoot({ isPackaged: false, appPath: projectRoot, execPath: path.join(root, "electron.exe") }),
+    projectRoot
   );
   const packagedRoot = resolveProjectRoot({
     isPackaged: true,
-    appPath: "C:\\repo\\out\\app\\resources\\app.asar",
-    execPath: "C:\\repo\\out\\app\\WorkInPatraScraper.exe",
+    appPath: path.join(packageDir, "resources", "app.asar"),
+    execPath: path.join(packageDir, "WorkInPatraScraper.exe"),
   });
-  assert.equal(packagedRoot, path.resolve("C:\\repo"));
-  assert.equal(karieraSnapshotDirectory(packagedRoot), path.join(path.resolve("C:\\repo"), "data", "kariera-html-snapshots"));
+  assert.equal(packagedRoot, projectRoot);
+  assert.equal(karieraSnapshotDirectory(packagedRoot), path.join(projectRoot, "data", "kariera-html-snapshots"));
 });
 
 test("Kariera is the only default desktop source", () => {
@@ -92,7 +94,7 @@ test("fixture-backed source workers extract all three adapters independently", a
     jobfind: { fixturePath: fixture("jobfind") },
     xe: { fixturePath: fixture("xe") },
   });
-  assert.equal(settled.every((entry) => entry.status === "fulfilled" && entry.value.status === "success"), true);
+  assert.equal(settled.every((entry) => entry.status === "fulfilled" && entry.value.status === "success"), true, JSON.stringify(settled));
   assert.deepEqual(results.map((entry) => entry.source).sort(), ["jobfind", "kariera", "xe"]);
   assert.equal(results.find((entry) => entry.source === "xe").jobs[0].dateRaw, "πριν από 2 ημέρες");
 });
@@ -103,7 +105,8 @@ test("one failed fixture does not discard successful source results", async () =
     jobfind: { fixturePath: fixture("jobfind") },
     xe: { fixturePath: path.join(root, "fixtures", "desktop", "missing.html") },
   });
-  assert.deepEqual(settled.map((entry) => entry.value.status).sort(), ["failed", "success"]);
+  assert.deepEqual(settled.map((entry) => [entry.value.source, entry.value.status]), [["jobfind", "success"], ["xe", "failed"]], JSON.stringify(settled));
+  assert.match(settled[1].value.detail, /ENOENT.*missing\.html/);
 });
 
 test("active source workers can be cancelled", async () => {

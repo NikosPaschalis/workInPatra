@@ -14,6 +14,8 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-24.04
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: '0'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -25,6 +27,20 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Install Playwright Chromium
-        run: npx playwright install --with-deps --only-shell chromium
+        # Desktop workers use the full browser executable from the package-local cache.
+        run: npx playwright install --with-deps chromium
       - name: Run tests
         run: npm test
+
+      - name: Dry-run labour reports twice against repository snapshots
+        run: |
+          output="$(mktemp -d)"
+          node scripts/labour-reports.js --output "$output" --publication-date "$(TZ=Europe/Athens date +%F)"
+          REPORT_DRY_RUN_DIR="$output" node --input-type=module -e '
+            import assert from "node:assert/strict";
+            import { generateReports } from "./scripts/labour-reports.js";
+            const result = generateReports({ outputDir: process.env.REPORT_DRY_RUN_DIR });
+            assert.deepEqual(result.changed, []);
+            console.log(`${result.entries.length} report editions, ${result.changed.length} changed files on rerun`);
+          '
+          git diff --exit-code -- data
