@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "checkedAt": "2026-11-25T16:40:26.467Z",
+  "checkedAt": "2026-11-26T01:45:24.109Z",
   "inventory": 116,
   "corporateInventory": 22,
-  "observations": 1311,
+  "observations": 1378,
   "distinctSourceListings": 204,
-  "runs": 28,
+  "runs": 29,
   "snapshots": 5,
   "errors": [],
   "warnings": [
@@ -51,7 +51,7 @@
     },
     "corporate:althom": {
       "status": "success",
-      "last_success_at": "2026-11-25T16:40:26.127Z",
+      "last_success_at": "2026-11-26T01:45:23.812Z",
       "scope": "employer_adapter",
       "method": "corporate:althom:posting-adapter:v1",
       "inventory_count": 4,
@@ -67,7 +67,7 @@
     },
     "corporate:cosmos-sport": {
       "status": "success",
-      "last_success_at": "2026-11-25T16:40:26.127Z",
+      "last_success_at": "2026-11-26T01:45:23.812Z",
       "scope": "employer_adapter",
       "method": "corporate:cosmos-sport:posting-adapter:v1",
       "inventory_count": 3,
@@ -83,7 +83,7 @@
     },
     "corporate:irida-renesas": {
       "status": "success",
-      "last_success_at": "2026-11-25T16:40:26.127Z",
+      "last_success_at": "2026-11-26T01:45:23.812Z",
       "scope": "employer_adapter",
       "method": "corporate:irida-renesas:posting-adapter:v1",
       "inventory_count": 4,
@@ -99,7 +99,7 @@
     },
     "corporate:motodynamics": {
       "status": "success",
-      "last_success_at": "2026-11-25T16:40:26.127Z",
+      "last_success_at": "2026-11-26T01:45:23.812Z",
       "scope": "employer_adapter",
       "method": "corporate:motodynamics:posting-adapter:v1",
       "inventory_count": 1,
@@ -114,8 +114,8 @@
       }
     },
     "corporate:netcompany": {
-      "status": "scheduled_skip",
-      "last_success_at": "2026-11-25T02:09:36.523Z",
+      "status": "success",
+      "last_success_at": "2026-11-26T01:45:23.812Z",
       "scope": "employer_adapter",
       "method": "corporate:netcompany:posting-adapter:v1",
       "inventory_count": 5,
@@ -131,7 +131,7 @@
     },
     "corporate:noesis": {
       "status": "success",
-      "last_success_at": "2026-11-25T16:40:26.127Z",
+      "last_success_at": "2026-11-26T01:45:23.812Z",
       "scope": "employer_adapter",
       "method": "corporate:noesis:posting-adapter:v1",
       "inventory_count": 1,
@@ -147,7 +147,7 @@
     },
     "corporate:plaisio": {
       "status": "success",
-      "last_success_at": "2026-11-25T16:40:26.127Z",
+      "last_success_at": "2026-11-26T01:45:23.812Z",
       "scope": "employer_adapter",
       "method": "corporate:plaisio:posting-adapter:v1",
       "inventory_count": 1,
@@ -162,8 +162,8 @@
       }
     },
     "corporate:renesas": {
-      "status": "scheduled_skip",
-      "last_success_at": "2026-11-25T02:09:36.523Z",
+      "status": "success",
+      "last_success_at": "2026-11-26T01:45:23.812Z",
       "scope": "employer_adapter",
       "method": "corporate:renesas:posting-adapter:v1",
       "inventory_count": 1,
@@ -179,7 +179,7 @@
     },
     "corporate:tsmg": {
       "status": "success",
-      "last_success_at": "2026-11-25T16:40:26.127Z",
+      "last_success_at": "2026-11-26T01:45:23.812Z",
       "scope": "employer_adapter",
       "method": "corporate:tsmg:posting-adapter:v1",
       "inventory_count": 2,
@@ -195,7 +195,7 @@
     },
     "jobfind": {
       "status": "success",
-      "last_success_at": "2026-11-25T16:40:26.127Z",
+      "last_success_at": "2026-11-26T01:45:23.812Z",
       "scope": "listing_page_unverified",
       "method": "jobfind:listing-page:v1",
       "inventory_count": 35,
@@ -227,7 +227,7 @@
     },
     "xe": {
       "status": "success",
-      "last_success_at": "2026-11-25T16:40:26.127Z",
+      "last_success_at": "2026-11-26T01:45:23.812Z",
       "scope": "listing_page_unverified",
       "method": "xe:listing-page:v1",
       "inventory_count": 10,
