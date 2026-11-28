@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "checkedAt": "2026-11-28T01:19:06.875Z",
-  "inventory": 116,
+  "checkedAt": "2026-11-28T14:55:30.608Z",
+  "inventory": 117,
   "corporateInventory": 22,
-  "observations": 1624,
-  "distinctSourceListings": 219,
-  "runs": 33,
+  "observations": 1686,
+  "distinctSourceListings": 220,
+  "runs": 34,
   "snapshots": 5,
   "errors": [],
   "warnings": [
@@ -51,7 +51,7 @@
     },
     "corporate:althom": {
       "status": "success",
-      "last_success_at": "2026-11-28T01:19:06.517Z",
+      "last_success_at": "2026-11-28T14:55:30.240Z",
       "scope": "employer_adapter",
       "method": "corporate:althom:posting-adapter:v1",
       "inventory_count": 4,
@@ -67,7 +67,7 @@
     },
     "corporate:cosmos-sport": {
       "status": "success",
-      "last_success_at": "2026-11-28T01:19:06.517Z",
+      "last_success_at": "2026-11-28T14:55:30.240Z",
       "scope": "employer_adapter",
       "method": "corporate:cosmos-sport:posting-adapter:v1",
       "inventory_count": 3,
@@ -83,7 +83,7 @@
     },
     "corporate:irida-renesas": {
       "status": "success",
-      "last_success_at": "2026-11-28T01:19:06.517Z",
+      "last_success_at": "2026-11-28T14:55:30.240Z",
       "scope": "employer_adapter",
       "method": "corporate:irida-renesas:posting-adapter:v1",
       "inventory_count": 4,
@@ -99,7 +99,7 @@
     },
     "corporate:motodynamics": {
       "status": "success",
-      "last_success_at": "2026-11-28T01:19:06.517Z",
+      "last_success_at": "2026-11-28T14:55:30.240Z",
       "scope": "employer_adapter",
       "method": "corporate:motodynamics:posting-adapter:v1",
       "inventory_count": 1,
@@ -114,7 +114,7 @@
       }
     },
     "corporate:netcompany": {
-      "status": "success",
+      "status": "scheduled_skip",
       "last_success_at": "2026-11-28T01:19:06.517Z",
       "scope": "employer_adapter",
       "method": "corporate:netcompany:posting-adapter:v1",
@@ -131,7 +131,7 @@
     },
     "corporate:noesis": {
       "status": "success",
-      "last_success_at": "2026-11-28T01:19:06.517Z",
+      "last_success_at": "2026-11-28T14:55:30.240Z",
       "scope": "employer_adapter",
       "method": "corporate:noesis:posting-adapter:v1",
       "inventory_count": 1,
@@ -147,7 +147,7 @@
     },
     "corporate:plaisio": {
       "status": "success",
-      "last_success_at": "2026-11-28T01:19:06.517Z",
+      "last_success_at": "2026-11-28T14:55:30.240Z",
       "scope": "employer_adapter",
       "method": "corporate:plaisio:posting-adapter:v1",
       "inventory_count": 1,
@@ -162,7 +162,7 @@
       }
     },
     "corporate:renesas": {
-      "status": "success",
+      "status": "scheduled_skip",
       "last_success_at": "2026-11-28T01:19:06.517Z",
       "scope": "employer_adapter",
       "method": "corporate:renesas:posting-adapter:v1",
@@ -179,7 +179,7 @@
     },
     "corporate:tsmg": {
       "status": "success",
-      "last_success_at": "2026-11-28T01:19:06.517Z",
+      "last_success_at": "2026-11-28T14:55:30.240Z",
       "scope": "employer_adapter",
       "method": "corporate:tsmg:posting-adapter:v1",
       "inventory_count": 2,
@@ -195,7 +195,7 @@
     },
     "jobfind": {
       "status": "success",
-      "last_success_at": "2026-11-28T01:19:06.517Z",
+      "last_success_at": "2026-11-28T14:55:30.240Z",
       "scope": "listing_page_unverified",
       "method": "jobfind:listing-page:v1",
       "inventory_count": 35,
@@ -227,17 +227,17 @@
     },
     "xe": {
       "status": "success",
-      "last_success_at": "2026-11-28T01:19:06.517Z",
+      "last_success_at": "2026-11-28T14:55:30.240Z",
       "scope": "listing_page_unverified",
       "method": "xe:listing-page:v1",
-      "inventory_count": 10,
-      "observed_count": 10,
+      "inventory_count": 11,
+      "observed_count": 11,
       "comparable": true,
       "missing": {
-        "company": 4,
+        "company": 5,
         "location": 0,
-        "employmentType": 10,
-        "salaryRaw": 8,
+        "employmentType": 11,
+        "salaryRaw": 9,
         "date": 0
       }
     }
